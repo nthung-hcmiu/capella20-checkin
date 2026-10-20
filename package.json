@@ -12,7 +12,11 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "prisma db push --force-reset && tsx prisma/seed.ts",
     "db:studio": "prisma studio",
-    "setup": "prisma generate && prisma db push && tsx prisma/seed.ts"
+    "setup": "prisma generate && prisma db push && tsx prisma/seed.ts",
+    "vercel-build": "prisma generate && prisma db push --accept-data-loss && next build",
+    "postinstall": "prisma generate",
+    "use:postgres": "sed -i.bak 's/provider = \"sqlite\"/provider = \"postgresql\"/' prisma/schema.prisma && rm -f prisma/schema.prisma.bak",
+    "use:sqlite": "sed -i.bak 's/provider = \"postgresql\"/provider = \"sqlite\"/' prisma/schema.prisma && rm -f prisma/schema.prisma.bak"
   },
   "dependencies": {
     "@prisma/client": "5.22.0",

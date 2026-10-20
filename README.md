@@ -9,12 +9,17 @@ Stack: Next.js 14 (App Router) + Prisma. Demo chay SQLite, production chuyen Sup
 
 Can Node 18 tro len.
 
+Mac dinh repo dung Postgres (cho production). De chay demo nhanh tren may bang SQLite:
+
 ```bash
-cp .env.example .env   # tao file moi truong (mac dinh SQLite demo)
+cp .env.example .env   # mac dinh DATABASE_URL tro toi SQLite (file:./dev.db)
 npm install
+npm run use:sqlite     # doi provider sang SQLite cho demo cuc bo
 npm run setup          # tao Prisma client, dung schema, seed du lieu mau
 npm run dev            # mo http://localhost:3000
 ```
+
+Deploy production (Supabase + Vercel): xem `DEPLOY.md`. Repo da de san provider Postgres nen deploy khong can sua code.
 
 Lenh phu:
 

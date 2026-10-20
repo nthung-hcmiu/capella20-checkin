@@ -1,7 +1,8 @@
 // Capella 20 nam - Luoc do co so du lieu dung chung
 //
-// DEMO: provider = "sqlite" (chay ngay, file dev.db)
-// PRODUCTION Supabase: doi provider = "postgresql" va them directUrl (xem .env.example)
+// Mac dinh: postgresql (cho production Supabase / Vercel).
+// Chay demo cuc bo bang SQLite: `npm run use:sqlite` roi `npm run setup`.
+// Doi lai Postgres: `npm run use:postgres`.
 // Khong dung Prisma enum de giu tuong thich SQLite va Postgres;
 // cac trang thai la String, dinh nghia tap trung o src/lib/constants.ts
 
@@ -10,7 +11,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
   // Khi chuyen Supabase, bo comment dong duoi:
   // directUrl = env("DIRECT_URL")
