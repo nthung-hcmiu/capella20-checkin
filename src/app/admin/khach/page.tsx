@@ -1,0 +1,44 @@
+import { prisma } from "@/lib/db";
+import { GuestManager, GuestRow, VenueOpt } from "@/components/GuestManager";
+
+export const dynamic = "force-dynamic";
+
+export default async function KhachPage() {
+  const [guests, venues] = await Promise.all([
+    prisma.guest.findMany({ include: { venue: true }, orderBy: { soThuTu: "asc" } }),
+    prisma.venue.findMany({ orderBy: { thuTu: "asc" } }),
+  ]);
+
+  const rows: GuestRow[] = guests.map((g) => ({
+    id: g.id,
+    soThuTu: g.soThuTu,
+    maBiMat: g.maBiMat,
+    hoTen: g.hoTen,
+    sdt: g.sdt,
+    venueId: g.venueId,
+    venueTen: g.venue.ten,
+    venueMau: g.venue.mauSac,
+    soNguoiMoi: g.soNguoiMoi,
+    soNguoiXacNhan: g.soNguoiXacNhan,
+    trangThai: g.trangThai,
+    isVip: g.isVip,
+    ban: g.ban,
+    salesOwner: g.salesOwner,
+  }));
+
+  const venueOpts: VenueOpt[] = venues.map((v) => ({ id: v.id, ten: v.ten, code: v.code }));
+
+  const salesTeam = await prisma.staffUser.findMany({
+    where: { vaiTro: "SALES" },
+    select: { hoTen: true },
+    orderBy: { hoTen: "asc" },
+  });
+
+  return (
+    <GuestManager
+      guests={rows}
+      venues={venueOpts}
+      salesTeam={salesTeam.map((s) => s.hoTen)}
+    />
+  );
+}

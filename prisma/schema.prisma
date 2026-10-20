@@ -1,0 +1,83 @@
+// Capella 20 nam - Luoc do co so du lieu dung chung
+//
+// DEMO: provider = "sqlite" (chay ngay, file dev.db)
+// PRODUCTION Supabase: doi provider = "postgresql" va them directUrl (xem .env.example)
+// Khong dung Prisma enum de giu tuong thich SQLite va Postgres;
+// cac trang thai la String, dinh nghia tap trung o src/lib/constants.ts
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+  // Khi chuyen Supabase, bo comment dong duoi:
+  // directUrl = env("DIRECT_URL")
+}
+
+// 5 venue chinh + cac dai so du phong / tai cua / BOD
+model Venue {
+  id         String  @id @default(cuid())
+  code       String  @unique // RIVERSIDE, GALLERY, PARKVIEW, CLARIS, CHLOE, DUPHONG, TAICUA, BOD
+  ten        String
+  rangeStart Int // dau dai so thu tu, vi du 1000
+  rangeEnd   Int // cuoi dai so thu tu, vi du 1999
+  quota      Int     @default(0) // so thiep duoc cap
+  mauSac     String  @default("#b08d42")
+  thuTu      Int     @default(0)
+  guests     Guest[]
+}
+
+// Mot khach = mot ma. Khoa chong trung la SDT, xu ly o tang ung dung.
+model Guest {
+  id            String   @id @default(cuid())
+  soThuTu       Int      @unique // 4 chu so theo dai cua venue
+  maBiMat       String   @unique // 8 ky tu bi mat, nam trong QR
+  hoTen         String
+  sdt           String // so dien thoai, khoa chong trung
+  venueId       String
+  venue         Venue    @relation(fields: [venueId], references: [id])
+  soNguoiMoi    Int      @default(1) // so nguoi duoc moi
+  soNguoiXacNhan Int?    // so nguoi xac nhan tham du
+  trangThai     String   @default("NHAP")
+  isVip         Boolean  @default(false)
+  ban           String? // ten ban khi xep ban
+  salesOwner    String // sales phu trach
+  ghiChu        String?
+  lyDoChoDuyet  String? // ly do vao hang cho duyet: TRUNG_SDT | VIP
+  phatHanhLuc   DateTime?
+  xacNhanLuc    DateTime?
+  checkinLuc    DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  checkins CheckinLog[]
+
+  @@index([sdt])
+  @@index([trangThai])
+  @@index([venueId])
+}
+
+// Nhat ky check in, phuc vu doi soat va chong quet trung
+model CheckinLog {
+  id        String   @id @default(cuid())
+  guestId   String
+  guest     Guest    @relation(fields: [guestId], references: [id])
+  lan       String // Lan 1..4, VIP, Quay ho tro
+  leTan     String
+  ketQua    String // THANH_CONG | TRUNG_LAP | KHONG_HOP_LE
+  thoiGian  DateTime @default(now())
+
+  @@index([guestId])
+}
+
+// Tai khoan dang nhap: BTC, le tan, sales
+model StaffUser {
+  id       String  @id @default(cuid())
+  username String  @unique
+  matKhau  String // demo de nguyen; production phai bam
+  hoTen    String
+  vaiTro   String // ADMIN | LE_TAN | SALES
+  ca       String? // ca truc cua le tan
+}

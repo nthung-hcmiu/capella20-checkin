@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  background: #f7f3ec;
+  color: #1a1613;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+h1,
+h2,
+h3,
+.font-display {
+  font-family: Georgia, Cambria, "Times New Roman", serif;
+  letter-spacing: 0.01em;
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-2xl shadow-card border border-ivory-deep;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none;
+  }
+  .btn-gold {
+    @apply btn bg-gold text-white hover:bg-gold-deep;
+  }
+  .btn-ink {
+    @apply btn bg-ink text-ivory hover:bg-ink-soft;
+  }
+  .btn-ghost {
+    @apply btn border border-ink/20 text-ink-soft hover:bg-ivory-deep;
+  }
+  .btn-sm {
+    @apply px-3.5 py-1.5 text-xs;
+  }
+  .label {
+    @apply block text-xs font-medium uppercase tracking-wider text-ink-muted mb-1.5;
+  }
+  .input {
+    @apply w-full rounded-xl border border-ink/15 bg-white px-4 py-2.5 text-ink outline-none transition focus:border-gold focus:ring-2 focus:ring-gold/20;
+  }
+  .chip {
+    @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium;
+  }
+  .hairline {
+    @apply border-t border-ivory-deep;
+  }
+}
+
+/* Vien trang tri mong manh kieu thiep */
+.deco-line {
+  background: linear-gradient(90deg, transparent, #b08d42, transparent);
+  height: 1px;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: #d9cfbd;
+  border-radius: 6px;
+}
