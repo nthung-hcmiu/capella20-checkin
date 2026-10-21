@@ -24,10 +24,18 @@ export async function GET() {
 
   let ketNoi = "chưa thử";
   let soKhach: number | null = null;
+  let daCoBTC: boolean | null = null;
+  const doTreMs: number[] = [];
   try {
-    await prisma.$queryRaw`SELECT 1`;
+    // Lan dau gom ca mo ket noi; cac lan sau la do tre mot vong toi CSDL
+    for (let i = 0; i < 4; i++) {
+      const t = Date.now();
+      await prisma.$queryRaw`SELECT 1`;
+      doTreMs.push(Date.now() - t);
+    }
     ketNoi = "ok";
     soKhach = await prisma.guest.count();
+    daCoBTC = (await prisma.staffUser.count({ where: { vaiTro: "ADMIN", matKhau: { startsWith: "scrypt$" } } })) > 0;
   } catch (e: any) {
     ketNoi = String(e?.message || e).split("\n").filter(Boolean).slice(-3).join(" | ").slice(0, 400);
   }
@@ -49,6 +57,9 @@ export async function GET() {
     mayChu,
     ketNoi,
     soKhach,
+    daCoBTC,
+    vungChayApp: process.env.VERCEL_REGION || null,
+    doTreCSDL: doTreMs.length ? { moKetNoiMs: doTreMs[0], motVongMs: doTreMs.slice(1) } : null,
     vercelEnv: process.env.VERCEL_ENV || null,
     domainProduction: process.env.VERCEL_PROJECT_PRODUCTION_URL || null,
   });
