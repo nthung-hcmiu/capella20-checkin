@@ -49,3 +49,27 @@ Dung cach thu cong:
 - **Gieo lai du lieu mau**: them bien `SETUP_KEY` (chuoi bi mat tu dat), Redeploy, roi mo
   `https://<app>/api/setup?key=<SETUP_KEY>&seed=1`. Lenh nay xoa het va gieo lai, chi dung cho demo.
 - **Truoc khi nhap khach that**: phai xoa du lieu mau. Bao lai de them nut xoa sach co xac nhan.
+
+---
+
+## Cach khac: deploy bang terminal (Vercel CLI)
+
+Can Node 18 tro len (`node -v` de kiem tra). Lenh chay duoc tren macOS, Windows va Linux.
+
+```bash
+git clone https://github.com/nthung-hcmiu/capella20-checkin.git
+cd capella20-checkin
+
+npx vercel@latest login              # mo trinh duyet, chon Continue with GitHub
+npx vercel@latest link --yes         # tao project capella20-checkin tren Vercel
+
+# Gan CSDL Supabase vao project (chon goi Free, region Singapore khi duoc hoi)
+npx vercel@latest integration add supabase
+
+npx vercel@latest --prod             # build tren may chu Vercel, tu tao bang va gieo du lieu mau
+```
+
+Neu lenh `integration add` bao loi: tao project tai https://supabase.com, lay chuoi ket noi URI cong 5432, roi chay
+`npx vercel@latest env add DATABASE_URL production` va dan chuoi do vao, sau do chay lai `npx vercel@latest --prod`.
+
+Tuy chon, de moi lan push len GitHub la tu deploy: `npx vercel@latest git connect`.
