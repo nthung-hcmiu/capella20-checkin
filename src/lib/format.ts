@@ -32,9 +32,15 @@ export function boDau(s: string): string {
     .trim();
 }
 
-// Chuan hoa SDT de chong trung: bo ky tu khong phai so, doi +84 / 84 ve 0
-export function chuanHoaSdt(raw: string): string {
-  let s = (raw || "").replace(/\D/g, "");
+// Chuan hoa SDT de chong trung: bo ky tu khong phai so, doi +84 / 84 ve 0,
+// them lai so 0 dau khi Excel lam mat (909000111 -> 0909000111)
+export function chuanHoaSdt(raw: string | number | null | undefined): string {
+  let s = String(raw ?? "").replace(/\D/g, "");
   if (s.startsWith("84") && s.length >= 11) s = "0" + s.slice(2);
+  if (s.length === 9 && !s.startsWith("0")) s = "0" + s;
   return s;
+}
+
+export function sdtHopLe(sdt: string): boolean {
+  return /^0\d{9,10}$/.test(sdt);
 }

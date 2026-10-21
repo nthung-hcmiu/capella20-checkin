@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
+import { yeuCauTrang } from "@/lib/auth";
 import { SalesPortal } from "@/components/SalesPortal";
+import { UserBar } from "@/components/UserBar";
 import { TRANG_THAI } from "@/lib/constants";
+import { urlQR } from "@/lib/codes";
 
 export const dynamic = "force-dynamic";
 
@@ -11,45 +14,50 @@ const CHIEM = [
 ];
 
 export default async function SalesPage() {
-  const [guests, venues, sales] = await Promise.all([
-    prisma.guest.findMany({ include: { venue: true }, orderBy: { soThuTu: "asc" } }),
+  const u = await yeuCauTrang(["SALES", "ADMIN"], "/sales");
+  // Chi gui xuong trinh duyet khach cua chinh sales nay
+  const [guests, venues, dem] = await Promise.all([
+    prisma.guest.findMany({
+      where: { salesOwner: u.hoTen, trangThai: { not: TRANG_THAI.DA_HUY } },
+      include: { venue: true },
+      orderBy: { soThuTu: "asc" },
+    }),
     prisma.venue.findMany({ where: { quota: { gt: 0 } }, orderBy: { thuTu: "asc" } }),
-    prisma.staffUser.findMany({ where: { vaiTro: "SALES" }, select: { hoTen: true }, orderBy: { hoTen: "asc" } }),
+    prisma.guest.groupBy({ by: ["venueId"], where: { trangThai: { in: CHIEM } }, _count: { _all: true } }),
   ]);
-
-  const rows = guests.map((g) => ({
-    id: g.id,
-    soThuTu: g.soThuTu,
-    maBiMat: g.maBiMat,
-    hoTen: g.hoTen,
-    sdt: g.sdt,
-    venueTen: g.venue.ten,
-    venueMau: g.venue.mauSac,
-    soNguoiMoi: g.soNguoiMoi,
-    soNguoiXacNhan: g.soNguoiXacNhan,
-    trangThai: g.trangThai,
-    isVip: g.isVip,
-    salesOwner: g.salesOwner,
-  }));
-
-  const venueOpts = venues.map((v) => ({
-    id: v.id,
-    ten: v.ten,
-    quota: v.quota,
-    dangDung: guests.filter((g) => g.venueId === v.id && CHIEM.includes(g.trangThai as any)).length,
-  }));
 
   return (
     <div className="min-h-screen bg-ivory">
       <header className="border-b border-ivory-deep bg-white">
         <div className="mx-auto flex max-w-md items-center justify-between px-4 py-3">
-          <Link href="/" className="font-display text-sm tracking-[0.2em] text-ink">
+          <Link href="/sales" className="font-display text-sm tracking-[0.2em] text-ink">
             CAPELLA <span className="text-gold">20</span>
           </Link>
-          <span className="text-xs text-ink-muted">Cong Sales</span>
+          <UserBar u={u} />
         </div>
       </header>
-      <SalesPortal guests={rows} venues={venueOpts} salesTeam={sales.map((s) => s.hoTen)} />
+      <SalesPortal
+        ten={u.hoTen}
+        guests={guests.map((g) => ({
+          id: g.id,
+          soThuTu: g.soThuTu,
+          maBiMat: g.maBiMat,
+          linkThiep: urlQR(g.maBiMat),
+          hoTen: g.hoTen,
+          sdt: g.sdt,
+          venueTen: g.venue.ten,
+          soNguoiMoi: g.soNguoiMoi,
+          soNguoiXacNhan: g.soNguoiXacNhan,
+          trangThai: g.trangThai,
+          isVip: g.isVip,
+        }))}
+        venues={venues.map((v) => ({
+          id: v.id,
+          ten: v.ten,
+          quota: v.quota,
+          dangDung: dem.find((d) => d.venueId === v.id)?._count._all || 0,
+        }))}
+      />
     </div>
   );
 }

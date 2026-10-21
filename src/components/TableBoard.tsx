@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { xepBan } from "@/lib/actions";
+import { boDau } from "@/lib/format";
 
 export interface BanRow {
   id: string;
@@ -35,14 +36,14 @@ export function TableBoard({ guests }: { guests: BanRow[] }) {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl text-ink">Xep ban</h1>
+          <h1 className="font-display text-2xl text-ink">Xếp bàn</h1>
           <p className="mt-1 text-sm text-ink-muted">
-            {guests.length} khach da xac nhan &middot; {tongNguoi} nguoi &middot; {banCo.length} ban
+            {guests.length} khách đã xác nhận · {tongNguoi} người · {banCo.length} bàn
           </p>
         </div>
         <input
           className="input max-w-xs"
-          placeholder="Loc ten hoac ban..."
+          placeholder="Lọc theo tên hoặc bàn..."
           value={loc}
           onChange={(e) => setLoc(e.target.value)}
         />
@@ -51,12 +52,12 @@ export function TableBoard({ guests }: { guests: BanRow[] }) {
       {chuaXep.length > 0 && (
         <div className="card p-5">
           <div className="mb-3 flex items-center gap-2">
-            <span className="chip bg-gold/15 text-gold-deep">Chua xep ban</span>
-            <span className="text-sm text-ink-muted">{chuaXep.length} khach</span>
+            <span className="chip bg-gold/15 text-gold-deep">Chưa xếp bàn</span>
+            <span className="text-sm text-ink-muted">{chuaXep.length} khách</span>
           </div>
           <div className="space-y-1.5">
             {chuaXep
-              .filter((g) => !loc || g.hoTen.toLowerCase().includes(loc.toLowerCase()))
+              .filter((g) => !loc || boDau(g.hoTen).includes(boDau(loc)))
               .map((g) => (
                 <Dong key={g.id} g={g} />
               ))}
@@ -66,7 +67,7 @@ export function TableBoard({ guests }: { guests: BanRow[] }) {
 
       <div className="grid gap-4 sm:grid-cols-2">
         {banCo
-          .filter((b) => !loc || b.toLowerCase().includes(loc.toLowerCase()) || (nhom.get(b) || []).some((g) => g.hoTen.toLowerCase().includes(loc.toLowerCase())))
+          .filter((b) => !loc || boDau(b).includes(boDau(loc)) || (nhom.get(b) || []).some((g) => boDau(g.hoTen).includes(boDau(loc))))
           .map((b) => {
             const ds = nhom.get(b)!;
             const nguoi = ds.reduce((s, g) => s + g.soNguoi, 0);
@@ -74,7 +75,7 @@ export function TableBoard({ guests }: { guests: BanRow[] }) {
               <div key={b} className="card p-5">
                 <div className="mb-3 flex items-center justify-between">
                   <span className="font-display text-lg text-ink">{b}</span>
-                  <span className="chip bg-ivory-deep text-ink-soft">{nguoi} nguoi</span>
+                  <span className="chip bg-ivory-deep text-ink-soft">{nguoi} người</span>
                 </div>
                 <div className="space-y-1.5">
                   {ds.map((g) => (
@@ -108,7 +109,7 @@ function Dong({ g }: { g: BanRow }) {
           {g.hoTen}
           {g.isVip && <span className="ml-1.5 chip bg-gold/15 text-gold-deep">VIP</span>}
         </div>
-        <div className="text-xs text-ink-muted">{g.venueTen} &middot; {g.soNguoi} nguoi</div>
+        <div className="text-xs text-ink-muted">{g.venueTen} · {g.soNguoi} người</div>
       </div>
       {sua ? (
         <input
@@ -118,7 +119,7 @@ function Dong({ g }: { g: BanRow }) {
           onChange={(e) => setVal(e.target.value)}
           onBlur={luu}
           onKeyDown={(e) => e.key === "Enter" && luu()}
-          placeholder="Ban 01"
+          placeholder="Bàn 01"
         />
       ) : (
         <button
@@ -126,7 +127,7 @@ function Dong({ g }: { g: BanRow }) {
           disabled={pending}
           onClick={() => setSua(true)}
         >
-          {pending ? "..." : g.ban ? "Doi ban" : "Xep ban"}
+          {pending ? "..." : g.ban ? "Đổi bàn" : "Xếp bàn"}
         </button>
       )}
     </div>

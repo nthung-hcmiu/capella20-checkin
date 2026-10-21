@@ -1,15 +1,19 @@
 import type { Metadata, Viewport } from "next";
+import "@fontsource/be-vietnam-pro/400.css";
+import "@fontsource/be-vietnam-pro/500.css";
+import "@fontsource/be-vietnam-pro/600.css";
+import "@fontsource/playfair-display/500.css";
+import "@fontsource/playfair-display/600.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Capella 20 nam - He thong khach moi va check in",
-  description: "Quan ly khach moi, phat hanh thiep, xac nhan va check in cho dem tri an 20 nam Capella.",
+  title: "Capella 20 năm | Hệ thống khách mời",
+  description: "Quản lý khách mời, phát hành thiệp, xác nhận và check in cho đêm tri ân 20 năm Capella.",
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -18,11 +18,11 @@ export async function GET() {
       const u = new URL(chuoiKetNoi()!);
       mayChu = `${u.hostname}:${u.port || "5432"}`;
     } catch {
-      mayChu = "chuoi ket noi khong dung dinh dang URL";
+      mayChu = "chuỗi kết nối sai định dạng";
     }
   }
 
-  let ketNoi = "chua thu";
+  let ketNoi = "chưa thử";
   let soKhach: number | null = null;
   try {
     await prisma.$queryRaw`SELECT 1`;
@@ -33,14 +33,14 @@ export async function GET() {
   }
 
   const chanDoan = !dangDung
-    ? "Chua co bien ket noi CSDL. Vao Storage gan Neon hoac Supabase vao project (hoac them DATABASE_URL) roi Redeploy."
+    ? "Chưa có biến kết nối CSDL. Vào Storage gắn Neon hoặc Supabase vào project (hoặc thêm DATABASE_URL) rồi Redeploy."
     : ketNoi !== "ok" && soKhach === null && /does not exist|P2021/i.test(ketNoi)
-    ? "Noi duoc CSDL nhung chua co bang. Redeploy de buoc build tao bang."
+    ? "Nối được CSDL nhưng chưa có bảng. Redeploy để bước build tạo bảng."
     : ketNoi !== "ok"
-    ? "Co bien nhung khong noi duoc CSDL. Xem dong ketNoi."
+    ? "Có biến nhưng không nối được CSDL. Xem dòng ketNoi."
     : soKhach === 0
-    ? "CSDL trong. Redeploy de gieo du lieu mau."
-    : "On dinh.";
+    ? "CSDL trống. Vào trang Dữ liệu để nạp mẫu, hoặc nhập danh sách."
+    : "Ổn định.";
 
   return NextResponse.json({
     chanDoan,

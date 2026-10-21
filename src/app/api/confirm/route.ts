@@ -13,26 +13,30 @@ export async function POST(req: NextRequest) {
   const thamDu = !!body.thamDu;
   const soNguoiXacNhan = thamDu ? Math.max(1, parseInt(String(body.soNguoiXacNhan || "1"), 10)) : 0;
 
-  if (!ma) return NextResponse.json({ ok: false, thongBao: "Thieu ma" }, { status: 400 });
+  if (!ma) return NextResponse.json({ ok: false, thongBao: "Thiếu mã thiệp" }, { status: 400 });
 
   const guest = await prisma.guest.findUnique({ where: { maBiMat: ma }, include: { venue: true } });
-  if (!guest) return NextResponse.json({ ok: false, thongBao: "Thiep khong hop le" }, { status: 404 });
+  if (!guest) return NextResponse.json({ ok: false, thongBao: "Thiệp không hợp lệ" }, { status: 404 });
+
+  if (guest.trangThai === TRANG_THAI.DA_CHECKIN) {
+    return NextResponse.json({ ok: false, thongBao: "Quý khách đã check in tại sự kiện" }, { status: 409 });
+  }
 
   if (guest.trangThai === TRANG_THAI.DA_HUY) {
-    return NextResponse.json({ ok: false, thongBao: "Thiep da bi huy" }, { status: 410 });
+    return NextResponse.json({ ok: false, thongBao: "Thiệp đã bị hủy" }, { status: 410 });
   }
 
   // Doi chieu so thu tu va 4 so cuoi SDT
   if (guest.soThuTu !== soThuTu || guest.sdt.slice(-4) !== last4) {
     return NextResponse.json(
-      { ok: false, thongBao: "So thu tu hoac 4 so cuoi SDT chua khop. Vui long kiem tra lai." },
+      { ok: false, thongBao: "Số thứ tự hoặc 4 số cuối điện thoại chưa khớp. Quý khách vui lòng kiểm tra lại." },
       { status: 403 }
     );
   }
 
   if (soNguoiXacNhan > guest.soNguoiMoi) {
     return NextResponse.json(
-      { ok: false, thongBao: `Thiep nay moi toi da ${guest.soNguoiMoi} nguoi` },
+      { ok: false, thongBao: `Thiệp này mời tối đa ${guest.soNguoiMoi} người` },
       { status: 400 }
     );
   }
@@ -48,7 +52,7 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({
     ok: true,
-    thongBao: thamDu ? "Cam on, da ghi nhan xac nhan tham du" : "Da ghi nhan phan hoi khong tham du",
+    thongBao: thamDu ? "Cảm ơn quý khách, Capella đã ghi nhận xác nhận tham dự" : "Capella đã ghi nhận phản hồi của quý khách",
     trangThai: capNhat.trangThai,
     soNguoiXacNhan: capNhat.soNguoiXacNhan,
   });

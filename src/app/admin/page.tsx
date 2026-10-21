@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
+import { yeuCauTrang } from "@/lib/auth";
 import { CHISO, TRANG_THAI, NHAN_TRANG_THAI, MAU_TRANG_THAI } from "@/lib/constants";
 import { StatusBadge } from "@/components/StatusBadge";
 
@@ -15,6 +16,7 @@ function soNguoi(g: { soNguoiXacNhan: number | null; soNguoiMoi: number }) {
 }
 
 export default async function Dashboard() {
+  await yeuCauTrang(["ADMIN"], "/admin");
   const guests = await prisma.guest.findMany({ include: { venue: true } });
   const venues = await prisma.venue.findMany({ orderBy: { thuTu: "asc" } });
 
@@ -35,29 +37,29 @@ export default async function Dashboard() {
   return (
     <div className="space-y-7">
       <div>
-        <h1 className="font-display text-2xl text-ink">Bang dieu khien</h1>
-        <p className="mt-1 text-sm text-ink-muted">Dem nguoi, khong dem thiep. Con so cap nhat theo thoi gian thuc.</p>
+        <h1 className="font-display text-2xl text-ink">Bảng điều khiển</h1>
+        <p className="mt-1 text-sm text-ink-muted">Đếm người, không đếm thiệp. Số liệu cập nhật theo thời gian thực.</p>
       </div>
 
       {/* KPI chinh */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Kpi
-          nhan="Nguoi da xac nhan"
+          nhan="Người đã xác nhận"
           so={nguoiXacNhan}
-          phu={`nguong ${CHISO.nguongXacNhan} nguoi`}
+          phu={`ngưỡng ${CHISO.nguongXacNhan} người`}
           tiLe={tiLeXacNhan}
           noiBat
         />
-        <Kpi nhan="Thiep da phat hanh" so={daPhatHanh} phu={`du kien ${CHISO.soThiepPhatHanh}`} />
-        <Kpi nhan="Da check in" so={nguoiCheckin} phu={`${daCheckin.length} thiep da den`} />
-        <Kpi nhan="Cho BTC duyet" so={soCho} phu="trung SDT hoac VIP" canhBao={soCho > 0} />
+        <Kpi nhan="Thiệp đã phát hành" so={daPhatHanh} phu={`dự kiến ${CHISO.soThiepPhatHanh}`} />
+        <Kpi nhan="Người đã check in" so={nguoiCheckin} phu={`${daCheckin.length} thiệp đã đến`} />
+        <Kpi nhan="Chờ BTC duyệt" so={soCho} phu="trùng SĐT hoặc VIP" canhBao={soCho > 0} />
       </div>
 
       {/* Phan bo trang thai */}
       <div className="card p-6">
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-lg text-ink">Phan bo theo trang thai</h2>
-          <span className="text-xs text-ink-muted">{guests.length} khach trong he thong</span>
+          <h2 className="font-display text-lg text-ink">Phân bổ theo trạng thái</h2>
+          <span className="text-xs text-ink-muted">{guests.length} khách trong hệ thống</span>
         </div>
         <div className="mt-4 space-y-2.5">
           {Object.keys(NHAN_TRANG_THAI)
@@ -65,13 +67,13 @@ export default async function Dashboard() {
             .sort((a, b) => demTrangThai[b] - demTrangThai[a])
             .map((k) => {
               const n = demTrangThai[k];
-              const pct = Math.round((n / guests.length) * 100);
+              const pct = guests.length ? Math.round((n / guests.length) * 100) : 0;
               const mau = MAU_TRANG_THAI[k];
               return (
                 <div key={k} className="flex items-center gap-3">
                   <div className="w-28 shrink-0 text-xs text-ink-soft">{NHAN_TRANG_THAI[k]}</div>
                   <div className="h-5 flex-1 overflow-hidden rounded-full bg-ivory-deep">
-                    <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: mau.text }} />
+                    <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: mau.text === "#ffffff" ? mau.bg : mau.text }} />
                   </div>
                   <div className="w-10 shrink-0 text-right text-xs font-medium text-ink">{n}</div>
                 </div>
@@ -85,7 +87,7 @@ export default async function Dashboard() {
         <div className="flex items-center justify-between px-6 py-4">
           <h2 className="font-display text-lg text-ink">Theo venue</h2>
           <Link href="/admin/quota" className="text-xs font-medium text-gold hover:underline">
-            Xem quota &rarr;
+            Xem quota →
           </Link>
         </div>
         <div className="hairline" />
@@ -94,9 +96,9 @@ export default async function Dashboard() {
             <thead>
               <tr className="text-left text-xs uppercase tracking-wider text-ink-muted">
                 <th className="px-6 py-3 font-medium">Venue</th>
-                <th className="px-3 py-3 font-medium">Dai so</th>
-                <th className="px-3 py-3 text-right font-medium">Khach</th>
-                <th className="px-3 py-3 text-right font-medium">Xac nhan</th>
+                <th className="px-3 py-3 font-medium">Dải số</th>
+                <th className="px-3 py-3 text-right font-medium">Khách</th>
+                <th className="px-3 py-3 text-right font-medium">Xác nhận</th>
                 <th className="px-3 py-3 text-right font-medium">Check in</th>
                 <th className="px-6 py-3 text-right font-medium">Quota</th>
               </tr>
@@ -115,7 +117,7 @@ export default async function Dashboard() {
                         {v.ten}
                       </span>
                     </td>
-                    <td className="px-3 py-3 text-ink-muted">{v.rangeStart}-{v.rangeEnd}</td>
+                    <td className="px-3 py-3 text-ink-muted">{v.rangeStart} đến {v.rangeEnd}</td>
                     <td className="px-3 py-3 text-right">{ds.length}</td>
                     <td className="px-3 py-3 text-right">{xn.length}</td>
                     <td className="px-3 py-3 text-right">{ci.length}</td>

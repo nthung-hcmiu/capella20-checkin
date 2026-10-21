@@ -18,17 +18,17 @@ export const TRANG_THAI = {
 export type TrangThai = (typeof TRANG_THAI)[keyof typeof TRANG_THAI];
 
 export const NHAN_TRANG_THAI: Record<string, string> = {
-  NHAP: "Nhap",
-  CHO_DUYET: "Cho duyet",
-  DANH_SACH_CHO: "Danh sach cho",
-  DA_PHAT_HANH: "Da phat hanh",
-  DA_MOI: "Da moi",
-  THAM_DU: "Tham du",
-  CHUA_PHAN_HOI: "Chua phan hoi",
-  KHONG_THAM_DU: "Khong tham du",
-  DA_CHECKIN: "Da check in",
-  VANG_MAT: "Vang mat",
-  DA_HUY: "Da huy",
+  NHAP: "Nháp",
+  CHO_DUYET: "Chờ duyệt",
+  DANH_SACH_CHO: "Danh sách chờ",
+  DA_PHAT_HANH: "Đã phát hành",
+  DA_MOI: "Đã mời",
+  THAM_DU: "Tham dự",
+  CHUA_PHAN_HOI: "Chưa phản hồi",
+  KHONG_THAM_DU: "Không tham dự",
+  DA_CHECKIN: "Đã check in",
+  VANG_MAT: "Vắng mặt",
+  DA_HUY: "Đã hủy",
 };
 
 // Mau hien thi cho tung trang thai (nen, chu)
@@ -53,8 +53,21 @@ export const VAI_TRO = {
   SALES: "SALES",
 } as const;
 
+export const NHAN_VAI_TRO: Record<string, string> = {
+  ADMIN: "BTC",
+  SALES: "Sales",
+  LE_TAN: "Lễ tân",
+};
+
+// Trang mac dinh sau khi dang nhap theo vai tro
+export const TRANG_CHINH: Record<string, string> = {
+  ADMIN: "/admin",
+  SALES: "/sales",
+  LE_TAN: "/checkin",
+};
+
 // ===== Lan check in =====
-export const LAN_CHECKIN = ["Lan 1", "Lan 2", "Lan 3", "Lan 4", "Lan VIP", "Quay ho tro"];
+export const LAN_CHECKIN = ["Làn 1", "Làn 2", "Làn 3", "Làn 4", "Làn VIP", "Quầy hỗ trợ"];
 
 export const KET_QUA_CHECKIN = {
   THANH_CONG: "THANH_CONG",
@@ -78,9 +91,9 @@ export const DAI_VENUE: DaiVenue[] = [
   { code: "PARKVIEW", ten: "Parkview", rangeStart: 3000, rangeEnd: 3999, mauSac: "#5c6b4f", thuTu: 3 },
   { code: "CLARIS", ten: "Claris Palace", rangeStart: 4000, rangeEnd: 4999, mauSac: "#3a5a6b", thuTu: 4 },
   { code: "CHLOE", ten: "Chloe Gallery", rangeStart: 5000, rangeEnd: 5999, mauSac: "#8a6d2f", thuTu: 5 },
-  { code: "DUPHONG", ten: "Du phong", rangeStart: 6000, rangeEnd: 7999, mauSac: "#9a9086", thuTu: 6 },
-  { code: "TAICUA", ten: "Khach bo sung tai cua", rangeStart: 8000, rangeEnd: 8999, mauSac: "#6b6255", thuTu: 7 },
-  { code: "BOD", ten: "Khach BOD / BTC", rangeStart: 9000, rangeEnd: 9999, mauSac: "#1a1613", thuTu: 8 },
+  { code: "DUPHONG", ten: "Dự phòng", rangeStart: 6000, rangeEnd: 7999, mauSac: "#9a9086", thuTu: 6 },
+  { code: "TAICUA", ten: "Khách bổ sung tại cửa", rangeStart: 8000, rangeEnd: 8999, mauSac: "#6b6255", thuTu: 7 },
+  { code: "BOD", ten: "Khách BOD / BTC", rangeStart: 9000, rangeEnd: 9999, mauSac: "#1a1613", thuTu: 8 },
 ];
 
 // ===== Con so mac dinh (gia dinh, BTC chinh sau) =====
@@ -97,7 +110,7 @@ export const CHISO = {
 };
 
 export const SU_KIEN = {
-  ten: "Capella 20 nam - Dem tri an khach hang",
+  ten: "Capella 20 năm, Đêm tri ân khách hàng",
   ngay: "12/11/2026",
   diaDiem: "Riverside Palace",
   soKhach: 800,

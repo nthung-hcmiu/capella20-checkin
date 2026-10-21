@@ -2,29 +2,40 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { docMaTuQR } from "@/lib/codes";
 import { TRANG_THAI, KET_QUA_CHECKIN } from "@/lib/constants";
+import { yeuCauQuyen } from "@/lib/auth";
 
 // Thuc hien check in. Moi ma chi check in mot lan.
 export async function POST(req: NextRequest) {
+  const u = await yeuCauQuyen(["LE_TAN", "ADMIN"]);
+  if (!u) {
+    return NextResponse.json({ ok: false, ketQua: KET_QUA_CHECKIN.KHONG_HOP_LE, thongBao: "Phiên đăng nhập đã hết, hãy đăng nhập lại" }, { status: 401 });
+  }
   const body = await req.json().catch(() => ({}));
-  const lan = body.lan || "Lan 1";
-  const leTan = body.leTan || "Le tan";
+  const lan = String(body.lan || "Làn 1").slice(0, 40);
+  const leTan = u.hoTen;
 
   // Xac dinh khach theo id hoac ma QR
   let guest = null as any;
   if (body.id) {
     guest = await prisma.guest.findUnique({ where: { id: body.id }, include: { venue: true } });
   } else if (body.ma) {
-    const ma = docMaTuQR(String(body.ma));
-    if (ma) guest = await prisma.guest.findUnique({ where: { maBiMat: ma }, include: { venue: true } });
+    const raw = String(body.ma).trim();
+    // Le tan go so thu tu tren thiep (1 den 5 chu so), hoac quet / nhap ma QR
+    if (/^\d{1,5}$/.test(raw)) {
+      guest = await prisma.guest.findUnique({ where: { soThuTu: parseInt(raw, 10) }, include: { venue: true } });
+    } else {
+      const ma = docMaTuQR(raw);
+      if (ma) guest = await prisma.guest.findUnique({ where: { maBiMat: ma }, include: { venue: true } });
+    }
   }
 
   if (!guest) {
-    return NextResponse.json({ ok: false, ketQua: KET_QUA_CHECKIN.KHONG_HOP_LE, thongBao: "Khong tim thay ma" }, { status: 404 });
+    return NextResponse.json({ ok: false, ketQua: KET_QUA_CHECKIN.KHONG_HOP_LE, thongBao: "Không tìm thấy số thứ tự hoặc mã này" }, { status: 404 });
   }
 
   if (guest.trangThai === TRANG_THAI.DA_HUY) {
     await ghiLog(guest.id, lan, leTan, KET_QUA_CHECKIN.KHONG_HOP_LE);
-    return NextResponse.json({ ok: false, ketQua: KET_QUA_CHECKIN.KHONG_HOP_LE, thongBao: "Ma da bi huy, vo hieu", guest: gon(guest) });
+    return NextResponse.json({ ok: false, ketQua: KET_QUA_CHECKIN.KHONG_HOP_LE, thongBao: "Thiệp đã bị hủy, mã không còn hiệu lực", guest: gon(guest) });
   }
 
   // Da check in truoc do -> trung lap
@@ -33,29 +44,34 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       ok: false,
       ketQua: KET_QUA_CHECKIN.TRUNG_LAP,
-      thongBao: "Ma nay da check in roi",
+      thongBao: "Mã này đã check in rồi",
       guest: gon(guest),
     });
   }
 
   const canhBao =
     guest.trangThai === TRANG_THAI.KHONG_THAM_DU
-      ? "Khach truoc do bao khong tham du"
+      ? "Khách trước đó báo không tham dự"
       : guest.trangThai === TRANG_THAI.CHUA_PHAN_HOI
-      ? "Khach chua phan hoi xac nhan"
+      ? "Khách chưa phản hồi xác nhận"
       : null;
 
-  const capNhat = await prisma.guest.update({
-    where: { id: guest.id },
+  // Cap nhat co dieu kien: hai lan quet cung luc thi chi mot lan thanh cong
+  const { count } = await prisma.guest.updateMany({
+    where: { id: guest.id, trangThai: { notIn: [TRANG_THAI.DA_CHECKIN, TRANG_THAI.DA_HUY] } },
     data: { trangThai: TRANG_THAI.DA_CHECKIN, checkinLuc: new Date() },
-    include: { venue: true },
   });
+  const capNhat = await prisma.guest.findUnique({ where: { id: guest.id }, include: { venue: true } });
+  if (count === 0) {
+    await ghiLog(guest.id, lan, leTan, KET_QUA_CHECKIN.TRUNG_LAP);
+    return NextResponse.json({ ok: false, ketQua: KET_QUA_CHECKIN.TRUNG_LAP, thongBao: "Mã này đã check in rồi", guest: gon(capNhat) });
+  }
   await ghiLog(guest.id, lan, leTan, KET_QUA_CHECKIN.THANH_CONG);
 
   return NextResponse.json({
     ok: true,
     ketQua: KET_QUA_CHECKIN.THANH_CONG,
-    thongBao: "Check in thanh cong",
+    thongBao: "Check in thành công",
     canhBao,
     guest: gon(capNhat),
   });

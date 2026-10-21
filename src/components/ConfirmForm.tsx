@@ -35,7 +35,7 @@ export function ConfirmForm({
       const data = await r.json();
       setKq({ ok: data.ok, msg: data.thongBao });
     } catch {
-      setKq({ ok: false, msg: "Co loi ket noi, thu lai" });
+      setKq({ ok: false, msg: "Có lỗi kết nối, quý khách vui lòng thử lại" });
     } finally {
       setDang(false);
     }
@@ -46,7 +46,7 @@ export function ConfirmForm({
       <div className="rounded-2xl bg-sage/10 p-6 text-center">
         <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-sage text-white">✓</div>
         <div className="font-display text-lg text-ink">{kq.msg}</div>
-        <p className="mt-1 text-sm text-ink-muted">Hen gap quy khach tai dem tri an.</p>
+        <p className="mt-1 text-sm text-ink-muted">Hẹn gặp quý khách tại đêm tri ân.</p>
       </div>
     );
   }
@@ -55,12 +55,12 @@ export function ConfirmForm({
     <div className="space-y-4">
       {goiYSo && (
         <div className="rounded-xl border border-dashed border-gold/40 bg-gold/5 px-4 py-2.5 text-xs text-gold-deep">
-          Ban demo: so thu tu <b>{goiYSo}</b>, 4 so cuoi SDT <b>{goiYLast4}</b>
+          Bản demo dành cho BTC: số thứ tự <b>{goiYSo}</b>, 4 số cuối điện thoại <b>{goiYLast4}</b>
         </div>
       )}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="label">So thu tu</label>
+          <label className="label">Số thứ tự trên thiệp</label>
           <input
             inputMode="numeric"
             className="input text-center font-mono"
@@ -70,7 +70,7 @@ export function ConfirmForm({
           />
         </div>
         <div>
-          <label className="label">4 so cuoi SDT</label>
+          <label className="label">4 số cuối điện thoại</label>
           <input
             inputMode="numeric"
             maxLength={4}
@@ -83,7 +83,7 @@ export function ConfirmForm({
       </div>
 
       <div>
-        <label className="label">So nguoi tham du (toi da {soNguoiMoi})</label>
+        <label className="label">Số người tham dự (tối đa {soNguoiMoi})</label>
         <div className="flex items-center gap-2">
           {Array.from({ length: soNguoiMoi }, (_, i) => i + 1).map((n) => (
             <button
@@ -108,16 +108,16 @@ export function ConfirmForm({
 
       <div className="space-y-2 pt-1">
         <button className="btn-gold w-full" disabled={dang} onClick={() => gui(true)}>
-          {dang ? "Dang gui..." : "Toi se tham du"}
+          {dang ? "Đang gửi..." : "Tôi sẽ tham dự"}
         </button>
         <button className="btn-ghost w-full" disabled={dang} onClick={() => gui(false)}>
-          Toi khong tham du
+          Tôi không thể tham dự
         </button>
       </div>
 
       {daXacNhan != null && (
         <p className="text-center text-xs text-ink-muted">
-          Truoc do da ghi nhan {daXacNhan} nguoi. Gui lai de cap nhat.
+          Trước đó đã ghi nhận {daXacNhan} người. Gửi lại để cập nhật.
         </p>
       )}
     </div>

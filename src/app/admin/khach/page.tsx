@@ -1,9 +1,11 @@
 import { prisma } from "@/lib/db";
+import { yeuCauTrang } from "@/lib/auth";
 import { GuestManager, GuestRow, VenueOpt } from "@/components/GuestManager";
 
 export const dynamic = "force-dynamic";
 
 export default async function KhachPage() {
+  await yeuCauTrang(["ADMIN"], "/admin/khach");
   const [guests, venues] = await Promise.all([
     prisma.guest.findMany({ include: { venue: true }, orderBy: { soThuTu: "asc" } }),
     prisma.venue.findMany({ orderBy: { thuTu: "asc" } }),

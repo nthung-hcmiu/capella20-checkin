@@ -14,15 +14,16 @@ body {
 }
 
 body {
-  font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: "Be Vietnam Pro", system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 h1,
 h2,
 h3,
 .font-display {
-  font-family: Georgia, Cambria, "Times New Roman", serif;
-  letter-spacing: 0.01em;
+  font-family: "Playfair Display", Georgia, "Times New Roman", serif;
+  letter-spacing: 0;
+  font-variant-numeric: lining-nums;
 }
 
 @layer components {

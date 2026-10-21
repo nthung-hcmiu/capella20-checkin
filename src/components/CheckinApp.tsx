@@ -21,6 +21,7 @@ interface KetQua {
   thongBao: string;
   canhBao?: string | null;
   guest?: KhachGon;
+  hetPhien?: boolean;
 }
 interface Gan {
   hoTen: string;
@@ -32,31 +33,24 @@ interface Gan {
 
 type Che = "quet" | "so" | "ten";
 
-export function CheckinApp({ leTans }: { leTans: string[] }) {
-  const [leTan, setLeTan] = useState("");
-  const [lan, setLan] = useState(LAN_CHECKIN[0]);
-  const [vaoCa, setVaoCa] = useState(false);
+export function CheckinApp({ ten, ca }: { ten: string; ca: string | null }) {
+  const [lan, setLan] = useState<string | null>(null);
   const [che, setChe] = useState<Che>("so");
   const [kq, setKq] = useState<KetQua | null>(null);
   const [gan, setGan] = useState<Gan[]>([]);
 
   useEffect(() => {
     try {
-      const l = localStorage.getItem("ci_letan");
       const c = localStorage.getItem("ci_lan");
-      if (l) setLeTan(l);
-      if (c) setLan(c);
-      if (l) setVaoCa(true);
+      if (c && LAN_CHECKIN.includes(c)) setLan(c);
     } catch {}
   }, []);
 
-  const batDau = () => {
-    if (!leTan) return;
+  const chonLan = (l: string) => {
+    setLan(l);
     try {
-      localStorage.setItem("ci_letan", leTan);
-      localStorage.setItem("ci_lan", lan);
+      localStorage.setItem("ci_lan", l);
     } catch {}
-    setVaoCa(true);
   };
 
   const checkin = async (payload: { ma?: string; id?: string }) => {
@@ -64,9 +58,10 @@ export function CheckinApp({ leTans }: { leTans: string[] }) {
       const r = await fetch("/api/checkin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...payload, lan, leTan }),
+        body: JSON.stringify({ ...payload, lan }),
       });
       const data: KetQua = await r.json();
+      if (r.status === 401) data.hetPhien = true;
       setKq(data);
       if (data.guest) {
         setGan((g) =>
@@ -79,51 +74,33 @@ export function CheckinApp({ leTans }: { leTans: string[] }) {
               trungLap: data.ketQua === "TRUNG_LAP",
             },
             ...g,
-          ].slice(0, 12)
+          ].slice(0, 15)
         );
       }
     } catch {
-      setKq({ ok: false, ketQua: "KHONG_HOP_LE", thongBao: "Loi ket noi, kiem tra mang" });
+      setKq({ ok: false, ketQua: "KHONG_HOP_LE", thongBao: "Mất kết nối mạng. Kiểm tra wifi hoặc 4G rồi thử lại." });
     }
   };
 
-  if (!vaoCa) {
+  if (!lan) {
     return (
       <div className="mx-auto max-w-sm px-5 py-10">
         <div className="card p-7">
-          <h1 className="font-display text-xl text-ink">Vao ca check in</h1>
-          <p className="mt-1 text-sm text-ink-muted">Chon le tan va lan phu trach.</p>
-          <div className="mt-5 space-y-4">
-            <div>
-              <label className="label">Le tan</label>
-              <select className="input" value={leTan} onChange={(e) => setLeTan(e.target.value)}>
-                <option value="">Chon le tan</option>
-                {leTans.map((l) => (
-                  <option key={l} value={l}>
-                    {l}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="label">Lan</label>
-              <div className="grid grid-cols-3 gap-2">
-                {LAN_CHECKIN.map((l) => (
-                  <button
-                    key={l}
-                    onClick={() => setLan(l)}
-                    className={`rounded-xl border px-2 py-2 text-xs font-medium transition ${
-                      lan === l ? "border-ink bg-ink text-ivory" : "border-ink/15 bg-white text-ink-soft"
-                    }`}
-                  >
-                    {l}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <button className="btn-gold w-full" disabled={!leTan} onClick={batDau}>
-              Bat dau
-            </button>
+          <h1 className="font-display text-xl text-ink">Vào ca check in</h1>
+          <p className="mt-1 text-sm text-ink-muted">
+            {ten}
+            {ca ? ` · ${ca}` : ""}. Chọn làn bạn phụ trách.
+          </p>
+          <div className="mt-5 grid grid-cols-2 gap-2">
+            {LAN_CHECKIN.map((l) => (
+              <button
+                key={l}
+                onClick={() => chonLan(l)}
+                className="rounded-xl border border-ink/15 bg-white px-2 py-3 text-sm font-medium text-ink-soft transition hover:border-ink hover:bg-ink hover:text-ivory"
+              >
+                {l}
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -132,30 +109,26 @@ export function CheckinApp({ leTans }: { leTans: string[] }) {
 
   return (
     <div className="mx-auto max-w-md px-4 py-5">
-      {/* Thanh ca */}
       <div className="mb-4 flex items-center justify-between rounded-xl bg-ink px-4 py-2.5 text-ivory">
         <div className="text-sm">
-          <span className="font-medium">{leTan}</span>
-          <span className="text-ivory/60"> &middot; {lan}</span>
+          <span className="font-medium">{ten}</span>
+          <span className="text-ivory/60"> · {lan}</span>
         </div>
-        <button className="text-xs text-ivory/70 underline" onClick={() => setVaoCa(false)}>
-          Doi ca
+        <button className="text-xs text-ivory/70 underline" onClick={() => setLan(null)}>
+          Đổi làn
         </button>
       </div>
 
-      {/* Tab che do */}
       <div className="mb-4 grid grid-cols-3 gap-1 rounded-xl bg-ivory-deep p-1">
         {([
-          ["quet", "Quet QR"],
-          ["so", "Nhap so"],
-          ["ten", "Tim ten / SDT"],
+          ["quet", "Quét QR"],
+          ["so", "Nhập số"],
+          ["ten", "Tìm tên / SĐT"],
         ] as [Che, string][]).map(([c, nhan]) => (
           <button
             key={c}
             onClick={() => setChe(c)}
-            className={`rounded-lg py-2 text-xs font-medium transition ${
-              che === c ? "bg-white text-ink shadow-sm" : "text-ink-muted"
-            }`}
+            className={`rounded-lg py-2 text-xs font-medium transition ${che === c ? "bg-white text-ink shadow-sm" : "text-ink-muted"}`}
           >
             {nhan}
           </button>
@@ -168,29 +141,21 @@ export function CheckinApp({ leTans }: { leTans: string[] }) {
 
       {kq && <KetQuaCard kq={kq} onDong={() => setKq(null)} />}
 
-      {/* Dem va gan day */}
       <div className="mt-6">
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-sm text-ink">Vua check in</h2>
-          <span className="chip bg-sage/15 text-sage">
-            {gan.filter((g) => g.ok).length} thanh cong
-          </span>
+          <h2 className="font-display text-sm text-ink">Vừa check in</h2>
+          <span className="chip bg-sage/15 text-sage">{gan.filter((g) => g.ok).length} thành công</span>
         </div>
         <div className="mt-2 space-y-1.5">
-          {gan.length === 0 && <p className="text-xs text-ink-muted">Chua co luot nao trong phien nay.</p>}
+          {gan.length === 0 && <p className="text-xs text-ink-muted">Chưa có lượt nào trong phiên này.</p>}
           {gan.map((g, i) => (
-            <div
-              key={i}
-              className="flex items-center justify-between rounded-lg bg-white px-3 py-2 text-sm shadow-sm"
-            >
+            <div key={i} className="flex items-center justify-between rounded-lg bg-white px-3 py-2 text-sm shadow-sm">
               <span className="flex items-center gap-2">
                 <span className={`h-2 w-2 rounded-full ${g.ok ? "bg-sage" : "bg-wine"}`} />
                 <span className="font-mono text-xs text-ink-muted">{g.soThuTu}</span>
                 <span className="text-ink">{g.hoTen}</span>
               </span>
-              <span className="text-xs text-ink-muted">
-                {g.trungLap ? "trung lap" : g.gio}
-              </span>
+              <span className="text-xs text-ink-muted">{g.trungLap ? "trùng lặp" : g.gio}</span>
             </div>
           ))}
         </div>
@@ -201,34 +166,28 @@ export function CheckinApp({ leTans }: { leTans: string[] }) {
 
 function NhapSo({ onMa }: { onMa: (ma: string) => void }) {
   const [v, setV] = useState("");
+  const gui = () => {
+    if (!v.trim()) return;
+    onMa(v.trim());
+    setV("");
+  };
   return (
     <div className="card p-5">
-      <label className="label">So thu tu hoac ma QR</label>
+      <label className="label">Số thứ tự hoặc mã QR</label>
       <input
         className="input text-center font-mono text-lg"
         value={v}
+        inputMode="numeric"
         onChange={(e) => setV(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && v.trim()) {
-            onMa(v.trim());
-            setV("");
-          }
-        }}
+        onKeyDown={(e) => e.key === "Enter" && gui()}
         placeholder="1234"
         autoFocus
       />
-      <button
-        className="btn-gold mt-3 w-full"
-        disabled={!v.trim()}
-        onClick={() => {
-          onMa(v.trim());
-          setV("");
-        }}
-      >
+      <button className="btn-gold mt-3 w-full" disabled={!v.trim()} onClick={gui}>
         Check in
       </button>
       <p className="mt-2 text-center text-xs text-ink-muted">
-        Cua khong ket: quet QR, nhap so, hoac tim ten. Quay ho tro xu ly ca kho.
+        Cửa không kẹt: quét QR, nhập số, hoặc tìm tên. Ca khó chuyển sang quầy hỗ trợ.
       </p>
     </div>
   );
@@ -238,6 +197,7 @@ function TimTen({ onChon }: { onChon: (id: string) => void }) {
   const [q, setQ] = useState("");
   const [ds, setDs] = useState<KhachGon[]>([]);
   const [dang, setDang] = useState(false);
+  const [loi, setLoi] = useState<string | null>(null);
 
   useEffect(() => {
     if (q.trim().length < 2) {
@@ -246,10 +206,14 @@ function TimTen({ onChon }: { onChon: (id: string) => void }) {
     }
     const t = setTimeout(async () => {
       setDang(true);
+      setLoi(null);
       try {
         const r = await fetch(`/api/lookup?q=${encodeURIComponent(q.trim())}`);
         const data = await r.json();
+        if (!r.ok) setLoi(data.loi || "Không tra cứu được");
         setDs(data.ket_qua || []);
+      } catch {
+        setLoi("Mất kết nối mạng");
       } finally {
         setDang(false);
       }
@@ -259,19 +223,12 @@ function TimTen({ onChon }: { onChon: (id: string) => void }) {
 
   return (
     <div className="card p-5">
-      <label className="label">Tim ten hoac SDT</label>
-      <input
-        className="input"
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        placeholder="Nguyen Van A hoac 0901..."
-        autoFocus
-      />
+      <label className="label">Tìm tên hoặc số điện thoại</label>
+      <input className="input" value={q} onChange={(e) => setQ(e.target.value)} placeholder="nguyen van an hoặc 0901..." autoFocus />
       <div className="mt-3 space-y-1.5">
-        {dang && <p className="text-xs text-ink-muted">Dang tim...</p>}
-        {!dang && q.trim().length >= 2 && ds.length === 0 && (
-          <p className="text-xs text-ink-muted">Khong tim thay khach.</p>
-        )}
+        {dang && <p className="text-xs text-ink-muted">Đang tìm...</p>}
+        {loi && <p className="text-xs text-wine">{loi}</p>}
+        {!dang && !loi && q.trim().length >= 2 && ds.length === 0 && <p className="text-xs text-ink-muted">Không tìm thấy khách.</p>}
         {ds.map((g) => (
           <button
             key={g.id}
@@ -279,8 +236,7 @@ function TimTen({ onChon }: { onChon: (id: string) => void }) {
             className="flex w-full items-center justify-between rounded-lg border border-ivory-deep bg-white px-3 py-2.5 text-left hover:border-gold"
           >
             <span>
-              <span className="font-mono text-xs text-ink-muted">{g.soThuTu}</span>{" "}
-              <span className="text-sm text-ink">{g.hoTen}</span>
+              <span className="font-mono text-xs text-ink-muted">{g.soThuTu}</span> <span className="text-sm text-ink">{g.hoTen}</span>
               {g.isVip && <span className="ml-1.5 chip bg-gold/15 text-gold-deep">VIP</span>}
               <div className="text-xs text-ink-muted">
                 {g.venue}
@@ -299,7 +255,6 @@ function QuetQR({ onMa }: { onMa: (ma: string) => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [chay, setChay] = useState(false);
   const [loi, setLoi] = useState<string | null>(null);
-  const hoTro = typeof window !== "undefined" && "BarcodeDetector" in window;
   const streamRef = useRef<MediaStream | null>(null);
   const quetRef = useRef(false);
 
@@ -314,8 +269,8 @@ function QuetQR({ onMa }: { onMa: (ma: string) => void }) {
 
   const bat = async () => {
     setLoi(null);
-    if (!hoTro) {
-      setLoi("Trinh duyet nay chua ho tro quet QR truc tiep. Dung Nhap so hoac Tim ten.");
+    if (typeof window === "undefined" || !("BarcodeDetector" in window)) {
+      setLoi("Trình duyệt này chưa hỗ trợ quét QR trực tiếp (thường gặp trên iPhone). Dùng Nhập số hoặc Tìm tên, hoặc mở bằng Chrome trên Android.");
       return;
     }
     try {
@@ -343,7 +298,7 @@ function QuetQR({ onMa }: { onMa: (ma: string) => void }) {
       };
       requestAnimationFrame(vong);
     } catch {
-      setLoi("Khong truy cap duoc camera. Kiem tra quyen hoac dung Nhap so.");
+      setLoi("Không mở được camera. Kiểm tra quyền camera của trình duyệt, hoặc dùng Nhập số.");
     }
   };
 
@@ -355,23 +310,21 @@ function QuetQR({ onMa }: { onMa: (ma: string) => void }) {
           <div className="absolute inset-0 grid place-items-center text-center text-ivory/70">
             <div>
               <div className="mx-auto mb-3 h-14 w-14 rounded-xl border-2 border-dashed border-ivory/40" />
-              <p className="text-xs">Huong camera vao QR tren thiep</p>
+              <p className="text-xs">Hướng camera vào mã QR trên thiệp</p>
             </div>
           </div>
         )}
-        {chay && (
-          <div className="pointer-events-none absolute inset-8 rounded-xl border-2 border-gold/80" />
-        )}
+        {chay && <div className="pointer-events-none absolute inset-8 rounded-xl border-2 border-gold/80" />}
       </div>
       {loi && <div className="mt-3 rounded-xl bg-wine/10 px-3 py-2 text-xs text-wine">{loi}</div>}
       <div className="mt-3">
         {chay ? (
           <button className="btn-ghost w-full" onClick={dung}>
-            Dung quet
+            Dừng quét
           </button>
         ) : (
           <button className="btn-gold w-full" onClick={bat}>
-            Bat camera
+            Bật camera
           </button>
         )}
       </div>
@@ -395,24 +348,26 @@ function KetQuaCard({ kq, onDong }: { kq: KetQua; onDong: () => void }) {
           <div className="px-6 py-5 text-center">
             <div className="font-display text-2xl text-ink">{kq.guest.hoTen}</div>
             <div className="mt-1 text-sm text-ink-muted">
-              <span className="font-mono">{kq.guest.soThuTu}</span> &middot; {kq.guest.venue}
+              <span className="font-mono">{kq.guest.soThuTu}</span> · {kq.guest.venue}
             </div>
-            <div className="mt-4 flex items-center justify-center gap-3">
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
               {kq.guest.isVip && <span className="chip bg-gold/15 text-gold-deep">VIP</span>}
               {kq.guest.ban && <span className="chip bg-ink text-ivory">{kq.guest.ban}</span>}
-              <span className="chip bg-ivory-deep text-ink-soft">
-                {kq.guest.soNguoiXacNhan ?? kq.guest.soNguoiMoi} nguoi
-              </span>
+              <span className="chip bg-ivory-deep text-ink-soft">{kq.guest.soNguoiXacNhan ?? kq.guest.soNguoiMoi} người</span>
             </div>
-            {kq.canhBao && (
-              <div className="mt-4 rounded-xl bg-gold/10 px-3 py-2 text-xs text-gold-deep">{kq.canhBao}</div>
-            )}
+            {kq.canhBao && <div className="mt-4 rounded-xl bg-gold/10 px-3 py-2 text-xs text-gold-deep">{kq.canhBao}</div>}
           </div>
         )}
         <div className="px-6 pb-5">
-          <button className="btn-ink w-full" onClick={onDong}>
-            Tiep tuc
-          </button>
+          {kq.hetPhien ? (
+            <a href="/dang-nhap?tiep=/checkin" className="btn-ink w-full">
+              Đăng nhập lại
+            </a>
+          ) : (
+            <button className="btn-ink w-full" onClick={onDong}>
+              Tiếp tục
+            </button>
+          )}
         </div>
       </div>
     </div>

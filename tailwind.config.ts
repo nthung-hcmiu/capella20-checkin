@@ -23,8 +23,8 @@ const config: Config = {
         sage: "#5c6b4f",
       },
       fontFamily: {
-        serif: ["Georgia", "Cambria", "Times New Roman", "serif"],
-        sans: ["system-ui", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif"],
+        serif: ["Playfair Display", "Georgia", "Times New Roman", "serif"],
+        sans: ["Be Vietnam Pro", "system-ui", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif"],
       },
       boxShadow: {
         card: "0 1px 2px rgba(26,22,19,0.04), 0 8px 24px rgba(26,22,19,0.06)",

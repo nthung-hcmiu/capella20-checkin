@@ -46,9 +46,8 @@ Dung cach thu cong:
 
 - **Domain that** (vi du `thiep.capella.vn`): Vercel > **Settings > Domains** them domain,
   roi them bien `NEXT_PUBLIC_BASE_URL=https://thiep.capella.vn` va Redeploy de QR tro ve domain nay.
-- **Gieo lai du lieu mau**: them bien `SETUP_KEY` (chuoi bi mat tu dat), Redeploy, roi mo
-  `https://<app>/api/setup?key=<SETUP_KEY>&seed=1`. Lenh nay xoa het va gieo lai, chi dung cho demo.
-- **Truoc khi nhap khach that**: phai xoa du lieu mau. Bao lai de them nut xoa sach co xac nhan.
+- **Nap lai du lieu mau / xoa danh sach**: trang `/admin/du-lieu` (chi BTC).
+- **Truoc khi nhap khach that**: vao `/admin/du-lieu`, xuat CSV sao luu, roi Xoa toan bo danh sach khach.
 
 ---
 

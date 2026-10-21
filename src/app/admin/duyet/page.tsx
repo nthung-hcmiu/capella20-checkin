@@ -1,10 +1,12 @@
 import { prisma } from "@/lib/db";
+import { yeuCauTrang } from "@/lib/auth";
 import { TRANG_THAI } from "@/lib/constants";
 import { ApproveQueue, ChoDuyetItem } from "@/components/ApproveQueue";
 
 export const dynamic = "force-dynamic";
 
 export default async function DuyetPage() {
+  await yeuCauTrang(["ADMIN"], "/admin/duyet");
   const ds = await prisma.guest.findMany({
     where: { trangThai: TRANG_THAI.CHO_DUYET },
     include: { venue: true },
@@ -47,9 +49,9 @@ export default async function DuyetPage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="font-display text-2xl text-ink">Cho duyet</h1>
+        <h1 className="font-display text-2xl text-ink">Chờ duyệt</h1>
         <p className="mt-1 text-sm text-ink-muted">
-          BTC chong trung va duyet VIP. {items.length} truong hop dang cho.
+          BTC chống trùng và duyệt VIP. {items.length} trường hợp đang chờ.
         </p>
       </div>
       <ApproveQueue items={items} />

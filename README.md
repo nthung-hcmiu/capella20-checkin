@@ -40,13 +40,14 @@ npm run build     # build production
 
 Trang chu `/` la cong vao ca bon phan he.
 
-## Tai khoan mau (demo chua co dang nhap bat buoc)
+## Dang nhap va phan quyen
 
-- BTC: `btc` / `capella20`
-- Le tan: `letan1` ... `letan12` / `le123`
-- Sales: `thuha`, `minhquan`, `ngoclan`, `giabao`, `khanhvy`, `quochung` / `sale123`
-
-Ban v1 chua gan xac thuc dang nhap, chi phan vai o giao dien. Khi len production can them Supabase Auth hoac NextAuth (xem muc Buoc tiep theo).
+- Khong co mat khau mac dinh nao trong code (repo cong khai).
+- Lan dau: build tren Vercel in dong `[capella] Ma khoi tao tai khoan BTC: XXXXXXXXXX` trong Build Logs.
+  Mo `/dang-nhap` > Khoi tao tai khoan BTC, nhap ma do de tao tai khoan BTC dau tien.
+- BTC tao tai khoan sales, le tan trong trang `/admin/tai-khoan`. Tai khoan mau (sales, le tan) chua co mat khau,
+  BTC dat mat khau chung hoac rieng tung nguoi.
+- BTC vao moi phan he. Sales chi thay khach co cot sales trung ho ten cua minh. Le tan chi vao `/checkin`.
 
 ## Nam nguyen tac da cai vao he thong
 
@@ -100,9 +101,8 @@ src/components/        giao dien dung chung
 
 ## Con thieu cho production (de xuat)
 
-- Dang nhap va phan quyen that (Supabase Auth / NextAuth) cho BTC, sales, le tan.
 - Check in offline: hang doi cuc bo (IndexedDB) va dong bo khi co mang.
-- Xuat sticker QR ca nhan (phuong an thiep B) va xuat danh sach ra Excel.
+- Xuat sticker QR ca nhan (phuong an thiep B).
 - Gui thiep qua Zalo / kenh da chon, nhac han xac nhan 07/11.
 - Nhat ky thao tac va dong bo CRM sau su kien.
 ```

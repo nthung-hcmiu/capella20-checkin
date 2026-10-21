@@ -12,8 +12,8 @@ export function Brand({ sub, light }: { sub?: string; light?: boolean }) {
         <div className={`font-display text-base ${light ? "text-ivory" : "text-ink"}`}>
           CAPELLA <span className="text-gold">20</span>
         </div>
-        <div className={`text-[11px] uppercase tracking-[0.2em] ${light ? "text-ivory/60" : "text-ink-muted"}`}>
-          {sub || "Dem tri an"}
+        <div className={`text-[11px] uppercase tracking-[0.18em] ${light ? "text-ivory/60" : "text-ink-muted"}`}>
+          {sub || "Đêm tri ân"}
         </div>
       </div>
     </div>

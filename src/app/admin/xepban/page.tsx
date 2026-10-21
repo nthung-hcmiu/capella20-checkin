@@ -1,10 +1,12 @@
 import { prisma } from "@/lib/db";
+import { yeuCauTrang } from "@/lib/auth";
 import { TRANG_THAI } from "@/lib/constants";
 import { TableBoard, BanRow } from "@/components/TableBoard";
 
 export const dynamic = "force-dynamic";
 
 export default async function XepBanPage() {
+  await yeuCauTrang(["ADMIN"], "/admin/xepban");
   const ds = await prisma.guest.findMany({
     where: { trangThai: { in: [TRANG_THAI.THAM_DU, TRANG_THAI.DA_CHECKIN] } },
     include: { venue: true },

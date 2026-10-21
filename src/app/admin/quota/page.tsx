@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { yeuCauTrang } from "@/lib/auth";
 import { TRANG_THAI, CHISO } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
@@ -9,6 +10,7 @@ const CHIEM = [
 ];
 
 export default async function QuotaPage() {
+  await yeuCauTrang(["ADMIN"], "/admin/quota");
   const venues = await prisma.venue.findMany({ orderBy: { thuTu: "asc" } });
   const guests = await prisma.guest.findMany({ select: { venueId: true, trangThai: true } });
 
@@ -17,7 +19,7 @@ export default async function QuotaPage() {
       <div>
         <h1 className="font-display text-2xl text-ink">Quota venue</h1>
         <p className="mt-1 text-sm text-ink-muted">
-          Quota binh quan {CHISO.quotaBinhQuan} thiep moi venue sau khi giu 10% cho BOD/BTC.
+          Quota bình quân {CHISO.quotaBinhQuan} thiệp mỗi venue sau khi giữ 10% cho BOD/BTC.
         </p>
       </div>
 
@@ -37,14 +39,14 @@ export default async function QuotaPage() {
                     <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: v.mauSac }} />
                     {v.ten}
                   </span>
-                  <span className="text-xs text-ink-muted">{v.rangeStart}-{v.rangeEnd}</span>
+                  <span className="text-xs text-ink-muted">{v.rangeStart} đến {v.rangeEnd}</span>
                 </div>
                 <div className="mt-4 flex items-end justify-between">
                   <div>
                     <span className="font-display text-2xl text-ink">{dung}</span>
-                    <span className="text-sm text-ink-muted"> / {v.quota || "khong gioi han"}</span>
+                    <span className="text-sm text-ink-muted"> / {v.quota || "không giới hạn"}</span>
                   </div>
-                  {cho > 0 && <span className="chip bg-ivory-deep text-ink-soft">{cho} cho</span>}
+                  {cho > 0 && <span className="chip bg-ivory-deep text-ink-soft">{cho} đang chờ</span>}
                 </div>
                 <div className="mt-2 h-2 overflow-hidden rounded-full bg-ivory-deep">
                   <div
@@ -55,9 +57,9 @@ export default async function QuotaPage() {
                 <div className="mt-2 text-xs text-ink-muted">
                   {v.quota > 0
                     ? vuot
-                      ? "Da day quota, khach moi vao danh sach cho"
-                      : `Con ${v.quota - dung} thiep`
-                    : "Dai dac biet, khong tinh quota"}
+                      ? "Đã đầy quota, khách mới vào danh sách chờ"
+                      : `Còn ${v.quota - dung} thiệp`
+                    : "Dải đặc biệt, không tính quota"}
                 </div>
               </div>
             );

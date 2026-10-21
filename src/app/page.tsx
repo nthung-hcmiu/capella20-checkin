@@ -1,7 +1,10 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Brand } from "@/components/Brand";
+import { UserBar } from "@/components/UserBar";
 import { prisma } from "@/lib/db";
-import { CHISO, SU_KIEN, TRANG_THAI } from "@/lib/constants";
+import { layNguoiDung } from "@/lib/auth";
+import { CHISO, SU_KIEN, TRANG_THAI, TRANG_CHINH } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -9,98 +12,102 @@ const MODULES = [
   {
     href: "/sales",
     ma: "A",
-    ten: "Cong Sales",
-    thietBi: "Dien thoai",
-    mo: "Lap danh sach khach, theo doi quota, xem trang thai khach cua minh.",
+    ten: "Cổng Sales",
+    thietBi: "Điện thoại",
+    mo: "Lập danh sách khách, theo dõi quota, gửi thiệp và xem trạng thái khách của mình.",
     mau: "#b08d42",
+    vaiTro: ["ADMIN", "SALES"],
   },
   {
     href: "/admin",
     ma: "B",
-    ten: "Quan tri BTC",
-    thietBi: "May tinh",
-    mo: "Chong trung, duyet VIP, phan quota, phat hanh thiep, xep ban, bao cao.",
+    ten: "Quản trị BTC",
+    thietBi: "Máy tính",
+    mo: "Chống trùng, duyệt VIP, phân quota, nhập danh sách, phát hành thiệp, xếp bàn, báo cáo.",
     mau: "#6b2b36",
+    vaiTro: ["ADMIN"],
   },
   {
     href: "/thiep/demo",
     ma: "C",
-    ten: "Trang thiep khach",
-    thietBi: "Cong khai",
-    mo: "Khach quet QR, nhap so thu tu va 4 so cuoi SDT de xac nhan tham du.",
+    ten: "Trang thiệp khách",
+    thietBi: "Công khai",
+    mo: "Khách quét QR, nhập số thứ tự và 4 số cuối điện thoại để xác nhận tham dự.",
     mau: "#5c6b4f",
+    vaiTro: ["ADMIN"],
   },
   {
     href: "/checkin",
     ma: "D",
     ten: "App check in",
-    thietBi: "Le tan theo ca",
-    mo: "Quet QR, nhap so, tim ten hoac SDT. Moi ma check in mot lan.",
+    thietBi: "Lễ tân theo ca",
+    mo: "Quét QR, nhập số, tìm tên hoặc số điện thoại. Mỗi mã chỉ check in một lần.",
     mau: "#3a5a6b",
+    vaiTro: ["ADMIN", "LE_TAN"],
   },
 ];
 
-async function laySo() {
-  const [tong, xacNhan, checkin, phatHanh] = await Promise.all([
-    prisma.guest.count(),
-    prisma.guest.count({
-      where: { trangThai: { in: [TRANG_THAI.THAM_DU, TRANG_THAI.DA_CHECKIN] } },
-    }),
-    prisma.guest.count({ where: { trangThai: TRANG_THAI.DA_CHECKIN } }),
-    prisma.guest.count({
-      where: {
-        trangThai: {
-          in: [
-            TRANG_THAI.DA_PHAT_HANH, TRANG_THAI.DA_MOI, TRANG_THAI.THAM_DU,
-            TRANG_THAI.CHUA_PHAN_HOI, TRANG_THAI.KHONG_THAM_DU, TRANG_THAI.DA_CHECKIN,
-          ],
-        },
-      },
-    }),
-  ]);
-  return { tong, xacNhan, checkin, phatHanh };
-}
+export default async function Home({ searchParams }: { searchParams: { khongQuyen?: string } }) {
+  const u = await layNguoiDung();
+  if (!u) redirect("/dang-nhap");
+  if (u.doiMatKhau) redirect("/doi-mat-khau");
+  // Sales va le tan chi co mot phan he, dua thang vao
+  if (u.vaiTro !== "ADMIN" && !searchParams.khongQuyen) redirect(TRANG_CHINH[u.vaiTro] || "/dang-nhap");
 
-export default async function Home() {
-  const so = await laySo();
+  const [tong, xacNhan, checkin] = await Promise.all([
+    prisma.guest.count(),
+    prisma.guest.count({ where: { trangThai: { in: [TRANG_THAI.THAM_DU, TRANG_THAI.DA_CHECKIN] } } }),
+    prisma.guest.count({ where: { trangThai: TRANG_THAI.DA_CHECKIN } }),
+  ]);
+  const modules = MODULES.filter((m) => m.vaiTro.includes(u.vaiTro));
 
   return (
     <main className="min-h-screen">
-      {/* Hero */}
       <section className="bg-ink text-ivory">
         <div className="mx-auto max-w-5xl px-5 pt-6 pb-14">
-          <Brand light sub="He thong khach moi" />
+          <div className="flex items-center justify-between gap-3">
+            <Brand light sub="Hệ thống khách mời" />
+            <UserBar u={u} light />
+          </div>
           <div className="mt-12 text-center">
-            <div className="text-xs uppercase tracking-[0.35em] text-gold-soft">Dem tri an khach hang</div>
-            <h1 className="mt-4 font-display text-4xl sm:text-5xl text-ivory">
-              Capella <span className="text-gold-soft">20 nam</span>
+            <div className="text-xs uppercase tracking-[0.3em] text-gold-soft">Đêm tri ân khách hàng</div>
+            <h1 className="mt-4 font-display text-4xl text-ivory sm:text-5xl">
+              Capella <span className="text-gold-soft">20 năm</span>
             </h1>
             <div className="mx-auto mt-5 deco-line w-40" />
             <p className="mt-5 text-sm text-ivory/70">
-              {SU_KIEN.ngay} &middot; {SU_KIEN.diaDiem} &middot; {SU_KIEN.soKhach} khach &middot; 5 venue
+              {SU_KIEN.ngay} · {SU_KIEN.diaDiem} · {SU_KIEN.soKhach} khách · 5 venue
             </p>
           </div>
         </div>
       </section>
 
-      {/* Con so */}
-      <section className="mx-auto max-w-5xl px-5 -mt-8">
-        <div className="card grid grid-cols-2 gap-px overflow-hidden bg-ivory-deep sm:grid-cols-4">
-          <SoDemo nhan="Nguong xac nhan" so={CHISO.nguongXacNhan} chu="nguoi muc tieu" />
-          <SoDemo nhan="Thiep phat hanh" so={CHISO.soThiepPhatHanh} chu="du kien" />
-          <SoDemo nhan="Da xac nhan" so={so.xacNhan} chu={`/ ${so.tong} khach trong he`} />
-          <SoDemo nhan="Da check in" so={so.checkin} chu="tren he thong" />
+      {searchParams.khongQuyen && (
+        <div className="mx-auto mt-6 max-w-5xl px-5">
+          <div className="rounded-xl bg-wine/10 px-4 py-3 text-sm text-wine">
+            Tài khoản của bạn không được vào trang vừa mở.
+          </div>
         </div>
-      </section>
+      )}
 
-      {/* 4 phan he */}
+      {u.vaiTro === "ADMIN" && (
+        <section className="mx-auto -mt-8 max-w-5xl px-5">
+          <div className="card grid grid-cols-2 gap-px overflow-hidden bg-ivory-deep sm:grid-cols-4">
+            <SoDemo nhan="Ngưỡng xác nhận" so={CHISO.nguongXacNhan} chu="người mục tiêu" />
+            <SoDemo nhan="Thiệp phát hành" so={CHISO.soThiepPhatHanh} chu="dự kiến" />
+            <SoDemo nhan="Đã xác nhận" so={xacNhan} chu={`/ ${tong} khách trong hệ thống`} />
+            <SoDemo nhan="Đã check in" so={checkin} chu="trên hệ thống" />
+          </div>
+        </section>
+      )}
+
       <section className="mx-auto max-w-5xl px-5 py-12">
         <div className="mb-6 flex items-end justify-between">
-          <h2 className="font-display text-2xl text-ink">Bon phan he</h2>
-          <span className="text-xs text-ink-muted">Mot co so du lieu chung</span>
+          <h2 className="font-display text-2xl text-ink">Các phân hệ</h2>
+          <span className="text-xs text-ink-muted">Một cơ sở dữ liệu chung</span>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
-          {MODULES.map((m) => (
+          {modules.map((m) => (
             <Link key={m.href} href={m.href} className="group card p-6 transition hover:-translate-y-0.5 hover:shadow-lg">
               <div className="flex items-start gap-4">
                 <div
@@ -110,14 +117,13 @@ export default async function Home() {
                   {m.ma}
                 </div>
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <h3 className="font-display text-lg text-ink">{m.ten}</h3>
                     <span className="chip bg-ivory-deep text-ink-muted">{m.thietBi}</span>
                   </div>
                   <p className="mt-1.5 text-sm text-ink-soft">{m.mo}</p>
                   <span className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-gold group-hover:gap-2">
-                    Mo phan he
-                    <span aria-hidden>&rarr;</span>
+                    Mở phân hệ <span aria-hidden>→</span>
                   </span>
                 </div>
               </div>
@@ -126,29 +132,27 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Vong doi khach */}
-      <section className="mx-auto max-w-5xl px-5 pb-16">
-        <div className="card p-6">
-          <h2 className="font-display text-lg text-ink">Vong doi khach</h2>
-          <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
-            {[
-              "Nhap", "Cho duyet / Danh sach cho", "Da phat hanh", "Da moi",
-              "Tham du / Chua phan hoi / Khong tham du", "Da check in / Vang mat",
-            ].map((b, i, arr) => (
-              <span key={b} className="flex items-center gap-2">
-                <span className="chip bg-ivory-deep text-ink-soft">{b}</span>
-                {i < arr.length - 1 && <span className="text-gold">&rarr;</span>}
-              </span>
-            ))}
+      {u.vaiTro === "ADMIN" && (
+        <section className="mx-auto max-w-5xl px-5 pb-16">
+          <div className="card p-6">
+            <h2 className="font-display text-lg text-ink">Vòng đời khách</h2>
+            <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
+              {[
+                "Nháp", "Chờ duyệt / Danh sách chờ", "Đã phát hành", "Đã mời",
+                "Tham dự / Chưa phản hồi / Không tham dự", "Đã check in / Vắng mặt",
+              ].map((b, i, arr) => (
+                <span key={b} className="flex items-center gap-2">
+                  <span className="chip bg-ivory-deep text-ink-soft">{b}</span>
+                  {i < arr.length - 1 && <span className="text-gold">→</span>}
+                </span>
+              ))}
+            </div>
+            <p className="mt-4 text-xs text-ink-muted">
+              Hủy được ở mọi bước trước sự kiện, mã thiệp mất hiệu lực. Các con số mục tiêu là giả định mặc định, BTC chỉnh sau.
+            </p>
           </div>
-          <p className="mt-4 text-xs text-ink-muted">
-            Huy duoc o moi buoc truoc su kien, ma vo hieu. Con so tren la gia dinh mac dinh, BTC chinh sau.
-          </p>
-        </div>
-        <p className="mt-6 text-center text-xs text-ink-muted">
-          Ban demo v1 &middot; du lieu mau &middot; dung de BTC trai nghiem va chot flow
-        </p>
-      </section>
+        </section>
+      )}
     </main>
   );
 }

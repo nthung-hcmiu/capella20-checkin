@@ -20,13 +20,13 @@ export async function sinhMaBiMatDuyNhat(): Promise<string> {
     const trung = await prisma.guest.findUnique({ where: { maBiMat: ma } });
     if (!trung) return ma;
   }
-  throw new Error("Khong sinh duoc ma bi mat duy nhat");
+  throw new Error("Không sinh được mã thiệp, hãy thử lại");
 }
 
 // Cap so thu tu tiep theo con trong trong dai cua venue
 export async function capSoThuTu(venueId: string): Promise<number> {
   const venue = await prisma.venue.findUnique({ where: { id: venueId } });
-  if (!venue) throw new Error("Khong tim thay venue");
+  if (!venue) throw new Error("Không tìm thấy venue");
 
   const daDung = await prisma.guest.findMany({
     where: { venueId, soThuTu: { gte: venue.rangeStart, lte: venue.rangeEnd } },
@@ -38,7 +38,7 @@ export async function capSoThuTu(venueId: string): Promise<number> {
   for (let n = venue.rangeStart; n <= venue.rangeEnd; n++) {
     if (!tapDaDung.has(n)) return n;
   }
-  throw new Error(`Het so thu tu cho dai ${venue.rangeStart}-${venue.rangeEnd}`);
+  throw new Error(`Đã hết số thứ tự trong dải ${venue.rangeStart} đến ${venue.rangeEnd}`);
 }
 
 // Noi dung QR: URL dieu huong theo ngu canh
