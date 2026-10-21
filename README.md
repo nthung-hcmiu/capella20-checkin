@@ -80,14 +80,10 @@ Huy duoc o moi buoc truoc su kien, ma vo hieu.
 
 Sua o `src/lib/constants.ts` (CHISO): nguong xac nhan 889, thiep phat hanh 977, quota binh quan 176 moi venue, 4 lan quet cong lan VIP cong quay ho tro, 12 le tan.
 
-## Chuyen sang Supabase (production)
+## Deploy production
 
-1. Tao project tren supabase.com, lay connection string o Project Settings > Database.
-2. Trong `prisma/schema.prisma`: doi `provider = "sqlite"` thanh `provider = "postgresql"` va bo comment dong `directUrl`.
-3. Trong `.env`: dat `DATABASE_URL` (cong 6543, pooler) va `DIRECT_URL` (cong 5432). Xem `.env.example`.
-4. Chay: `npx prisma migrate deploy` (hoac `prisma db push`) roi `npm run db:seed`.
-5. Dat `NEXT_PUBLIC_BASE_URL` ve domain that (vi du `https://thiep.capella.vn`) de QR va link thiep tro dung.
-6. Deploy len Vercel: import repo, dat bien moi truong, build command mac dinh.
+Xem `DEPLOY.md`: Vercel cong Supabase tich hop san, khoang 10 phut, khong can sua code hay dien bien moi truong.
+Build tren Vercel tu tao bang va tu gieo du lieu mau khi CSDL con trong.
 
 ## Cau truc thu muc
 

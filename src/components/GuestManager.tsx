@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { StatusBadge } from "./StatusBadge";
 import { NHAN_TRANG_THAI, TRANG_THAI } from "@/lib/constants";
-import { che4SoCuoi } from "@/lib/format";
+import { che4SoCuoi, boDau } from "@/lib/format";
 import { taoKhach, phatHanh, danhDauDaMoi, huyKhach, duyetKhach } from "@/lib/actions";
 
 export interface GuestRow {
@@ -49,9 +49,9 @@ export function GuestManager({
       if (tt && g.trangThai !== tt) return false;
       if (vn && g.venueId !== vn) return false;
       if (q) {
-        const s = q.toLowerCase();
+        const s = boDau(q);
         return (
-          g.hoTen.toLowerCase().includes(s) ||
+          boDau(g.hoTen).includes(s) ||
           g.sdt.includes(q) ||
           String(g.soThuTu).includes(q) ||
           g.maBiMat.toLowerCase().includes(s)

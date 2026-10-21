@@ -43,7 +43,9 @@ export async function capSoThuTu(venueId: string): Promise<number> {
 
 // Noi dung QR: URL dieu huong theo ngu canh
 export function urlQR(maBiMat: string, baseUrl?: string): string {
-  const base = baseUrl || process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
+  const base =
+    baseUrl || process.env.NEXT_PUBLIC_BASE_URL || (vercel ? `https://${vercel}` : "http://localhost:3000");
   return `${base}/q/${maBiMat}`;
 }
 

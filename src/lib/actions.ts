@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "./db";
 import { TRANG_THAI } from "./constants";
 import { capSoThuTu, sinhMaBiMatDuyNhat } from "./codes";
+import { chuanHoaSdt } from "./format";
 
 // Cac trang thai duoc tinh la dang chiem cho trong quota
 const CHIEM_QUOTA = [
@@ -40,7 +41,7 @@ export async function taoKhach(input: {
   ghiChu?: string;
 }): Promise<KetQuaTao> {
   const hoTen = input.hoTen?.trim();
-  const sdt = input.sdt?.trim().replace(/\s+/g, "");
+  const sdt = chuanHoaSdt(input.sdt);
   if (!hoTen || !sdt || !input.venueId) {
     return { ok: false, thongBao: "Thieu ho ten, SDT hoac venue" };
   }

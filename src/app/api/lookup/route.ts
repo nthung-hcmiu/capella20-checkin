@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { docMaTuQR } from "@/lib/codes";
+import { boDau } from "@/lib/format";
 
 // Tra cuu khach cho app check in: theo ma QR, so thu tu, ten hoac SDT
 export async function GET(req: NextRequest) {
@@ -25,16 +26,27 @@ export async function GET(req: NextRequest) {
 
   // 3. SDT hoac ten
   const theoSdt = /^\d{4,}$/.test(q);
-  const ds = await prisma.guest.findMany({
-    where: theoSdt
-      ? { sdt: { contains: q } }
-      : { hoTen: { contains: q } },
+  if (theoSdt) {
+    const ds = await prisma.guest.findMany({
+      where: { sdt: { contains: q } },
+      include: { venue: true },
+      take: 12,
+      orderBy: { soThuTu: "asc" },
+    });
+    return NextResponse.json({ ket_qua: ds.map(guiGon), nguon: "sdt" });
+  }
+
+  // Tim ten khong phan biet hoa thuong va dau (le tan go "nguyen" van ra "Nguyễn").
+  // Loc trong bo nho de chay giong nhau tren SQLite va Postgres; quy mo vai nghin khach van nhe.
+  const tuKhoa = boDau(q);
+  const tatCa = await prisma.guest.findMany({
     include: { venue: true },
-    take: 12,
     orderBy: { soThuTu: "asc" },
   });
-  return NextResponse.json({ ket_qua: ds.map(guiGon), nguon: theoSdt ? "sdt" : "ten" });
+  const ds = tatCa.filter((g) => boDau(g.hoTen).includes(tuKhoa)).slice(0, 12);
+  return NextResponse.json({ ket_qua: ds.map(guiGon), nguon: "ten" });
 }
+
 
 function guiGon(g: any) {
   return {
