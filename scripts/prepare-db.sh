@@ -1,7 +1,8 @@
 #!/bin/sh
 # Chay trong luc build tren Vercel: tao bang va gieo du lieu mau neu CSDL con trong.
-# Nhan DATABASE_URL dat tay, hoac bien tu tich hop Supabase / Neon cua Vercel.
-URL="${DATABASE_URL:-${POSTGRES_URL_NON_POOLING:-$DATABASE_URL_UNPOOLED}}"
+# Tao bang can ket noi truc tiep (khong qua pooler): uu tien bien unpooled cua Supabase / Neon,
+# sau do moi den DATABASE_URL dat tay.
+URL="${POSTGRES_URL_NON_POOLING:-${DATABASE_URL_UNPOOLED:-$DATABASE_URL}}"
 if [ -z "$URL" ]; then
   echo "[capella] Chua ket noi CSDL, bo qua buoc tao bang. Ket noi Storage roi Redeploy."
   exit 0

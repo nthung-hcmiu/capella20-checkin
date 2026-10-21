@@ -14,10 +14,10 @@ Repo tu tao bang va tu gieo du lieu mau trong luc build.
 2. Khong sua gi. Bam **Deploy**.
 3. Build se xanh. Mo link luc nay se bao loi vi **chua co co so du lieu**. Dung roi, sang buoc 3.
 
-## Buoc 3. Gan co so du lieu Supabase ngay trong Vercel
+## Buoc 3. Gan co so du lieu (Neon hoac Supabase) ngay trong Vercel
 
 1. Vao project vua tao > tab **Storage** > **Create Database** (hoac **Browse Marketplace**).
-2. Chon **Supabase** > **Continue**. Chon goi **Free**, region **Singapore**, dat ten tuy y > **Create**.
+2. Chon **Neon** (hoac **Supabase** neu tai khoan con slot Free) > **Continue**. Chon goi **Free**, region **Singapore**, dat ten tuy y > **Create**.
 3. Khi duoc hoi gan vao project: chon `capella20-checkin`, tich du **Production / Preview / Development** > **Connect**.
 
 Vercel tu dua thong tin ket noi vao project. Khong can tai khoan Supabase rieng.

@@ -1,20 +1,21 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { chuoiKetNoi, tenBienDangDung } from "@/lib/dbUrl";
 
 export const dynamic = "force-dynamic";
 
 // Chan doan nhanh khi deploy: co bien ket noi nao, noi duoc CSDL chua, da co bang chua.
 // Chi tra ve co/khong va ten may chu, khong lo mat khau.
 export async function GET() {
-  const ten = ["DATABASE_URL", "POSTGRES_PRISMA_URL", "POSTGRES_URL", "POSTGRES_URL_NON_POOLING", "DATABASE_URL_UNPOOLED"];
+  const ten = ["POSTGRES_PRISMA_URL", "DATABASE_URL", "POSTGRES_URL", "POSTGRES_URL_NON_POOLING", "DATABASE_URL_UNPOOLED"];
   const bien: Record<string, boolean> = {};
   for (const t of ten) bien[t] = !!process.env[t];
-  const dangDung = ten.slice(0, 3).find((t) => process.env[t]) || null;
+  const dangDung = tenBienDangDung();
 
   let mayChu: string | null = null;
   if (dangDung) {
     try {
-      const u = new URL(process.env[dangDung]!);
+      const u = new URL(chuoiKetNoi()!);
       mayChu = `${u.hostname}:${u.port || "5432"}`;
     } catch {
       mayChu = "chuoi ket noi khong dung dinh dang URL";
@@ -32,7 +33,7 @@ export async function GET() {
   }
 
   const chanDoan = !dangDung
-    ? "Chua co bien ket noi CSDL. Vao Storage gan Supabase vao project (hoac them DATABASE_URL) roi Redeploy."
+    ? "Chua co bien ket noi CSDL. Vao Storage gan Neon hoac Supabase vao project (hoac them DATABASE_URL) roi Redeploy."
     : ketNoi !== "ok" && soKhach === null && /does not exist|P2021/i.test(ketNoi)
     ? "Noi duoc CSDL nhung chua co bang. Redeploy de buoc build tao bang."
     : ketNoi !== "ok"
