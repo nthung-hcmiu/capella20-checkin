@@ -15,9 +15,9 @@ function o(v: unknown): string {
 
 // Xuat toan bo danh sach khach ra CSV (UTF-8 co BOM de Excel doc dung tieng Viet)
 export async function GET() {
-  if (!(await yeuCauQuyen(["ADMIN"]))) {
-    return NextResponse.json({ loi: "Chỉ BTC được xuất danh sách" }, { status: 401 });
-  }
+  const u = await yeuCauQuyen(["ADMIN"]);
+  if (!u) return NextResponse.json({ loi: "Chỉ Quản trị được xuất danh sách" }, { status: 401 });
+  if (!u.quanTri) return NextResponse.json({ loi: "Chỉ Quản trị được xuất danh sách" }, { status: 403 });
   const ds = await prisma.guest.findMany({ include: { venue: true }, orderBy: { soThuTu: "asc" } });
   // Thu tu cot theo mau danh sach cac nam truoc, roi den cac cot cua he thong
   const tieuDe = [

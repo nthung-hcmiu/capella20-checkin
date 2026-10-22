@@ -56,8 +56,8 @@ Huong dan su dung cho tung vai tro nam ngay trong app: `/huong-dan`.
   Mo `/dang-nhap` > Khoi tao tai khoan BTC, nhap ma do de tao tai khoan BTC dau tien.
 - BTC tao tai khoan sales, le tan trong trang `/admin/tai-khoan`. Tai khoan mau (sales, le tan) chua co mat khau,
   BTC dat mat khau chung hoac rieng tung nguoi.
-- Tai khoan BTC tao bang ma khoi tao (hoac nthung) la Quan tri: tao tai khoan, dat mat khau cho nguoi khac, vao tab Du lieu.
-  Cac tai khoan BTC khac khong lam duoc ba viec do.
+- Tai khoan BTC tao bang ma khoi tao (hoac nthung) la Quan tri: tao tai khoan, dat mat khau cho nguoi khac, xuat CSV, vao tab Du lieu.
+  Cac tai khoan BTC khac khong lam duoc cac viec do.
 - BTC vao moi phan he. Sales chi thay khach co cot sales trung ho ten cua minh. Le tan chi vao `/checkin`.
 
 ## Nam nguyen tac da cai vao he thong

@@ -37,12 +37,12 @@ const HUONG_DAN: VaiTro[] = [
         tieuDe: "Sau sự kiện (Quản trị)",
         buoc: [
           ["Chốt vắng mặt", "Dữ liệu > Chốt vắng mặt: khách Tham dự mà không check in chuyển sang Vắng mặt."],
-          ["Báo cáo", "Dữ liệu > Tải file CSV, hoặc Danh sách khách > Xuất CSV."],
+          ["Báo cáo", "Dữ liệu > Tải file CSV, hoặc Danh sách khách > Xuất CSV. Chỉ Quản trị thấy nút này."],
         ],
       },
     ],
     luuY: [
-      "Chỉ tài khoản Quản trị được tạo tài khoản, đặt mật khẩu cho người khác và vào tab Dữ liệu. Tài khoản BTC khác chỉ xem danh sách tài khoản.",
+      "Chỉ tài khoản Quản trị được tạo tài khoản, đặt mật khẩu cho người khác, xuất CSV và vào tab Dữ liệu. Tài khoản BTC khác chỉ xem danh sách tài khoản.",
       "Xóa toàn bộ danh sách không hoàn tác được. Luôn tải CSV sao lưu trước.",
       "BTC cũng xác nhận thay khách và sửa thông tin được ngay trong dòng khách đã mở.",
     ],

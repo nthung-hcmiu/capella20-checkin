@@ -45,10 +45,12 @@ export function GuestManager({
   guests,
   venues,
   salesTeam,
+  quanTri,
 }: {
   guests: GuestRow[];
   venues: VenueOpt[];
   salesTeam: string[];
+  quanTri: boolean;
 }) {
   const [q, setQ] = useState("");
   const [tt, setTt] = useState("");
@@ -96,9 +98,11 @@ export function GuestManager({
           <Link href="/admin/nhap" className="btn-ghost">
             Nhập từ Excel
           </Link>
-          <a href="/api/xuat" className="btn-ghost">
-            Xuất CSV
-          </a>
+          {quanTri && (
+            <a href="/api/xuat" className="btn-ghost">
+              Xuất CSV
+            </a>
+          )}
           <a href="/in-qr" target="_blank" className="btn-ghost">
             In QR thiệp giấy
           </a>

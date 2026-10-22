@@ -30,7 +30,7 @@ export function AccountManager({ ds, quanTri }: { ds: TaiKhoanRow[]; quanTri: bo
           <h1 className="font-display text-2xl text-ink">Tài khoản</h1>
           <p className="mt-1 text-sm text-ink-muted">
             BTC vào mọi phân hệ. Sales chỉ thấy khách mang đúng họ tên của mình. Lễ tân chỉ vào app check in.
-            {" "}Chỉ Quản trị được tạo tài khoản, đặt mật khẩu cho người khác và vào tab Dữ liệu.
+            {" "}Chỉ Quản trị được tạo tài khoản, đặt mật khẩu cho người khác, xuất CSV và vào tab Dữ liệu.
           </p>
         </div>
         {quanTri && (
