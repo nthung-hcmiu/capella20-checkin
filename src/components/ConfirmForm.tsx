@@ -9,6 +9,7 @@ export function ConfirmForm({
   trangThai,
   goiYSo,
   goiYLast4,
+  canSdt = true,
 }: {
   ma: string;
   soNguoiMoi: number;
@@ -16,6 +17,7 @@ export function ConfirmForm({
   trangThai: string;
   goiYSo?: number;
   goiYLast4?: string;
+  canSdt?: boolean;
 }) {
   const [soThuTu, setSoThuTu] = useState("");
   const [last4, setLast4] = useState("");
@@ -55,10 +57,11 @@ export function ConfirmForm({
     <div className="space-y-4">
       {goiYSo && (
         <div className="rounded-xl border border-dashed border-gold/40 bg-gold/5 px-4 py-2.5 text-xs text-gold-deep">
-          Bản demo dành cho BTC: số thứ tự <b>{goiYSo}</b>, 4 số cuối điện thoại <b>{goiYLast4}</b>
+          Bản demo dành cho BTC: số thứ tự <b>{goiYSo}</b>
+          {goiYLast4 && <>, 4 số cuối điện thoại <b>{goiYLast4}</b></>}
         </div>
       )}
-      <div className="grid grid-cols-2 gap-3">
+      <div className={`grid gap-3 ${canSdt ? "grid-cols-2" : "grid-cols-1"}`}>
         <div>
           <label className="label">Số thứ tự trên thiệp</label>
           <input
@@ -69,7 +72,7 @@ export function ConfirmForm({
             placeholder="1234"
           />
         </div>
-        <div>
+        {canSdt && <div>
           <label className="label">4 số cuối điện thoại</label>
           <input
             inputMode="numeric"
@@ -79,7 +82,7 @@ export function ConfirmForm({
             onChange={(e) => setLast4(e.target.value)}
             placeholder="5678"
           />
-        </div>
+        </div>}
       </div>
 
       <div>

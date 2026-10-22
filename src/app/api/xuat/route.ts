@@ -19,16 +19,25 @@ export async function GET() {
     return NextResponse.json({ loi: "Chỉ BTC được xuất danh sách" }, { status: 401 });
   }
   const ds = await prisma.guest.findMany({ include: { venue: true }, orderBy: { soThuTu: "asc" } });
+  // Thu tu cot theo mau danh sach cac nam truoc, roi den cac cot cua he thong
   const tieuDe = [
-    "Số thứ tự", "Họ tên", "Số điện thoại", "Venue", "Số người mời", "Số người xác nhận",
-    "Trạng thái", "VIP", "Bàn", "Sales phụ trách", "Ghi chú", "Mã thiệp", "Link thiệp", "Giờ check in",
+    "STT", "Đơn vị", "Nhóm khách mời", "Thuộc đơn vị kinh doanh", "Mã CORP Netsuite", "Company Name", "Nhóm khách",
+    "Lĩnh vực", "Danh xưng", "Tên khách mời", "Chức vụ", "Số điện thoại", "Số lượng người tham dự", "Phân loại khách",
+    "Phân loại khách VIP", "Doanh thu dự kiến", "Round 1: Khách đã nhận thiệp online", "Round 2: Đã gửi thiệp giấy",
+    "Line ghế", "Số ghế cho khách VIP", "Họ và tên người phụ trách tiếp khách", "Phòng ban", "Ghi chú",
+    "Số thứ tự thiệp", "Trạng thái", "Số người xác nhận", "Số người thực tế đến", "Giờ check in", "Mã thiệp", "Link thiệp",
   ];
-  const dong = ds.map((g) =>
+  const daNhanOnline = ["DA_MOI", "THAM_DU", "CHUA_PHAN_HOI", "KHONG_THAM_DU", "DA_CHECKIN", "VANG_MAT"];
+  const dong = ds.map((g, i) =>
     [
-      o(g.soThuTu), o(g.hoTen), `="${g.sdt}"`, o(g.venue.ten), o(g.soNguoiMoi), o(g.soNguoiXacNhan ?? ""),
-      o(NHAN_TRANG_THAI[g.trangThai] || g.trangThai), o(g.isVip ? "x" : ""), o(g.ban ?? ""), o(g.salesOwner),
-      o(g.ghiChu ?? ""), o(g.maBiMat), o(urlQR(g.maBiMat)),
+      o(i + 1), o(g.venue.ten), o(g.nhomKhachMoi), o(g.donViKinhDoanh), o(g.maCorp), o(g.congTy), o(g.nhomKhach),
+      o(g.linhVuc), o(g.danhXung), o(g.hoTen), o(g.chucVu), g.sdt ? `="${g.sdt}"` : o(""), o(g.soNguoiMoi), o(g.nguonKhach),
+      o(g.isVip ? "VIP" : "THƯỜNG"), o(g.doanhThuDuKien), o(daNhanOnline.includes(g.trangThai) ? "ĐÃ NHẬN" : ""),
+      o(g.daGuiThiepGiay ? "ĐÃ GỬI" : ""), o(g.ban), o(g.soGhe), o(g.salesOwner), o(g.phongBan), o(g.ghiChu),
+      o(g.soThuTu), o(NHAN_TRANG_THAI[g.trangThai] || g.trangThai), o(g.soNguoiXacNhan ?? ""),
+      o(g.soNguoiDen ?? ""),
       o(g.checkinLuc ? g.checkinLuc.toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }) : ""),
+      o(g.maBiMat), o(urlQR(g.maBiMat)),
     ].join(",")
   );
   const csv = "﻿" + [tieuDe.map(o).join(","), ...dong].join("\r\n");

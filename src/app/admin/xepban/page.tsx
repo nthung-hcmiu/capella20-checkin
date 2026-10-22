@@ -21,6 +21,9 @@ export default async function XepBanPage() {
     venueMau: g.venue.mauSac,
     soNguoi: g.soNguoiXacNhan ?? g.soNguoiMoi,
     ban: g.ban,
+    soGhe: g.soGhe,
+    danhXung: g.danhXung,
+    congTy: g.congTy,
     isVip: g.isVip,
   }));
 

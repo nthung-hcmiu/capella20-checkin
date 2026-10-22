@@ -47,7 +47,10 @@ export async function GET(req: NextRequest) {
     include: { venue: true },
     orderBy: { soThuTu: "asc" },
   });
-  const ds = tatCa.filter((g) => boDau(g.hoTen).includes(tuKhoa)).slice(0, 12);
+  // Tim theo ten khach truoc, sau do moi den ten cong ty
+  const theoTen = tatCa.filter((g) => boDau(g.hoTen).includes(tuKhoa));
+  const theoCty = tuKhoa.length >= 3 ? tatCa.filter((g) => !theoTen.includes(g) && boDau(g.congTy || "").includes(tuKhoa)) : [];
+  const ds = [...theoTen, ...theoCty].slice(0, 15);
   return NextResponse.json({ ket_qua: ds.map(guiGon), nguon: "ten" });
 }
 
@@ -58,6 +61,10 @@ function guiGon(g: any) {
     soThuTu: g.soThuTu,
     maBiMat: g.maBiMat,
     hoTen: g.hoTen,
+    danhXung: g.danhXung,
+    chucVu: g.chucVu,
+    congTy: g.congTy,
+    soGhe: g.soGhe,
     sdt: g.sdt,
     venue: g.venue?.ten,
     venueCode: g.venue?.code,

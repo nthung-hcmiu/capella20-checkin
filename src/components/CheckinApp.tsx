@@ -3,11 +3,17 @@
 import { useEffect, useRef, useState } from "react";
 import { LAN_CHECKIN } from "@/lib/constants";
 import { dinhDangGioNgan } from "@/lib/format";
+import { tenGoi } from "@/lib/khach";
 
 interface KhachGon {
   id: string;
   soThuTu: number;
   hoTen: string;
+  danhXung?: string | null;
+  chucVu?: string | null;
+  congTy?: string | null;
+  soGhe?: string | null;
+  soNguoiDen?: number | null;
   venue?: string;
   soNguoiMoi: number;
   soNguoiXacNhan: number | null;
@@ -53,7 +59,7 @@ export function CheckinApp({ ten, ca }: { ten: string; ca: string | null }) {
     } catch {}
   };
 
-  const checkin = async (payload: { ma?: string; id?: string }) => {
+  const checkin = async (payload: { ma?: string; id?: string; cach: "QR" | "THU_CONG" }) => {
     try {
       const r = await fetch("/api/checkin", {
         method: "POST",
@@ -135,9 +141,9 @@ export function CheckinApp({ ten, ca }: { ten: string; ca: string | null }) {
         ))}
       </div>
 
-      {che === "quet" && <QuetQR onMa={(ma) => checkin({ ma })} />}
-      {che === "so" && <NhapSo onMa={(ma) => checkin({ ma })} />}
-      {che === "ten" && <TimTen onChon={(id) => checkin({ id })} />}
+      {che === "quet" && <QuetQR onMa={(ma) => checkin({ ma, cach: "QR" })} />}
+      {che === "so" && <NhapSo onMa={(ma) => checkin({ ma, cach: "THU_CONG" })} />}
+      {che === "ten" && <TimTen onChon={(id) => checkin({ id, cach: "THU_CONG" })} />}
 
       {kq && <KetQuaCard kq={kq} onDong={() => setKq(null)} />}
 
@@ -223,8 +229,8 @@ function TimTen({ onChon }: { onChon: (id: string) => void }) {
 
   return (
     <div className="card p-5">
-      <label className="label">Tìm tên hoặc số điện thoại</label>
-      <input className="input" value={q} onChange={(e) => setQ(e.target.value)} placeholder="nguyen van an hoặc 0901..." autoFocus />
+      <label className="label">Tìm tên, công ty hoặc số điện thoại</label>
+      <input className="input" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tên khách, tên công ty hoặc SĐT" autoFocus />
       <div className="mt-3 space-y-1.5">
         {dang && <p className="text-xs text-ink-muted">Đang tìm...</p>}
         {loi && <p className="text-xs text-wine">{loi}</p>}
@@ -236,8 +242,9 @@ function TimTen({ onChon }: { onChon: (id: string) => void }) {
             className="flex w-full items-center justify-between rounded-lg border border-ivory-deep bg-white px-3 py-2.5 text-left hover:border-gold"
           >
             <span>
-              <span className="font-mono text-xs text-ink-muted">{g.soThuTu}</span> <span className="text-sm text-ink">{g.hoTen}</span>
+              <span className="font-mono text-xs text-ink-muted">{g.soThuTu}</span> <span className="text-sm text-ink">{tenGoi(g)}</span>
               {g.isVip && <span className="ml-1.5 chip bg-gold/15 text-gold-deep">VIP</span>}
+              {g.congTy && <div className="text-xs text-ink-soft">{g.congTy}</div>}
               <div className="text-xs text-ink-muted">
                 {g.venue}
                 {g.ban ? ` · ${g.ban}` : ""}
@@ -346,15 +353,19 @@ function KetQuaCard({ kq, onDong }: { kq: KetQua; onDong: () => void }) {
         </div>
         {kq.guest && (
           <div className="px-6 py-5 text-center">
-            <div className="font-display text-2xl text-ink">{kq.guest.hoTen}</div>
+            <div className="font-display text-2xl text-ink">{tenGoi(kq.guest)}</div>
+            {(kq.guest.chucVu || kq.guest.congTy) && (
+              <div className="mt-0.5 text-sm text-ink-soft">{[kq.guest.chucVu, kq.guest.congTy].filter(Boolean).join(" · ")}</div>
+            )}
             <div className="mt-1 text-sm text-ink-muted">
               <span className="font-mono">{kq.guest.soThuTu}</span> · {kq.guest.venue}
             </div>
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
               {kq.guest.isVip && <span className="chip bg-gold/15 text-gold-deep">VIP</span>}
               {kq.guest.ban && <span className="chip bg-ink text-ivory">{kq.guest.ban}</span>}
-              <span className="chip bg-ivory-deep text-ink-soft">{kq.guest.soNguoiXacNhan ?? kq.guest.soNguoiMoi} người</span>
+              {kq.guest.soGhe && <span className="chip bg-gold text-white">Ghế {kq.guest.soGhe}</span>}
             </div>
+            {kq.guest.trangThai === "DA_CHECKIN" && <SoNguoiDen g={kq.guest} />}
             {kq.canhBao && <div className="mt-4 rounded-xl bg-gold/10 px-3 py-2 text-xs text-gold-deep">{kq.canhBao}</div>}
           </div>
         )}
@@ -369,6 +380,45 @@ function KetQuaCard({ kq, onDong }: { kq: KetQua; onDong: () => void }) {
             </button>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+// Doi soat: so nguoi thuc te den so voi so da xac nhan
+function SoNguoiDen({ g }: { g: KhachGon }) {
+  const dangKy = g.soNguoiXacNhan || g.soNguoiMoi;
+  const [so, setSo] = useState(g.soNguoiDen || dangKy);
+  const [luu, setLuu] = useState<"" | "dang" | "xong" | "loi">("");
+  const doi = async (n: number) => {
+    const moi = Math.min(20, Math.max(1, n));
+    setSo(moi);
+    setLuu("dang");
+    try {
+      const r = await fetch("/api/checkin/so-nguoi", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: g.id, soNguoi: moi }),
+      });
+      setLuu(r.ok ? "xong" : "loi");
+    } catch {
+      setLuu("loi");
+    }
+  };
+  return (
+    <div className="mt-4 rounded-xl bg-ivory/70 p-3">
+      <div className="text-xs text-ink-muted">Số người thực tế đến (đăng ký {dangKy})</div>
+      <div className="mt-2 flex items-center justify-center gap-3">
+        <button className="h-10 w-10 rounded-full border border-ink/20 text-lg" onClick={() => doi(so - 1)} disabled={so <= 1}>
+          −
+        </button>
+        <span className="w-10 text-center font-display text-2xl text-ink">{so}</span>
+        <button className="h-10 w-10 rounded-full border border-ink/20 text-lg" onClick={() => doi(so + 1)}>
+          +
+        </button>
+      </div>
+      <div className="mt-1 h-4 text-[11px] text-ink-muted">
+        {luu === "dang" ? "Đang lưu..." : luu === "xong" ? "Đã lưu" : luu === "loi" ? "Chưa lưu được, thử lại" : so !== dangKy ? "Khác số đăng ký" : ""}
       </div>
     </div>
   );

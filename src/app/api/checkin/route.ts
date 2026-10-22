@@ -12,6 +12,9 @@ export async function POST(req: NextRequest) {
   }
   const body = await req.json().catch(() => ({}));
   const lan = String(body.lan || "Làn 1").slice(0, 40);
+  const cach = body.cach === "QR" ? "QR" : "THU_CONG";
+  const ghiLog = (guestId: string, lan: string, leTan: string, ketQua: string) =>
+    prisma.checkinLog.create({ data: { guestId, lan, leTan, ketQua, cach } });
   const leTan = u.hoTen;
 
   // Xac dinh khach theo id hoac ma QR
@@ -59,7 +62,7 @@ export async function POST(req: NextRequest) {
   // Cap nhat co dieu kien: hai lan quet cung luc thi chi mot lan thanh cong
   const { count } = await prisma.guest.updateMany({
     where: { id: guest.id, trangThai: { notIn: [TRANG_THAI.DA_CHECKIN, TRANG_THAI.DA_HUY] } },
-    data: { trangThai: TRANG_THAI.DA_CHECKIN, checkinLuc: new Date() },
+    data: { trangThai: TRANG_THAI.DA_CHECKIN, checkinLuc: new Date(), soNguoiDen: guest.soNguoiXacNhan || guest.soNguoiMoi },
   });
   const capNhat = await prisma.guest.findUnique({ where: { id: guest.id }, include: { venue: true } });
   if (count === 0) {
@@ -77,15 +80,18 @@ export async function POST(req: NextRequest) {
   });
 }
 
-async function ghiLog(guestId: string, lan: string, leTan: string, ketQua: string) {
-  await prisma.checkinLog.create({ data: { guestId, lan, leTan, ketQua } });
-}
+
 
 function gon(g: any) {
   return {
     id: g.id,
     soThuTu: g.soThuTu,
     hoTen: g.hoTen,
+    danhXung: g.danhXung,
+    chucVu: g.chucVu,
+    congTy: g.congTy,
+    soGhe: g.soGhe,
+    soNguoiDen: g.soNguoiDen,
     venue: g.venue?.ten,
     soNguoiMoi: g.soNguoiMoi,
     soNguoiXacNhan: g.soNguoiXacNhan,

@@ -36,14 +36,28 @@ model Guest {
   soThuTu        Int       @unique // 4 chu so theo dai cua venue
   maBiMat        String    @unique // 8 ky tu bi mat, nam trong QR
   hoTen          String
-  sdt            String // so dien thoai, khoa chong trung
+  sdt            String? // so dien thoai; co thi dung lam khoa chong trung, khong co thi dung ten + ma CORP
+  danhXung       String? // Ong, Ba...
+  chucVu         String?
+  congTy         String? // Company Name
+  maCorp         String? // Ma CORP Netsuite
+  nhomKhachMoi   String? // Khach Corporate, Doi tac Capella, Taskforce tiep khach...
+  donViKinhDoanh String? // Thuoc don vi kinh doanh
+  nhomKhach      String? // Agency/bao chi/truyen thong, Khach end-user...
+  linhVuc        String?
+  nguonKhach     String? // Phan loai khach: Netsuite, Contact moi
+  doanhThuDuKien String?
+  phongBan       String? // phong ban cua nguoi phu trach
+  daGuiThiepGiay Boolean   @default(false) // Round 2: thiep giay
+  soGhe          String? // so ghe cho khach VIP, vd 10.01
+  soNguoiDen     Int? // so nguoi thuc te den khi check in
   venueId        String
   venue          Venue     @relation(fields: [venueId], references: [id])
   soNguoiMoi     Int       @default(1) // so nguoi duoc moi
   soNguoiXacNhan Int? // so nguoi xac nhan tham du
   trangThai      String    @default("NHAP")
   isVip          Boolean   @default(false)
-  ban            String? // ten ban khi xep ban
+  ban            String? // line ghe khi xep cho, vd LINE 9 & 10
   salesOwner     String // sales phu trach
   ghiChu         String?
   lyDoChoDuyet   String? // ly do vao hang cho duyet: TRUNG_SDT | VIP
@@ -56,6 +70,7 @@ model Guest {
   checkins CheckinLog[]
 
   @@index([sdt])
+  @@index([maCorp])
   @@index([trangThai])
   @@index([venueId])
 }
@@ -67,6 +82,7 @@ model CheckinLog {
   guest    Guest    @relation(fields: [guestId], references: [id], onDelete: Cascade)
   lan      String // Lan 1..4, VIP, Quay ho tro
   leTan    String
+  cach     String   @default("") // QR (quet / ma) hoac THU_CONG (nhap so, tim ten)
   ketQua   String // THANH_CONG | TRUNG_LAP | KHONG_HOP_LE
   thoiGian DateTime @default(now())
 

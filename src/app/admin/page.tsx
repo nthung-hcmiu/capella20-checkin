@@ -29,7 +29,30 @@ export default async function Dashboard() {
   );
   const nguoiXacNhan = daXacNhanKhach.reduce((s, g) => s + soNguoi(g), 0);
   const daCheckin = guests.filter((g) => g.trangThai === TRANG_THAI.DA_CHECKIN);
-  const nguoiCheckin = daCheckin.reduce((s, g) => s + soNguoi(g), 0);
+  const nguoiCheckin = daCheckin.reduce((s, g) => s + (g.soNguoiDen ?? soNguoi(g)), 0);
+
+  // Doi soat nhu sheet Reconcile: dang ky (xac nhan) so voi thuc te check in
+  const cachCheckin = await prisma.checkinLog.groupBy({ by: ["cach"], where: { ketQua: "THANH_CONG" }, _count: { _all: true } });
+  const soQR = cachCheckin.find((c) => c.cach === "QR")?._count._all || 0;
+  const soThuCong = cachCheckin.filter((c) => c.cach !== "QR").reduce((s, c) => s + c._count._all, 0);
+  const doiSoat = (khoa: (g: (typeof guests)[number]) => string) => {
+    const m = new Map<string, { khach: number; dangKy: number; den: number; thiepDen: number }>();
+    for (const g of guests) {
+      if (!PIPELINE.includes(g.trangThai as any)) continue;
+      const k = khoa(g) || "Chưa phân nhóm";
+      const r = m.get(k) || { khach: 0, dangKy: 0, den: 0, thiepDen: 0 };
+      r.khach++;
+      if ([TRANG_THAI.THAM_DU, TRANG_THAI.DA_CHECKIN].includes(g.trangThai as any)) r.dangKy += soNguoi(g);
+      if (g.trangThai === TRANG_THAI.DA_CHECKIN) {
+        r.den += g.soNguoiDen ?? soNguoi(g);
+        r.thiepDen++;
+      }
+      m.set(k, r);
+    }
+    return [...m.entries()].sort((a, b) => b[1].khach - a[1].khach);
+  };
+  const theoNhom = doiSoat((g) => g.nhomKhachMoi || "");
+  const theoSales = doiSoat((g) => g.salesOwner);
   const soCho = demTrangThai[TRANG_THAI.CHO_DUYET] || 0;
 
   const tiLeXacNhan = Math.min(100, Math.round((nguoiXacNhan / CHISO.nguongXacNhan) * 100));
@@ -52,7 +75,26 @@ export default async function Dashboard() {
         />
         <Kpi nhan="Thiệp đã phát hành" so={daPhatHanh} phu={`dự kiến ${CHISO.soThiepPhatHanh}`} />
         <Kpi nhan="Người đã check in" so={nguoiCheckin} phu={`${daCheckin.length} thiệp đã đến`} />
-        <Kpi nhan="Chờ BTC duyệt" so={soCho} phu="trùng SĐT hoặc VIP" canhBao={soCho > 0} />
+        <Kpi nhan="Chờ BTC duyệt" so={soCho} phu="trùng khách hoặc VIP" canhBao={soCho > 0} />
+      </div>
+
+      {/* Doi soat */}
+      <div className="card overflow-hidden">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-6 py-4">
+          <div>
+            <h2 className="font-display text-lg text-ink">Đối soát đăng ký và thực tế</h2>
+            <p className="text-xs text-ink-muted">Chỉ tính thiệp đã phát hành. Tỷ lệ tham dự = người thực tế đến / người đã đăng ký.</p>
+          </div>
+          <div className="flex gap-2 text-xs">
+            <span className="chip bg-sage/10 text-sage">Check in bằng QR: {soQR}</span>
+            <span className="chip bg-ivory-deep text-ink-soft">Thủ công: {soThuCong}</span>
+          </div>
+        </div>
+        <div className="hairline" />
+        <div className="grid gap-px bg-ivory-deep lg:grid-cols-2">
+          <BangDoiSoat tieuDe="Theo nhóm khách mời" dong={theoNhom} />
+          <BangDoiSoat tieuDe="Theo người phụ trách" dong={theoSales} />
+        </div>
       </div>
 
       {/* Phan bo trang thai */}
@@ -150,6 +192,54 @@ function Kpi({
           <div className="h-full rounded-full bg-gold" style={{ width: `${tiLe}%` }} />
         </div>
       )}
+    </div>
+  );
+}
+
+function BangDoiSoat({ tieuDe, dong }: { tieuDe: string; dong: [string, { khach: number; dangKy: number; den: number; thiepDen: number }][] }) {
+  const tong = dong.reduce(
+    (t, [, r]) => ({ khach: t.khach + r.khach, dangKy: t.dangKy + r.dangKy, den: t.den + r.den }),
+    { khach: 0, dangKy: 0, den: 0 }
+  );
+  const tl = (den: number, dk: number) => (dk > 0 ? `${Math.round((den / dk) * 100)}%` : "-");
+  return (
+    <div className="overflow-x-auto bg-white">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="text-left text-xs uppercase tracking-wider text-ink-muted">
+            <th className="px-5 py-3 font-medium">{tieuDe}</th>
+            <th className="px-3 py-3 text-right font-medium">Thiệp</th>
+            <th className="px-3 py-3 text-right font-medium">Đăng ký</th>
+            <th className="px-3 py-3 text-right font-medium">Thực tế</th>
+            <th className="px-5 py-3 text-right font-medium">Tỷ lệ</th>
+          </tr>
+        </thead>
+        <tbody>
+          {dong.length === 0 && (
+            <tr>
+              <td colSpan={5} className="px-5 py-6 text-center text-xs text-ink-muted">Chưa có thiệp phát hành.</td>
+            </tr>
+          )}
+          {dong.map(([k, r]) => (
+            <tr key={k} className="border-t border-ivory-deep">
+              <td className="px-5 py-2.5 text-ink">{k}</td>
+              <td className="px-3 py-2.5 text-right">{r.khach}</td>
+              <td className="px-3 py-2.5 text-right">{r.dangKy}</td>
+              <td className="px-3 py-2.5 text-right">{r.den}</td>
+              <td className="px-5 py-2.5 text-right text-ink-muted">{tl(r.den, r.dangKy)}</td>
+            </tr>
+          ))}
+          {dong.length > 1 && (
+            <tr className="border-t border-ivory-deep bg-ivory/50 font-medium">
+              <td className="px-5 py-2.5 text-ink">Tổng</td>
+              <td className="px-3 py-2.5 text-right">{tong.khach}</td>
+              <td className="px-3 py-2.5 text-right">{tong.dangKy}</td>
+              <td className="px-3 py-2.5 text-right">{tong.den}</td>
+              <td className="px-5 py-2.5 text-right">{tl(tong.den, tong.dangKy)}</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
     </div>
   );
 }

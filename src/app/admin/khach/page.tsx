@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { yeuCauTrang } from "@/lib/auth";
 import { GuestManager, GuestRow, VenueOpt } from "@/components/GuestManager";
+import { TRUONG_CHU } from "@/lib/khach";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,9 @@ export default async function KhachPage() {
     isVip: g.isVip,
     ban: g.ban,
     salesOwner: g.salesOwner,
+    ghiChu: g.ghiChu,
+    daGuiThiepGiay: g.daGuiThiepGiay,
+    them: Object.fromEntries(TRUONG_CHU.map((k) => [k, g[k] ?? null])),
   }));
 
   const venueOpts: VenueOpt[] = venues.map((v) => ({ id: v.id, ten: v.ten, code: v.code }));

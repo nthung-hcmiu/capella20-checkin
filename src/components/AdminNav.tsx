@@ -9,7 +9,7 @@ const MUC = [
   { href: "/admin/nhap", ten: "Nhập danh sách" },
   { href: "/admin/duyet", ten: "Chờ duyệt" },
   { href: "/admin/quota", ten: "Quota venue" },
-  { href: "/admin/xepban", ten: "Xếp bàn" },
+  { href: "/admin/xepban", ten: "Xếp chỗ ngồi" },
   { href: "/admin/tai-khoan", ten: "Tài khoản" },
   { href: "/admin/du-lieu", ten: "Dữ liệu" },
 ];

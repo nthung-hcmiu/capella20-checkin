@@ -11,6 +11,17 @@ const TEN_DEM = ["Văn", "Thị", "Minh", "Thanh", "Hoàng", "Ngọc", "Gia", "Q
 const TEN = ["An", "Bình", "Chi", "Dũng", "Giang", "Hà", "Hải", "Hoa", "Hùng", "Lan", "Linh", "Mai", "Nam", "Nga", "Nhung", "Phong", "Phương", "Quân", "Sơn", "Tâm", "Thảo", "Trang", "Tuấn", "Vy", "Yến"];
 export const SALES_MAU = ["Thu Hà", "Minh Quân", "Ngọc Lan", "Gia Bảo", "Khánh Vy", "Quốc Hùng"];
 
+// Doanh nghiep hu cau cho du lieu mau (khong lay tu danh sach that)
+const CONG_TY_MAU = [
+  "CÔNG TY TNHH SỰ KIỆN ÁNH DƯƠNG", "CÔNG TY CP TRUYỀN THÔNG BẢO MINH", "CÔNG TY TNHH CÔNG NGHỆ SAO VIỆT",
+  "CÔNG TY CP DƯỢC PHẨM AN KHANG MẪU", "CÔNG TY TNHH DU LỊCH HẢI ÂU", "CÔNG TY CP BẤT ĐỘNG SẢN PHÚ THỊNH",
+  "CÔNG TY TNHH THỜI TRANG LAM PHƯƠNG", "CÔNG TY CP THỰC PHẨM XANH VIỆT", "NGÂN HÀNG MẪU TMCP ĐÔNG Á",
+  "CÔNG TY TNHH GIÁO DỤC TRÍ TUỆ", "CÔNG TY CP LOGISTICS HOÀNG HÀ", "CÔNG TY TNHH QUẢNG CÁO NHẬT MINH",
+];
+const LINH_VUC = ["Giải Trí/Tổ Chức Sự Kiện", "Công Nghệ", "Dược Phẩm", "Du Lịch", "Bất Động Sản", "Thời Trang", "Thực Phẩm", "Tài Chính", "Giáo Dục", "Vận Tải"];
+const CHUC_VU = ["Giám Đốc", "Phó Giám Đốc", "Trưởng Phòng Nhân Sự", "Account Manager", "Event Executive", "Đại Diện Công Ty", "Trưởng Phòng Marketing", "Kế Toán Trưởng"];
+const NHOM_MOI = ["Khách Corporate", "Khách Corporate", "Khách Corporate", "Khách Corporate", "Đối tác Capella", "Taskforce tiếp khách"];
+
 export function tenDangNhapTu(hoTen: string): string {
   return boDau(hoTen).replace(/[^a-z0-9]/g, "");
 }
@@ -114,16 +125,31 @@ export async function gieoDuLieu(
       let ban: string | null = null;
       if ([TRANG_THAI.THAM_DU, TRANG_THAI.DA_CHECKIN].includes(trangThai as any)) {
         soBanTheoVenue[code] = (soBanTheoVenue[code] || 0) + 1;
-        ban = `Bàn ${String(Math.ceil(soBanTheoVenue[code] / 10)).padStart(2, "0")}`;
+        const so = Math.ceil(soBanTheoVenue[code] / 10) * 2 + 7;
+        ban = `LINE ${so} & ${so + 1}`;
       }
 
+      const ct = Math.floor(Math.random() * CONG_TY_MAU.length);
+      const nhomMoi = chon(NHOM_MOI);
       const guest = await prisma.guest.create({
         data: {
-          soThuTu, maBiMat: sinhMa(), hoTen: tenNgauNhien(), sdt, venueId: venue.id,
+          danhXung: Math.random() < 0.6 ? "Bà" : "Ông",
+          chucVu: chon(CHUC_VU),
+          congTy: CONG_TY_MAU[ct],
+          maCorp: `COR${String(9000000 + ct * 137).padStart(7, "0")}`,
+          nhomKhachMoi: nhomMoi,
+          donViKinhDoanh: nhomMoi === "Đối tác Capella" ? `Đối tác MKT ${venue.ten}` : `Capella ${venue.ten}`,
+          nhomKhach: chon(["Agency/báo chí/truyền thông", "Khách end-user"]),
+          linhVuc: LINH_VUC[ct % LINH_VUC.length],
+          nguonKhach: chon(["Netsuite", "Netsuite", "Netsuite", "Contact mới"]),
+          phongBan: nhomMoi === "Đối tác Capella" ? "Marketing" : "Phòng kinh doanh",
+          daGuiThiepGiay: daPhatHanh && Math.random() < 0.5,
+          soThuTu, maBiMat: sinhMa(), hoTen: tenNgauNhien(), sdt: i > 0 && Math.random() < 0.3 ? null : sdt, venueId: venue.id,
           soNguoiMoi, soNguoiXacNhan, trangThai, isVip: false, ban, salesOwner: chon(salesTeam),
           phatHanhLuc: daPhatHanh ? new Date(now - 86400000 * (5 + Math.random() * 10)) : null,
           xacNhanLuc: daXacNhan ? new Date(now - 86400000 * (1 + Math.random() * 4)) : null,
           checkinLuc,
+          soNguoiDen: checkinLuc ? soNguoiXacNhan || soNguoiMoi : null,
         },
       });
       if (checkinLuc) {
@@ -131,6 +157,7 @@ export async function gieoDuLieu(
           data: {
             guestId: guest.id, lan: `Làn ${1 + Math.floor(Math.random() * 4)}`,
             leTan: `Lễ tân ${1 + Math.floor(Math.random() * 12)}`, ketQua: "THANH_CONG", thoiGian: checkinLuc,
+            cach: Math.random() < 0.4 ? "QR" : "THU_CONG",
           },
         });
       }
@@ -143,6 +170,8 @@ export async function gieoDuLieu(
     await prisma.guest.create({
       data: {
         soThuTu: bod.rangeStart + i, maBiMat: sinhMa(), hoTen: tenNgauNhien(), sdt: sdtNgauNhien(),
+        danhXung: i % 2 ? "Bà" : "Ông", chucVu: "Tổng Giám Đốc", congTy: CONG_TY_MAU[i + 4], nhomKhachMoi: "Đối tác Capella",
+        soGhe: `1.0${i + 1}`, ban: "LINE 1 & 2",
         venueId: bod.id, soNguoiMoi: 2, trangThai: i < 2 ? TRANG_THAI.CHO_DUYET : TRANG_THAI.DA_PHAT_HANH,
         isVip: true, salesOwner: salesTeam[i % salesTeam.length], lyDoChoDuyet: i < 2 ? "VIP" : null,
       },
@@ -158,6 +187,19 @@ export async function gieoDuLieu(
       salesOwner: salesTeam[2 % salesTeam.length], lyDoChoDuyet: "TRUNG_SDT",
     },
   });
+
+  // Mot khach trung ten va cong ty (khong co SDT) de minh hoa luat chong trung moi
+  const goc = await prisma.guest.findFirst({ where: { venueId: theoCode("GALLERY").id }, orderBy: { soThuTu: "asc" } });
+  if (goc) {
+    await prisma.guest.create({
+      data: {
+        soThuTu: theoCode("GALLERY").rangeStart + 500, maBiMat: sinhMa(), hoTen: goc.hoTen, sdt: null,
+        danhXung: goc.danhXung, chucVu: goc.chucVu, congTy: goc.congTy, maCorp: goc.maCorp, nhomKhachMoi: goc.nhomKhachMoi,
+        venueId: goc.venueId, soNguoiMoi: 1, trangThai: TRANG_THAI.CHO_DUYET,
+        salesOwner: salesTeam[3 % salesTeam.length], lyDoChoDuyet: "TRUNG_TEN",
+      },
+    });
+  }
 
   return { tong: await prisma.guest.count(), venue: venues.length };
 }

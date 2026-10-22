@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { yeuCauTrang } from "@/lib/auth";
 import { TRANG_THAI } from "@/lib/constants";
 import { ApproveQueue, ChoDuyetItem } from "@/components/ApproveQueue";
+import { khoaTen, tenGoi } from "@/lib/khach";
 
 export const dynamic = "force-dynamic";
 
@@ -13,38 +14,44 @@ export default async function DuyetPage() {
     orderBy: { createdAt: "asc" },
   });
 
-  const items: ChoDuyetItem[] = [];
-  for (const g of ds) {
-    let xungDot: ChoDuyetItem["xungDot"] = null;
-    if (g.lyDoChoDuyet === "TRUNG_SDT") {
-      const khac = await prisma.guest.findFirst({
-        where: { sdt: g.sdt, id: { not: g.id }, trangThai: { not: TRANG_THAI.DA_HUY } },
-        include: { venue: true },
-        orderBy: { createdAt: "asc" },
-      });
-      if (khac) {
-        xungDot = {
-          soThuTu: khac.soThuTu,
-          hoTen: khac.hoTen,
-          trangThai: khac.trangThai,
-          venueTen: khac.venue.ten,
-          salesOwner: khac.salesOwner,
-        };
-      }
-    }
-    items.push({
+  // Lay mot lan toan bo khach con hieu luc de tim khach bi trung (tranh moi dong mot truy van)
+  const conLai = await prisma.guest.findMany({
+    where: { trangThai: { not: TRANG_THAI.DA_HUY } },
+    select: { id: true, soThuTu: true, hoTen: true, sdt: true, maCorp: true, congTy: true, chucVu: true, trangThai: true, salesOwner: true, createdAt: true, venue: { select: { ten: true } } },
+    orderBy: { createdAt: "asc" },
+  });
+
+  const items: ChoDuyetItem[] = ds.map((g) => {
+    const khoa = khoaTen(g.hoTen, g.maCorp, g.congTy);
+    const khac =
+      g.lyDoChoDuyet === "TRUNG_SDT" && g.sdt
+        ? conLai.find((x) => x.id !== g.id && x.sdt === g.sdt)
+        : g.lyDoChoDuyet === "TRUNG_TEN" && khoa
+        ? conLai.find((x) => x.id !== g.id && khoaTen(x.hoTen, x.maCorp, x.congTy) === khoa)
+        : undefined;
+    return {
       id: g.id,
       soThuTu: g.soThuTu,
-      hoTen: g.hoTen,
+      hoTen: tenGoi(g),
+      moTa: [g.chucVu, g.congTy].filter(Boolean).join(" · "),
       sdt: g.sdt,
       venueTen: g.venue.ten,
       soNguoiMoi: g.soNguoiMoi,
       salesOwner: g.salesOwner,
       lyDo: g.lyDoChoDuyet,
       isVip: g.isVip,
-      xungDot,
-    });
-  }
+      xungDot: khac
+        ? {
+            soThuTu: khac.soThuTu,
+            hoTen: khac.hoTen,
+            moTa: [khac.chucVu, khac.congTy].filter(Boolean).join(" · "),
+            trangThai: khac.trangThai,
+            venueTen: khac.venue.ten,
+            salesOwner: khac.salesOwner,
+          }
+        : null,
+    };
+  });
 
   return (
     <div className="space-y-5">

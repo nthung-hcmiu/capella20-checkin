@@ -5,8 +5,9 @@ import { prisma } from "./db";
 import { TRANG_THAI } from "./constants";
 import { boDau, chuanHoaSdt, sdtHopLe } from "./format";
 import { batBuocQuyen } from "./auth";
+import { TRUONG_CHU, khoaTen, lamSach, chuanSoGhe, type ThongTinThem } from "./khach";
 
-export interface DongNhap {
+export interface DongNhap extends ThongTinThem {
   hoTen: string;
   sdt: string;
   venue: string;
@@ -14,11 +15,13 @@ export interface DongNhap {
   sales: string;
   vip: string;
   ghiChu: string;
+  thiepGiay?: string;
 }
 
 export interface KetQuaDong {
   dong: number; // so dong trong file (bat dau tu 1, tinh ca dong tieu de)
   hoTen: string;
+  congTy?: string | null;
   sdt: string;
   venueTen?: string;
   salesOwner?: string;
@@ -33,7 +36,7 @@ export interface KetQuaNhap {
   thongBao: string;
   ghi: boolean;
   dong: KetQuaDong[];
-  tongHop: { hopLe: number; loi: number; choDuyet: number; danhSachCho: number; nhap: number };
+  tongHop: { hopLe: number; loi: number; choDuyet: number; danhSachCho: number; nhap: number; khongSdt: number };
 }
 
 const CHIEM_QUOTA = [
@@ -45,20 +48,23 @@ const BANG_MA = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 function laVip(s: string): boolean {
   return ["x", "co", "1", "yes", "y", "vip", "true", "dung"].includes(boDau(s));
 }
+function laCo(s: string): boolean {
+  return ["x", "co", "1", "yes", "y", "true", "dung", "da nhan", "da gui", "roi"].includes(boDau(s));
+}
 
 export async function nhapDanhSach(
   rows: DongNhap[],
-  tuyChon: { venueMacDinh?: string; salesMacDinh?: string; dongBatDau: number; ghi: boolean }
+  tuyChon: { venueMacDinh?: string; salesMacDinh?: string; dongBatDau: number; ghi: boolean; vipDaDuyet?: boolean }
 ): Promise<KetQuaNhap> {
   await batBuocQuyen(["ADMIN"]);
   if (rows.length > 3000) {
-    return { ok: false, thongBao: "Mỗi lần nhập tối đa 3.000 dòng.", ghi: false, dong: [], tongHop: { hopLe: 0, loi: 0, choDuyet: 0, danhSachCho: 0, nhap: 0 } };
+    return { ok: false, thongBao: "Mỗi lần nhập tối đa 3.000 dòng.", ghi: false, dong: [], tongHop: { hopLe: 0, loi: 0, choDuyet: 0, danhSachCho: 0, nhap: 0, khongSdt: 0 } };
   }
 
   const [venues, salesAcc, daCo] = await Promise.all([
     prisma.venue.findMany(),
     prisma.staffUser.findMany({ where: { vaiTro: "SALES" }, select: { hoTen: true } }),
-    prisma.guest.findMany({ select: { sdt: true, trangThai: true, soThuTu: true, venueId: true, maBiMat: true } }),
+    prisma.guest.findMany({ select: { sdt: true, hoTen: true, maCorp: true, congTy: true, trangThai: true, soThuTu: true, venueId: true, maBiMat: true } }),
   ]);
 
   // Tim venue theo ten hoac ma, khong phan biet dau; "Riverside" khop "Riverside Palace"
@@ -70,7 +76,9 @@ export async function nhapDanhSach(
     const gan = venues.filter((v) => boDau(v.ten).startsWith(t) || t.startsWith(boDau(v.ten)));
     if (gan.length === 1) return { v: gan[0], chinhXac: false };
     const chua = venues.filter((v) => boDau(v.ten).split(" ").includes(t));
-    return chua.length === 1 ? { v: chua[0], chinhXac: false } : null;
+    if (chua.length === 1) return { v: chua[0], chinhXac: false };
+    const nam = venues.filter((v) => t.includes(boDau(v.ten)));
+    return nam.length === 1 ? { v: nam[0], chinhXac: false } : null;
   };
   const timSales = (text: string) => {
     const t = boDau(text);
@@ -79,7 +87,9 @@ export async function nhapDanhSach(
   };
 
   const venueMacDinh = tuyChon.venueMacDinh ? venues.find((v) => v.id === tuyChon.venueMacDinh) : undefined;
-  const sdtDaCo = new Set(daCo.filter((g) => g.trangThai !== TRANG_THAI.DA_HUY).map((g) => g.sdt));
+  const conHieuLuc = daCo.filter((g) => g.trangThai !== TRANG_THAI.DA_HUY);
+  const sdtDaCo = new Set(conHieuLuc.map((g) => g.sdt).filter(Boolean) as string[]);
+  const tenDaCo = new Set(conHieuLuc.map((g) => khoaTen(g.hoTen, g.maCorp, g.congTy)).filter(Boolean) as string[]);
   const soDaDung = new Set(daCo.map((g) => g.soThuTu));
   const maDaDung = new Set(daCo.map((g) => g.maBiMat));
   const dangChiem: Record<string, number> = {};
@@ -107,7 +117,7 @@ export async function nhapDanhSach(
 
   const ketQua: KetQuaDong[] = [];
   const duLieuGhi: any[] = [];
-  const tongHop = { hopLe: 0, loi: 0, choDuyet: 0, danhSachCho: 0, nhap: 0 };
+  const tongHop = { hopLe: 0, loi: 0, choDuyet: 0, danhSachCho: 0, nhap: 0, khongSdt: 0 };
 
   rows.forEach((r, i) => {
     const dong = tuyChon.dongBatDau + i;
@@ -126,13 +136,17 @@ export async function nhapDanhSach(
       tongHop.loi++;
       return;
     }
-    const sdt = chuanHoaSdt(sdtGoc);
+    const sdt = sdtGoc ? chuanHoaSdt(sdtGoc) : "";
     kq.sdt = sdt || sdtGoc;
-    if (!sdtHopLe(sdt)) {
+    if (sdtGoc && !sdtHopLe(sdt)) {
       kq.loi = "Số điện thoại không hợp lệ";
       tongHop.loi++;
       return;
     }
+    const them = lamSach(Object.fromEntries(TRUONG_CHU.map((k) => [k, r[k] ?? null])) as ThongTinThem);
+    them.soGhe = chuanSoGhe(r.soGhe);
+    const khoa = khoaTen(hoTen, them.maCorp, them.congTy);
+    kq.congTy = them.congTy;
     const khopVenue = r.venue?.trim() ? timVenue(r.venue) : venueMacDinh ? { v: venueMacDinh, chinhXac: true } : null;
     const venue = khopVenue?.v;
     if (!venue) {
@@ -149,18 +163,23 @@ export async function nhapDanhSach(
     kq.salesOwner = salesOwner;
     if (r.sales?.trim() && !salesKhop) canhBao.push("Sales chưa có tài khoản, sales đó sẽ không thấy khách này");
 
-    const soNguoi = Math.min(10, Math.max(1, parseInt(String(r.soNguoiMoi || "1"), 10) || 1));
+    const soNguoiGoc = parseInt(String(r.soNguoiMoi ?? "").trim() || "1", 10);
+    const soNguoi = Math.min(10, Math.max(1, Number.isFinite(soNguoiGoc) ? soNguoiGoc : 1));
+    if (soNguoiGoc === 0) canhBao.push("Số người ghi 0, đã tính là 1");
     const vip = laVip(String(r.vip || ""));
 
     let trangThai: string = TRANG_THAI.NHAP;
     let lyDo: string | null = null;
-    if (sdtDaCo.has(sdt)) {
+    if (sdt && sdtDaCo.has(sdt)) {
       trangThai = TRANG_THAI.CHO_DUYET;
       lyDo = "TRUNG_SDT";
-    } else if (vip) {
+    } else if (khoa && tenDaCo.has(khoa)) {
+      trangThai = TRANG_THAI.CHO_DUYET;
+      lyDo = "TRUNG_TEN";
+    } else if (vip && !tuyChon.vipDaDuyet) {
       trangThai = TRANG_THAI.CHO_DUYET;
       lyDo = "VIP";
-    } else if (venue.quota > 0 && (dangChiem[venue.id] || 0) >= venue.quota) {
+    } else if (!vip && venue.quota > 0 && (dangChiem[venue.id] || 0) >= venue.quota) {
       trangThai = TRANG_THAI.DANH_SACH_CHO;
     }
 
@@ -171,20 +190,25 @@ export async function nhapDanhSach(
       return;
     }
 
-    sdtDaCo.add(sdt);
+    if (sdt) sdtDaCo.add(sdt);
+    if (khoa) tenDaCo.add(khoa);
     if (CHIEM_QUOTA.includes(trangThai as any)) dangChiem[venue.id] = (dangChiem[venue.id] || 0) + 1;
     kq.trangThai = trangThai;
     kq.soThuTu = soThuTu;
     if (lyDo === "TRUNG_SDT") canhBao.unshift("Trùng SĐT với khách đã có, chờ BTC duyệt");
+    if (lyDo === "TRUNG_TEN") canhBao.unshift("Trùng tên và công ty với khách đã có, chờ BTC duyệt");
     if (canhBao.length) kq.canhBao = canhBao.join(". ");
     tongHop.hopLe++;
+    if (!sdt) tongHop.khongSdt++;
     if (trangThai === TRANG_THAI.CHO_DUYET) tongHop.choDuyet++;
     else if (trangThai === TRANG_THAI.DANH_SACH_CHO) tongHop.danhSachCho++;
     else tongHop.nhap++;
 
     duLieuGhi.push({
-      soThuTu, maBiMat: sinhMa(), hoTen, sdt, venueId: venue.id, soNguoiMoi: soNguoi,
+      ...them,
+      soThuTu, maBiMat: sinhMa(), hoTen, sdt: sdt || null, venueId: venue.id, soNguoiMoi: soNguoi,
       salesOwner, isVip: vip, ghiChu: String(r.ghiChu || "").trim() || null, trangThai, lyDoChoDuyet: lyDo,
+      daGuiThiepGiay: laCo(String(r.thiepGiay || "")),
     });
   });
 

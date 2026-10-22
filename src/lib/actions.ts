@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "./db";
 import { TRANG_THAI } from "./constants";
 import { capSoThuTu, sinhMaBiMatDuyNhat } from "./codes";
-import { chuanHoaSdt } from "./format";
+import { chuanHoaSdt, sdtHopLe } from "./format";
+import { khoaTen, lamSach, type ThongTinThem } from "./khach";
 import { batBuocQuyen, bamMatKhau } from "./auth";
 import { gieoDuLieu } from "./seedData";
 
@@ -29,28 +30,50 @@ export interface KetQuaTao extends KetQua {
   maBiMat?: string;
 }
 
+// Tim khach trung: theo SDT neu co, khong thi theo ten + ma CORP / cong ty
+async function timKhachTrung(
+  k: { sdt: string | null; hoTen: string; maCorp?: string | null; congTy?: string | null },
+  boQuaId?: string
+) {
+  const khongTinh = { trangThai: { not: TRANG_THAI.DA_HUY }, ...(boQuaId ? { id: { not: boQuaId } } : {}) };
+  if (k.sdt) {
+    const g = await prisma.guest.findFirst({ where: { sdt: k.sdt, ...khongTinh } });
+    if (g) return { g, lyDo: "TRUNG_SDT" };
+  }
+  const khoa = khoaTen(k.hoTen, k.maCorp, k.congTy);
+  if (!khoa) return null;
+  const ungVien = await prisma.guest.findMany({
+    where: { ...khongTinh, OR: [k.maCorp ? { maCorp: k.maCorp } : {}, k.congTy ? { congTy: k.congTy } : {}].filter((o) => Object.keys(o).length) },
+    take: 200,
+  });
+  const g = ungVien.find((x) => khoaTen(x.hoTen, x.maCorp, x.congTy) === khoa);
+  return g ? { g, lyDo: "TRUNG_TEN" } : null;
+}
+
 // Tao khach moi voi quy tac chong trung, VIP, quota. Sales chi tao duoc khach cho chinh minh.
 export async function taoKhach(input: {
   hoTen: string;
-  sdt: string;
+  sdt?: string;
   venueId: string;
   soNguoiMoi: number;
   salesOwner?: string;
   isVip?: boolean;
   ghiChu?: string;
+  them?: ThongTinThem;
 }): Promise<KetQuaTao> {
   const u = await batBuocQuyen(["ADMIN", "SALES"]);
-  const hoTen = input.hoTen?.trim();
-  const sdt = chuanHoaSdt(input.sdt);
-  if (!hoTen || !sdt || !input.venueId) {
-    return { ok: false, thongBao: "Thiếu họ tên, số điện thoại hoặc venue." };
+  const hoTen = input.hoTen?.trim().replace(/\s+/g, " ");
+  const sdt = chuanHoaSdt(input.sdt) || null;
+  if (!hoTen || !input.venueId) {
+    return { ok: false, thongBao: "Thiếu họ tên hoặc venue." };
   }
-  if (!/^0\d{9,10}$/.test(sdt)) return { ok: false, thongBao: "Số điện thoại chưa đúng (cần 10 hoặc 11 số, bắt đầu bằng 0)." };
+  if (sdt && !sdtHopLe(sdt)) return { ok: false, thongBao: "Số điện thoại chưa đúng (cần 10 hoặc 11 số, bắt đầu bằng 0). Không có thì để trống." };
+  const them = lamSach(input.them || {});
 
   const venue = await prisma.venue.findUnique({ where: { id: input.venueId } });
   if (!venue) return { ok: false, thongBao: "Venue không hợp lệ." };
 
-  const trung = await prisma.guest.findFirst({ where: { sdt, trangThai: { not: TRANG_THAI.DA_HUY } } });
+  const trung = await timKhachTrung({ sdt, hoTen, maCorp: them.maCorp, congTy: them.congTy });
   const dangChiem = await prisma.guest.count({
     where: { venueId: input.venueId, trangThai: { in: CHIEM_QUOTA } },
   });
@@ -59,7 +82,7 @@ export async function taoKhach(input: {
   let lyDo: string | null = null;
   if (trung) {
     trangThai = TRANG_THAI.CHO_DUYET;
-    lyDo = "TRUNG_SDT";
+    lyDo = trung.lyDo;
   } else if (input.isVip) {
     trangThai = TRANG_THAI.CHO_DUYET;
     lyDo = "VIP";
@@ -77,6 +100,7 @@ export async function taoKhach(input: {
 
   await prisma.guest.create({
     data: {
+      ...them,
       soThuTu,
       maBiMat,
       hoTen,
@@ -96,6 +120,8 @@ export async function taoKhach(input: {
     trangThai === TRANG_THAI.CHO_DUYET
       ? lyDo === "TRUNG_SDT"
         ? "Trùng số điện thoại, đã chuyển BTC duyệt"
+        : lyDo === "TRUNG_TEN"
+        ? "Trùng tên và công ty với khách đã có, đã chuyển BTC duyệt"
         : "Khách VIP, chờ BTC duyệt"
       : trangThai === TRANG_THAI.DANH_SACH_CHO
       ? "Venue đã hết quota, khách vào danh sách chờ"
@@ -135,6 +161,51 @@ export async function danhDauDaMoi(id: string) {
   if (u.vaiTro === "SALES" && g.salesOwner !== u.hoTen) return;
   if (g.trangThai !== TRANG_THAI.DA_PHAT_HANH) return;
   await prisma.guest.update({ where: { id }, data: { trangThai: TRANG_THAI.DA_MOI } });
+  lamTuoi();
+}
+
+// BTC sua thong tin khach (khong doi so thu tu, ma thiep)
+export async function suaKhach(
+  id: string,
+  input: { hoTen: string; sdt?: string; soNguoiMoi: number; isVip: boolean; ghiChu?: string; salesOwner?: string; them?: ThongTinThem }
+): Promise<KetQua> {
+  await batBuocQuyen(["ADMIN"]);
+  const hoTen = input.hoTen?.trim().replace(/\s+/g, " ");
+  if (!hoTen) return { ok: false, thongBao: "Thiếu họ tên." };
+  const sdt = chuanHoaSdt(input.sdt) || null;
+  if (sdt && !sdtHopLe(sdt)) return { ok: false, thongBao: "Số điện thoại chưa đúng." };
+  const them = lamSach(input.them || {});
+  const trung = await timKhachTrung({ sdt, hoTen, maCorp: them.maCorp, congTy: them.congTy }, id);
+  await prisma.guest.update({
+    where: { id },
+    data: {
+      ...them,
+      hoTen,
+      sdt,
+      soNguoiMoi: Math.min(10, Math.max(1, input.soNguoiMoi || 1)),
+      isVip: input.isVip,
+      ghiChu: input.ghiChu?.trim() || null,
+      ...(input.salesOwner !== undefined ? { salesOwner: input.salesOwner.trim() || "BTC" } : {}),
+    },
+  });
+  lamTuoi();
+  return trung
+    ? { ok: true, thongBao: `Đã lưu. Lưu ý: trùng với khách số ${trung.g.soThuTu} (${trung.g.hoTen}).` }
+    : { ok: true, thongBao: "Đã lưu thông tin khách." };
+}
+
+// Round 2: danh dau da gui thiep giay (BTC, hoac sales cho khach cua minh)
+export async function datThiepGiay(id: string, daGui: boolean) {
+  const u = await batBuocQuyen(["ADMIN", "SALES"]);
+  const g = await prisma.guest.findUnique({ where: { id } });
+  if (!g || (u.vaiTro === "SALES" && g.salesOwner !== u.hoTen)) return;
+  await prisma.guest.update({ where: { id }, data: { daGuiThiepGiay: daGui } });
+  lamTuoi();
+}
+
+export async function xepCho(id: string, line: string, soGhe: string) {
+  await batBuocQuyen(["ADMIN"]);
+  await prisma.guest.update({ where: { id }, data: { ban: line.trim() || null, soGhe: soGhe.trim() || null } });
   lamTuoi();
 }
 

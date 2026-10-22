@@ -9,13 +9,14 @@ export interface ChoDuyetItem {
   id: string;
   soThuTu: number;
   hoTen: string;
-  sdt: string;
+  moTa: string;
+  sdt: string | null;
   venueTen: string;
   soNguoiMoi: number;
   salesOwner: string;
   lyDo: string | null;
   isVip: boolean;
-  xungDot: { soThuTu: number; hoTen: string; trangThai: string; venueTen: string; salesOwner: string } | null;
+  xungDot: { soThuTu: number; hoTen: string; moTa: string; trangThai: string; venueTen: string; salesOwner: string } | null;
 }
 
 export function ApproveQueue({ items }: { items: ChoDuyetItem[] }) {
@@ -42,7 +43,7 @@ export function ApproveQueue({ items }: { items: ChoDuyetItem[] }) {
 
 function The({ it }: { it: ChoDuyetItem }) {
   const [pending, start] = useTransition();
-  const laTrung = it.lyDo === "TRUNG_SDT";
+  const laTrung = it.lyDo === "TRUNG_SDT" || it.lyDo === "TRUNG_TEN";
 
   return (
     <div className="card p-5">
@@ -52,11 +53,12 @@ function The({ it }: { it: ChoDuyetItem }) {
             <span
               className={`chip ${laTrung ? "bg-wine/12 text-wine" : "bg-gold/15 text-gold-deep"}`}
             >
-              {laTrung ? "Trùng SĐT" : "Khách VIP"}
+              {it.lyDo === "TRUNG_SDT" ? "Trùng SĐT" : it.lyDo === "TRUNG_TEN" ? "Trùng tên và công ty" : "Khách VIP"}
             </span>
             <span className="font-mono text-sm text-ink-muted">{it.soThuTu}</span>
           </div>
           <div className="mt-2 font-display text-lg text-ink">{it.hoTen}</div>
+          {it.moTa && <div className="text-sm text-ink-soft">{it.moTa}</div>}
           <div className="text-sm text-ink-muted">
             {che4SoCuoi(it.sdt)} · {it.venueTen} · mời {it.soNguoiMoi} người · sales {it.salesOwner}
           </div>
@@ -87,8 +89,9 @@ function The({ it }: { it: ChoDuyetItem }) {
             <span className="font-medium">{it.xungDot.hoTen}</span> · {it.xungDot.venueTen} · sales{" "}
             {it.xungDot.salesOwner}
           </div>
+          {it.xungDot.moTa && <div className="text-xs text-ink-soft">{it.xungDot.moTa}</div>}
           <p className="mt-2 text-xs text-ink-muted">
-            Cùng một số điện thoại. BTC quyết định giữ khách nào, hoặc xác nhận đây là trường hợp hợp lệ rồi mới duyệt.
+            {it.lyDo === "TRUNG_SDT" ? "Cùng một số điện thoại." : "Cùng tên khách và cùng mã CORP hoặc công ty."} BTC quyết định giữ khách nào, hoặc xác nhận đây là hai người khác nhau rồi mới duyệt.
           </p>
         </div>
       )}

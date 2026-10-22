@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { xepBan } from "@/lib/actions";
+import { xepCho } from "@/lib/actions";
+import { tenGoi } from "@/lib/khach";
 import { boDau } from "@/lib/format";
 
 export interface BanRow {
@@ -12,6 +13,9 @@ export interface BanRow {
   venueMau: string;
   soNguoi: number;
   ban: string | null;
+  soGhe: string | null;
+  danhXung: string | null;
+  congTy: string | null;
   isVip: boolean;
 }
 
@@ -29,21 +33,21 @@ export function TableBoard({ guests }: { guests: BanRow[] }) {
   }, [guests]);
 
   const chuaXep = nhom.get("__chua__") || [];
-  const banCo = [...nhom.keys()].filter((k) => k !== "__chua__").sort();
+  const banCo = [...nhom.keys()].filter((k) => k !== "__chua__").sort((a, b) => a.localeCompare(b, "vi", { numeric: true }));
   const tongNguoi = guests.reduce((s, g) => s + g.soNguoi, 0);
 
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl text-ink">Xếp bàn</h1>
+          <h1 className="font-display text-2xl text-ink">Xếp chỗ ngồi</h1>
           <p className="mt-1 text-sm text-ink-muted">
-            {guests.length} khách đã xác nhận · {tongNguoi} người · {banCo.length} bàn
+            {guests.length} khách đã xác nhận · {tongNguoi} người · {banCo.length} line ghế
           </p>
         </div>
         <input
           className="input max-w-xs"
-          placeholder="Lọc theo tên hoặc bàn..."
+          placeholder="Lọc theo tên, công ty hoặc line..."
           value={loc}
           onChange={(e) => setLoc(e.target.value)}
         />
@@ -52,12 +56,12 @@ export function TableBoard({ guests }: { guests: BanRow[] }) {
       {chuaXep.length > 0 && (
         <div className="card p-5">
           <div className="mb-3 flex items-center gap-2">
-            <span className="chip bg-gold/15 text-gold-deep">Chưa xếp bàn</span>
+            <span className="chip bg-gold/15 text-gold-deep">Chưa xếp chỗ</span>
             <span className="text-sm text-ink-muted">{chuaXep.length} khách</span>
           </div>
           <div className="space-y-1.5">
             {chuaXep
-              .filter((g) => !loc || boDau(g.hoTen).includes(boDau(loc)))
+              .filter((g) => !loc || (boDau(g.hoTen).includes(boDau(loc)) || boDau(g.congTy || "").includes(boDau(loc))))
               .map((g) => (
                 <Dong key={g.id} g={g} />
               ))}
@@ -67,7 +71,7 @@ export function TableBoard({ guests }: { guests: BanRow[] }) {
 
       <div className="grid gap-4 sm:grid-cols-2">
         {banCo
-          .filter((b) => !loc || boDau(b).includes(boDau(loc)) || (nhom.get(b) || []).some((g) => boDau(g.hoTen).includes(boDau(loc))))
+          .filter((b) => !loc || boDau(b).includes(boDau(loc)) || (nhom.get(b) || []).some((g) => (boDau(g.hoTen).includes(boDau(loc)) || boDau(g.congTy || "").includes(boDau(loc)))))
           .map((b) => {
             const ds = nhom.get(b)!;
             const nguoi = ds.reduce((s, g) => s + g.soNguoi, 0);
@@ -92,43 +96,44 @@ export function TableBoard({ guests }: { guests: BanRow[] }) {
 
 function Dong({ g }: { g: BanRow }) {
   const [pending, start] = useTransition();
-  const [val, setVal] = useState(g.ban || "");
+  const [line, setLine] = useState(g.ban || "");
+  const [ghe, setGhe] = useState(g.soGhe || "");
   const [sua, setSua] = useState(false);
 
   const luu = () => {
     setSua(false);
-    if (val !== (g.ban || "")) start(() => void xepBan(g.id, val));
+    if (line !== (g.ban || "") || ghe !== (g.soGhe || "")) start(() => void xepCho(g.id, line, ghe));
   };
 
   return (
-    <div className="flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-ivory/60">
-      <span className="font-mono text-xs text-ink-muted">{g.soThuTu}</span>
-      <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: g.venueMau }} />
-      <div className="min-w-0 flex-1">
-        <div className="truncate text-sm text-ink">
-          {g.hoTen}
-          {g.isVip && <span className="ml-1.5 chip bg-gold/15 text-gold-deep">VIP</span>}
+    <div className="rounded-lg px-2 py-1.5 hover:bg-ivory/60">
+      <div className="flex items-center gap-3">
+        <span className="font-mono text-xs text-ink-muted">{g.soThuTu}</span>
+        <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: g.venueMau }} />
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-sm text-ink">
+            {tenGoi(g)}
+            {g.isVip && <span className="ml-1.5 chip bg-gold/15 text-gold-deep">VIP</span>}
+            {g.soGhe && <span className="ml-1.5 chip bg-gold text-white">Ghế {g.soGhe}</span>}
+          </div>
+          <div className="truncate text-xs text-ink-muted">
+            {[g.congTy, g.venueTen, `${g.soNguoi} người`].filter(Boolean).join(" · ")}
+          </div>
         </div>
-        <div className="text-xs text-ink-muted">{g.venueTen} · {g.soNguoi} người</div>
+        {!sua && (
+          <button className="btn-ghost btn-sm shrink-0" disabled={pending} onClick={() => setSua(true)}>
+            {pending ? "..." : g.ban ? "Đổi chỗ" : "Xếp chỗ"}
+          </button>
+        )}
       </div>
-      {sua ? (
-        <input
-          autoFocus
-          className="input w-28 px-2 py-1 text-xs"
-          value={val}
-          onChange={(e) => setVal(e.target.value)}
-          onBlur={luu}
-          onKeyDown={(e) => e.key === "Enter" && luu()}
-          placeholder="Bàn 01"
-        />
-      ) : (
-        <button
-          className="btn-ghost btn-sm shrink-0"
-          disabled={pending}
-          onClick={() => setSua(true)}
-        >
-          {pending ? "..." : g.ban ? "Đổi bàn" : "Xếp bàn"}
-        </button>
+      {sua && (
+        <div className="mt-2 flex flex-wrap items-center gap-2 pl-8">
+          <input autoFocus className="input w-36 px-2 py-1 text-xs" value={line} onChange={(e) => setLine(e.target.value)} placeholder="LINE 9 & 10" />
+          <input className="input w-24 px-2 py-1 text-xs" value={ghe} onChange={(e) => setGhe(e.target.value)} onKeyDown={(e) => e.key === "Enter" && luu()} placeholder="Ghế VIP" />
+          <button className="btn-gold btn-sm" onClick={luu}>
+            Lưu
+          </button>
+        </div>
       )}
     </div>
   );

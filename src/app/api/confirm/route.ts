@@ -27,9 +27,10 @@ export async function POST(req: NextRequest) {
   }
 
   // Doi chieu so thu tu va 4 so cuoi SDT
-  if (guest.soThuTu !== soThuTu || guest.sdt.slice(-4) !== last4) {
+  // Khach co SDT: doi chieu them 4 so cuoi. Khong co SDT: duong link rieng va so thu tu la du.
+  if (guest.soThuTu !== soThuTu || (guest.sdt && guest.sdt.slice(-4) !== last4)) {
     return NextResponse.json(
-      { ok: false, thongBao: "Số thứ tự hoặc 4 số cuối điện thoại chưa khớp. Quý khách vui lòng kiểm tra lại." },
+      { ok: false, thongBao: guest.sdt ? "Số thứ tự hoặc 4 số cuối điện thoại chưa khớp. Quý khách vui lòng kiểm tra lại." : "Số thứ tự chưa khớp với thiệp. Quý khách vui lòng kiểm tra lại." },
       { status: 403 }
     );
   }

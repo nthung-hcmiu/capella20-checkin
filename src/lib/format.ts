@@ -15,8 +15,9 @@ export function dinhDangGioNgan(d?: Date | string | null): string {
   return date.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
 }
 
-export function che4SoCuoi(sdt: string): string {
-  if (!sdt || sdt.length < 4) return "****";
+export function che4SoCuoi(sdt: string | null | undefined): string {
+  if (!sdt) return "không có SĐT";
+  if (sdt.length < 4) return "****";
   return "***" + sdt.slice(-4);
 }
 

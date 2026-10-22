@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { SU_KIEN, TRANG_THAI, NHAN_TRANG_THAI } from "@/lib/constants";
 import { ConfirmForm } from "@/components/ConfirmForm";
 import { layNguoiDung } from "@/lib/auth";
+import { tenGoi } from "@/lib/khach";
 
 export const dynamic = "force-dynamic";
 
@@ -47,7 +48,10 @@ export default async function ThiepPage({ params }: { params: { ma: string } }) 
     <Khung>
       <div className="text-center">
         <div className="text-[11px] uppercase tracking-[0.3em] text-gold-deep">Trân trọng kính mời</div>
-        <h1 className="mt-3 font-display text-2xl text-ink">{guest.hoTen}</h1>
+        <h1 className="mt-3 font-display text-2xl text-ink">{tenGoi(guest)}</h1>
+        {(guest.chucVu || guest.congTy) && (
+          <p className="mt-1 text-sm text-ink-muted">{[guest.chucVu, guest.congTy].filter(Boolean).join(" · ")}</p>
+        )}
         <div className="mx-auto mt-4 deco-line w-28" />
         <p className="mt-4 text-sm leading-relaxed text-ink-soft">
           Đến dự Đêm tri ân khách hàng nhân dịp kỷ niệm <b>20 năm Capella</b>.
@@ -78,7 +82,8 @@ export default async function ThiepPage({ params }: { params: { ma: string } }) 
               daXacNhan={guest.soNguoiXacNhan}
               trangThai={guest.trangThai}
               goiYSo={laDemo ? guest.soThuTu : undefined}
-              goiYLast4={laDemo ? guest.sdt.slice(-4) : undefined}
+              goiYLast4={laDemo && guest.sdt ? guest.sdt.slice(-4) : undefined}
+              canSdt={!!guest.sdt}
             />
           </>
         )}

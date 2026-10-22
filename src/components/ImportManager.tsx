@@ -8,15 +8,31 @@ import { StatusBadge } from "./StatusBadge";
 
 type Truong = keyof DongNhap;
 
-const TRUONG: { key: Truong; nhan: string; batBuoc?: boolean; dongNghia: string[] }[] = [
-  { key: "hoTen", nhan: "Họ tên", batBuoc: true, dongNghia: ["ho ten", "ho va ten", "ten khach", "ten khach hang", "khach hang", "khach moi", "ten", "full name", "name"] },
-  { key: "sdt", nhan: "Số điện thoại", batBuoc: true, dongNghia: ["sdt", "so dien thoai", "dien thoai", "so dt", "dt", "phone", "mobile", "di dong"] },
-  { key: "venue", nhan: "Venue", dongNghia: ["venue", "chi nhanh", "nha hang", "dia diem", "co so", "sanh", "trung tam"] },
-  { key: "soNguoiMoi", nhan: "Số người mời", dongNghia: ["so nguoi moi", "so nguoi duoc moi", "so nguoi", "so khach", "so luong", "sl"] },
-  { key: "sales", nhan: "Sales phụ trách", dongNghia: ["sales phu trach", "sales", "sale", "nhan vien phu trach", "nguoi phu trach", "phu trach", "nhan vien", "nv"] },
-  { key: "vip", nhan: "VIP", dongNghia: ["vip", "khach vip", "hang khach"] },
-  { key: "ghiChu", nhan: "Ghi chú", dongNghia: ["ghi chu", "note", "notes", "chu thich"] },
+const TRUONG: { key: Truong; nhan: string; batBuoc?: boolean; phu?: boolean; dongNghia: string[] }[] = [
+  { key: "hoTen", nhan: "Tên khách mời", batBuoc: true, dongNghia: ["ten khach moi", "ho ten", "ho va ten", "ten khach", "ten khach hang", "khach hang", "khach moi", "ten", "full name", "name"] },
+  { key: "sdt", nhan: "Số điện thoại", dongNghia: ["sdt", "so dien thoai", "dien thoai", "so dt", "dt", "phone", "mobile", "di dong"] },
+  { key: "venue", nhan: "Đơn vị (venue)", dongNghia: ["don vi", "venue", "chi nhanh", "nha hang", "dia diem", "co so", "sanh", "trung tam"] },
+  { key: "soNguoiMoi", nhan: "Số lượng người tham dự", dongNghia: ["so luong nguoi tham du", "so nguoi moi", "so nguoi duoc moi", "so nguoi tham du", "so nguoi", "so khach", "so luong", "sl"] },
+  { key: "sales", nhan: "Người phụ trách tiếp khách", dongNghia: ["ho va ten nguoi phu trach tiep khach", "nguoi phu trach tiep khach", "sales phu trach", "nguoi phu trach", "sales", "sale", "nhan vien phu trach", "phu trach", "nhan vien", "nv"] },
+  { key: "vip", nhan: "Phân loại khách VIP", dongNghia: ["phan loai khach vip", "khach vip", "vip", "hang khach"] },
+  { key: "danhXung", nhan: "Danh xưng", phu: true, dongNghia: ["danh xung", "xung ho", "gioi tinh"] },
+  { key: "chucVu", nhan: "Chức vụ", phu: true, dongNghia: ["chuc vu", "chuc danh", "position", "title"] },
+  { key: "congTy", nhan: "Company Name", phu: true, dongNghia: ["company name", "ten cong ty", "cong ty", "company", "doanh nghiep"] },
+  { key: "maCorp", nhan: "Mã CORP Netsuite", phu: true, dongNghia: ["ma corp netsuite", "ma corp", "ma netsuite", "ma khach hang"] },
+  { key: "nhomKhachMoi", nhan: "Nhóm khách mời", phu: true, dongNghia: ["nhom khach moi"] },
+  { key: "donViKinhDoanh", nhan: "Thuộc đơn vị kinh doanh", phu: true, dongNghia: ["thuoc don vi kinh doanh", "don vi kinh doanh"] },
+  { key: "nhomKhach", nhan: "Nhóm khách", phu: true, dongNghia: ["nhom khach"] },
+  { key: "linhVuc", nhan: "Lĩnh vực", phu: true, dongNghia: ["linh vuc", "nganh nghe", "nganh"] },
+  { key: "nguonKhach", nhan: "Phân loại khách", phu: true, dongNghia: ["phan loai khach", "nguon khach"] },
+  { key: "doanhThuDuKien", nhan: "Doanh thu dự kiến", phu: true, dongNghia: ["doanh thu du kien", "doanh thu"] },
+  { key: "phongBan", nhan: "Phòng ban", phu: true, dongNghia: ["phong ban", "bo phan"] },
+  { key: "soGhe", nhan: "Số ghế cho khách VIP", phu: true, dongNghia: ["so ghe ngoi cho khach vip", "so ghe cho khach vip", "so ghe"] },
+  { key: "thiepGiay", nhan: "Round 2: Đã gửi thiệp giấy", phu: true, dongNghia: ["round 2 da gui thiep giay", "da gui thiep giay", "thiep giay"] },
+  { key: "ghiChu", nhan: "Ghi chú", phu: true, dongNghia: ["ghi chu", "note", "notes", "chu thich"] },
 ];
+
+const TRUONG_XEM = TRUONG.filter((f) => ["danhXung", "hoTen", "chucVu", "congTy", "sdt", "venue", "soNguoiMoi", "vip", "sales"].includes(f.key))
+  .sort((a, b) => ["danhXung", "hoTen", "chucVu", "congTy", "sdt", "venue", "soNguoiMoi", "vip", "sales"].indexOf(a.key) - ["danhXung", "hoTen", "chucVu", "congTy", "sdt", "venue", "soNguoiMoi", "vip", "sales"].indexOf(b.key));
 
 // Doc CSV theo chuan (dau ngoac kep, xuong dong trong o), tu nhan dau phay hoac cham phay
 function docCsv(text: string): string[][] {
@@ -52,30 +68,36 @@ function oThanhChu(v: unknown): string {
 }
 
 function doanCot(tieuDe: string[]): Record<Truong, number> {
-  const chuan = tieuDe.map((h) => boDau(h).replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim());
-  const ketQua = {} as Record<Truong, number>;
+  const chuan = tieuDe.map((h) => boDau(String(h)).replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim());
+  const ketQua = Object.fromEntries(TRUONG.map((f) => [f.key, -1])) as Record<Truong, number>;
   const daDung = new Set<number>();
+  // Luot 1: khop dung nguyen tieu de cho moi truong, de "Phan loai khach" khong lay nham cot "Phan loai khach VIP"
   for (const f of TRUONG) {
-    let idx = chuan.findIndex((h, i) => !daDung.has(i) && f.dongNghia.includes(h));
-    if (idx < 0) {
-      // Khop mot phan, uu tien tu dong nghia dai nhat
-      for (const d of [...f.dongNghia].sort((a, b) => b.length - a.length)) {
-        if (d.length < 3) continue;
-        idx = chuan.findIndex((h, i) => !daDung.has(i) && h.includes(d));
-        if (idx >= 0) break;
-      }
+    const idx = chuan.findIndex((h, i) => !daDung.has(i) && f.dongNghia.includes(h));
+    if (idx >= 0) { ketQua[f.key] = idx; daDung.add(idx); }
+  }
+  // Luot 2: khop mot phan cho truong con thieu, uu tien tu dong nghia dai nhat
+  for (const f of TRUONG) {
+    if (ketQua[f.key] >= 0) continue;
+    for (const d of [...f.dongNghia].sort((a, b) => b.length - a.length)) {
+      if (d.length < 3) continue;
+      const idx = chuan.findIndex((h, i) => !daDung.has(i) && h.includes(d));
+      if (idx >= 0) { ketQua[f.key] = idx; daDung.add(idx); break; }
     }
-    ketQua[f.key] = idx;
-    if (idx >= 0) daDung.add(idx);
   }
   return ketQua;
 }
 
 function taiFileMau() {
-  const tieuDe = ["Họ tên", "Số điện thoại", "Venue", "Số người mời", "Sales phụ trách", "VIP", "Ghi chú"];
+  const tieuDe = [
+    "STT", "Đơn vị", "Nhóm khách mời", "Thuộc đơn vị kinh doanh", "Mã CORP Netsuite", "Company Name", "Nhóm khách",
+    "Lĩnh vực", "Danh xưng", "Tên khách mời", "Chức vụ", "Số điện thoại", "Số lượng người tham dự", "Phân loại khách",
+    "Phân loại khách VIP", "Doanh thu dự kiến", "Round 2: Đã gửi thiệp giấy", "Số ghế cho khách VIP",
+    "Họ và tên người phụ trách tiếp khách", "Phòng ban", "Ghi chú",
+  ];
   const mau = [
-    ["Nguyễn Văn An", "0901234567", "Riverside Palace", "2", "Thu Hà", "", ""],
-    ["Trần Thị Bình", "0912345678", "Gallery Hall", "1", "Minh Quân", "x", "Khách lâu năm"],
+    ["1", "Gallery Hall", "Khách Corporate", "Capella Gallery Hall", "COR0000001", "CÔNG TY TNHH MẪU A", "Khách end-user", "Công nghệ", "Ông", "Nguyễn Văn An", "Giám đốc", "0901234567", "1", "Netsuite", "VIP", "", "", "10.01", "Thu Hà", "Phòng kinh doanh", ""],
+    ["2", "Riverside Palace", "Đối tác Capella", "Riverside Palace", "COR0000002", "CÔNG TY CP MẪU B", "Agency/báo chí/truyền thông", "Sự kiện", "Bà", "Trần Thị Bình", "Trưởng phòng", "", "2", "Contact mới", "THƯỜNG", "", "", "", "Minh Quân", "Marketing", "Không có SĐT vẫn nhập được"],
   ];
   const csv = "﻿" + [tieuDe, ...mau].map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(",")).join("\r\n");
   const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
@@ -99,6 +121,7 @@ export function ImportManager({ venues, salesTeam }: { venues: { id: string; ten
   const [daNhap, setDaNhap] = useState<KetQuaNhap | null>(null);
   const [pending, start] = useTransition();
   const [chiXemLoi, setChiXemLoi] = useState(false);
+  const [vipDaDuyet, setVipDaDuyet] = useState(false);
 
   const tieuDe = bang[dongTieuDe] || [];
   const dongDuLieu = useMemo(
@@ -149,15 +172,17 @@ export function ImportManager({ venues, salesTeam }: { venues: { id: string; ten
   const dongNhap = (): DongNhap[] =>
     dongDuLieu.map((r) => {
       const lay = (k: Truong) => (cot && cot[k] >= 0 ? r[cot[k]] ?? "" : "");
-      return { hoTen: lay("hoTen"), sdt: lay("sdt"), venue: lay("venue"), soNguoiMoi: lay("soNguoiMoi"), sales: lay("sales"), vip: lay("vip"), ghiChu: lay("ghiChu") };
+      return Object.fromEntries(TRUONG.map((f) => [f.key, lay(f.key)])) as unknown as DongNhap;
     });
 
-  const thieuCot = !cot || cot.hoTen < 0 || cot.sdt < 0 || (cot.venue < 0 && !venueMacDinh);
+  const thieuCot = !cot || cot.hoTen < 0 || (cot.venue < 0 && !venueMacDinh);
+  const soCotPhu = cot ? TRUONG.filter((f) => f.phu && cot[f.key] >= 0).length : 0;
 
   const chay = (ghi: boolean) =>
     start(async () => {
       const r = await nhapDanhSach(dongNhap(), {
         venueMacDinh: venueMacDinh || undefined,
+        vipDaDuyet,
         salesMacDinh: salesMacDinh || undefined,
         dongBatDau: dongTieuDe + 2,
         ghi,
@@ -219,7 +244,7 @@ export function ImportManager({ venues, salesTeam }: { venues: { id: string; ten
                 ))}
               </select>
             </div>
-            {TRUONG.map((f) => (
+            {TRUONG.filter((f) => !f.phu).map((f) => (
               <div key={f.key}>
                 <label className="label">
                   {f.nhan} {f.batBuoc && <span className="text-wine">*</span>}
@@ -262,21 +287,53 @@ export function ImportManager({ venues, salesTeam }: { venues: { id: string; ten
               </select>
               <p className="mt-1 text-xs text-ink-muted">Dùng cho dòng không ghi sales.</p>
             </div>
+            <label className="flex items-start gap-2 text-sm text-ink-soft sm:col-span-2 lg:col-span-3">
+              <input type="checkbox" className="mt-0.5 h-4 w-4 accent-gold" checked={vipDaDuyet} onChange={(e) => { setVipDaDuyet(e.target.checked); setKiemTra(null); }} />
+              <span>
+                Khách VIP trong file này BTC đã duyệt
+                <span className="block text-xs text-ink-muted">Bỏ trống thì khách VIP vào hàng Chờ duyệt như khi sales tự thêm.</span>
+              </span>
+            </label>
           </div>
+
+          <details className="mt-4 rounded-xl border border-ivory-deep bg-ivory/40 p-4" open={soCotPhu < 6}>
+            <summary className="cursor-pointer text-sm font-medium text-ink">
+              Thông tin doanh nghiệp và phân loại ({soCotPhu}/{TRUONG.filter((f) => f.phu).length} cột đã ghép)
+            </summary>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {TRUONG.filter((f) => f.phu).map((f) => (
+                <div key={f.key}>
+                  <label className="label">{f.nhan}</label>
+                  <select
+                    className="input"
+                    value={cot[f.key]}
+                    onChange={(e) => { setCot({ ...cot, [f.key]: parseInt(e.target.value, 10) }); setKiemTra(null); }}
+                  >
+                    <option value={-1}>Không có cột này</option>
+                    {tieuDe.map((h, i) => (
+                      <option key={i} value={i}>
+                        Cột {i + 1}: {h || "(trống)"}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ))}
+            </div>
+          </details>
 
           <div className="mt-5 overflow-x-auto rounded-xl border border-ivory-deep">
             <table className="w-full text-xs">
               <thead className="bg-ivory/70 text-left text-ink-muted">
                 <tr>
-                  {TRUONG.map((f) => (
-                    <th key={f.key} className="px-3 py-2 font-medium">{f.nhan}</th>
+                  {TRUONG_XEM.map((f) => (
+                    <th key={f.key} className="whitespace-nowrap px-3 py-2 font-medium">{f.nhan}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {dongNhap().slice(0, 5).map((r, i) => (
                   <tr key={i} className="border-t border-ivory-deep">
-                    {TRUONG.map((f) => (
+                    {TRUONG_XEM.map((f) => (
                       <td key={f.key} className="px-3 py-2 text-ink">{r[f.key] || <span className="text-ink-muted">-</span>}</td>
                     ))}
                   </tr>
@@ -295,7 +352,7 @@ export function ImportManager({ venues, salesTeam }: { venues: { id: string; ten
                 {pending ? "Đang nhập..." : `Nhập ${kiemTra.tongHop.hopLe.toLocaleString("vi-VN")} khách`}
               </button>
             )}
-            {thieuCot && <span className="text-xs text-wine">Cần có cột Họ tên, Số điện thoại, và cột Venue hoặc venue mặc định.</span>}
+            {thieuCot && <span className="text-xs text-wine">Cần có cột Tên khách mời, và cột Đơn vị (venue) hoặc venue mặc định.</span>}
           </div>
         </div>
       )}
@@ -308,6 +365,11 @@ export function ImportManager({ venues, salesTeam }: { venues: { id: string; ten
           <div className={`mt-3 rounded-xl px-4 py-2.5 text-sm ${ketQua.ok ? "bg-sage/10 text-sage" : "bg-wine/10 text-wine"}`}>
             {ketQua.thongBao}
           </div>
+          {ketQua.tongHop.khongSdt > 0 && (
+            <p className="mt-3 text-xs text-ink-muted">
+              {ketQua.tongHop.khongSdt.toLocaleString("vi-VN")} khách không có SĐT: chống trùng theo tên và mã CORP / công ty, khách xác nhận trên trang thiệp chỉ cần số thứ tự.
+            </p>
+          )}
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
             <O nhan="Hợp lệ" so={ketQua.tongHop.hopLe} />
             <O nhan="Nháp" so={ketQua.tongHop.nhap} />
@@ -343,7 +405,7 @@ export function ImportManager({ venues, salesTeam }: { venues: { id: string; ten
                 {dongHien.map((d) => (
                   <tr key={d.dong} className="border-t border-ivory-deep align-top">
                     <td className="px-3 py-2 text-ink-muted">{d.dong}</td>
-                    <td className="px-3 py-2 text-ink">{d.hoTen || "-"}</td>
+                    <td className="px-3 py-2 text-ink">{d.hoTen || "-"}{d.congTy && <div className="text-ink-muted">{d.congTy}</div>}</td>
                     <td className="px-3 py-2 font-mono text-ink-soft">{d.sdt || "-"}</td>
                     <td className="px-3 py-2 text-ink-soft">{d.venueTen || "-"}</td>
                     <td className="px-3 py-2 font-mono">{d.soThuTu ?? "-"}</td>
@@ -379,8 +441,9 @@ export function ImportManager({ venues, salesTeam }: { venues: { id: string; ten
       <div className="card p-5 text-sm text-ink-soft">
         <div className="font-medium text-ink">Quy tắc khi nhập</div>
         <ul className="mt-2 list-disc space-y-1 pl-5">
-          <li>SĐT được chuẩn hóa (+84, dấu cách, dấu chấm, mất số 0 đầu do Excel). Trùng với khách đã có hoặc trùng trong file thì vào hàng Chờ duyệt.</li>
-          <li>Cột VIP ghi x, có, 1, yes hoặc VIP thì khách vào hàng Chờ duyệt.</li>
+          <li>Dùng được thẳng file danh sách mẫu các năm trước (sheet đầu tiên). Cột SĐT không bắt buộc.</li>
+          <li>Chống trùng: có SĐT thì theo SĐT (chuẩn hóa +84, dấu cách, mất số 0 do Excel). Không có SĐT thì theo tên khách cùng mã CORP, hoặc cùng công ty. Trùng thì vào hàng Chờ duyệt.</li>
+          <li>Cột VIP ghi VIP, x, có hoặc 1 là khách VIP (THƯỜNG là khách thường). Khách VIP vào hàng Chờ duyệt, trừ khi tích ô BTC đã duyệt.</li>
           <li>Venue hết quota thì khách vào Danh sách chờ. Venue ghi tên ngắn như “Riverside”, “Claris” vẫn nhận được.</li>
           <li>Tên sales phải trùng họ tên tài khoản sales thì sales đó mới thấy khách trong Cổng Sales.</li>
         </ul>
