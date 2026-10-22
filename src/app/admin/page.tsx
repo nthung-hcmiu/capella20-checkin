@@ -1,21 +1,20 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { yeuCauTrang } from "@/lib/auth";
-import { CHISO, TRANG_THAI, NHAN_TRANG_THAI, MAU_TRANG_THAI } from "@/lib/constants";
+import { CHISO, DA_PHAT_HANH_VE, TRANG_THAI, NHAN_TRANG_THAI, MAU_TRANG_THAI } from "@/lib/constants";
+import { dinhDangTien } from "@/lib/format";
+import { cong, rong, tongHopTheoVenue } from "@/lib/kpi";
 import { StatusBadge } from "@/components/StatusBadge";
 
 export const dynamic = "force-dynamic";
 
-const PIPELINE = [
-  TRANG_THAI.DA_PHAT_HANH, TRANG_THAI.DA_MOI, TRANG_THAI.THAM_DU,
-  TRANG_THAI.CHUA_PHAN_HOI, TRANG_THAI.KHONG_THAM_DU, TRANG_THAI.DA_CHECKIN,
-];
+const PIPELINE = DA_PHAT_HANH_VE;
 
 function soNguoi(g: { soNguoiXacNhan: number | null; soNguoiMoi: number }) {
   return g.soNguoiXacNhan ?? g.soNguoiMoi;
 }
 
-export default async function Dashboard() {
+export default async function Dashboard({ searchParams }: { searchParams: { khongQuyen?: string } }) {
   await yeuCauTrang(["ADMIN"], "/admin");
   const guests = await prisma.guest.findMany({ include: { venue: true } });
   const venues = await prisma.venue.findMany({ orderBy: { thuTu: "asc" } });
@@ -23,7 +22,7 @@ export default async function Dashboard() {
   const demTrangThai: Record<string, number> = {};
   for (const g of guests) demTrangThai[g.trangThai] = (demTrangThai[g.trangThai] || 0) + 1;
 
-  const daPhatHanh = guests.filter((g) => PIPELINE.includes(g.trangThai as any)).length;
+  const daPhatHanh = guests.filter((g) => PIPELINE.includes(g.trangThai)).length;
   const daXacNhanKhach = guests.filter((g) =>
     [TRANG_THAI.THAM_DU, TRANG_THAI.DA_CHECKIN].includes(g.trangThai as any)
   );
@@ -38,7 +37,7 @@ export default async function Dashboard() {
   const doiSoat = (khoa: (g: (typeof guests)[number]) => string) => {
     const m = new Map<string, { khach: number; dangKy: number; den: number; thiepDen: number }>();
     for (const g of guests) {
-      if (!PIPELINE.includes(g.trangThai as any)) continue;
+      if (!PIPELINE.includes(g.trangThai)) continue;
       const k = khoa(g) || "Chưa phân nhóm";
       const r = m.get(k) || { khach: 0, dangKy: 0, den: 0, thiepDen: 0 };
       r.khach++;
@@ -55,17 +54,26 @@ export default async function Dashboard() {
   const theoSales = doiSoat((g) => g.salesOwner);
   const soCho = demTrangThai[TRANG_THAI.CHO_DUYET] || 0;
 
+  const soLieu = tongHopTheoVenue(guests);
+  const dongVenue = venues
+    .map((v) => ({ v, r: soLieu.get(v.id) || rong() }))
+    .filter(({ v, r }) => v.quota > 0 || r.soKhach > 0);
+  const tongVenue = dongVenue.reduce((t, { r }) => cong(t, r), rong());
+
   const tiLeXacNhan = Math.min(100, Math.round((nguoiXacNhan / CHISO.nguongXacNhan) * 100));
 
   return (
     <div className="space-y-7">
+      {searchParams.khongQuyen && (
+        <div className="rounded-xl bg-wine/10 px-4 py-3 text-sm text-wine">Trang vừa mở chỉ dành cho Quản trị.</div>
+      )}
       <div>
         <h1 className="font-display text-2xl text-ink">Bảng điều khiển</h1>
         <p className="mt-1 text-sm text-ink-muted">Đếm người, không đếm thiệp. Số liệu cập nhật theo thời gian thực.</p>
       </div>
 
       {/* KPI chinh */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Kpi
           nhan="Người đã xác nhận"
           so={nguoiXacNhan}
@@ -75,7 +83,23 @@ export default async function Dashboard() {
         />
         <Kpi nhan="Thiệp đã phát hành" so={daPhatHanh} phu={`dự kiến ${CHISO.soThiepPhatHanh}`} />
         <Kpi nhan="Người đã check in" so={nguoiCheckin} phu={`${daCheckin.length} thiệp đã đến`} />
-        <Kpi nhan="Chờ BTC duyệt" so={soCho} phu="trùng khách hoặc VIP" canhBao={soCho > 0} />
+        <Kpi nhan="Chờ BTC duyệt" so={soCho} phu="sales đã gửi, BTC chưa duyệt" canhBao={soCho > 0} />
+        <Kpi
+          nhan="Công ty được mời"
+          so={tongVenue.soCongTy}
+          phu={`mục tiêu ${CHISO.tongCongTyMucTieu} công ty check in`}
+          tiLe={Math.min(100, Math.round((tongVenue.soCongTy / CHISO.tongCongTyMucTieu) * 100))}
+        />
+        <Kpi
+          nhan="Doanh thu dự kiến"
+          so={tongVenue.doanhThu}
+          hien={dinhDangTien(tongVenue.doanhThu)}
+          phu={`cam kết ${dinhDangTien(venues.reduce((t, v) => t + v.doanhThuCamKet, 0))}`}
+          tiLe={(() => {
+            const camKet = venues.reduce((t, v) => t + v.doanhThuCamKet, 0);
+            return camKet ? Math.min(100, Math.round((tongVenue.doanhThu / camKet) * 100)) : 0;
+          })()}
+        />
       </div>
 
       {/* Doi soat */}
@@ -126,10 +150,15 @@ export default async function Dashboard() {
 
       {/* Theo venue */}
       <div className="card overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4">
-          <h2 className="font-display text-lg text-ink">Theo venue</h2>
+        <div className="flex flex-wrap items-center justify-between gap-2 px-6 py-4">
+          <div>
+            <h2 className="font-display text-lg text-ink">Theo venue</h2>
+            <p className="text-xs text-ink-muted">
+              Thực tế so với KPI. Doanh thu dự kiến cộng theo công ty (mỗi công ty tính một lần), không tính khách đã hủy.
+            </p>
+          </div>
           <Link href="/admin/quota" className="text-xs font-medium text-brand hover:underline">
-            Xem quota →
+            Xem quota và KPI →
           </Link>
         </div>
         <div className="hairline" />
@@ -138,35 +167,47 @@ export default async function Dashboard() {
             <thead>
               <tr className="text-left text-xs uppercase tracking-wider text-ink-muted">
                 <th className="px-6 py-3 font-medium">Venue</th>
-                <th className="px-3 py-3 font-medium">Dải số</th>
-                <th className="px-3 py-3 text-right font-medium">Khách</th>
+                <th className="px-3 py-3 text-right font-medium">Doanh thu dự kiến</th>
+                <th className="px-3 py-3 text-right font-medium">Số công ty</th>
+                <th className="px-3 py-3 text-right font-medium">Số khách</th>
                 <th className="px-3 py-3 text-right font-medium">Xác nhận</th>
                 <th className="px-3 py-3 text-right font-medium">Check in</th>
-                <th className="px-6 py-3 text-right font-medium">Quota</th>
+                <th className="px-6 py-3 text-right font-medium">Thiệp / quota</th>
               </tr>
             </thead>
             <tbody>
-              {venues.map((v) => {
-                const ds = guests.filter((g) => g.venueId === v.id);
-                if (ds.length === 0 && v.quota === 0) return null;
-                const xn = ds.filter((g) => [TRANG_THAI.THAM_DU, TRANG_THAI.DA_CHECKIN].includes(g.trangThai as any));
-                const ci = ds.filter((g) => g.trangThai === TRANG_THAI.DA_CHECKIN);
-                return (
-                  <tr key={v.id} className="border-t border-ivory-deep">
-                    <td className="px-6 py-3">
-                      <span className="inline-flex items-center gap-2">
-                        <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: v.mauSac }} />
-                        {v.ten}
-                      </span>
-                    </td>
-                    <td className="px-3 py-3 text-ink-muted">{v.rangeStart} đến {v.rangeEnd}</td>
-                    <td className="px-3 py-3 text-right">{ds.length}</td>
-                    <td className="px-3 py-3 text-right">{xn.length}</td>
-                    <td className="px-3 py-3 text-right">{ci.length}</td>
-                    <td className="px-6 py-3 text-right text-ink-muted">{v.quota || "-"}</td>
-                  </tr>
-                );
-              })}
+              {dongVenue.map(({ v, r }) => (
+                <tr key={v.id} className="border-t border-ivory-deep">
+                  <td className="px-6 py-3">
+                    <span className="inline-flex items-center gap-2">
+                      <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: v.mauSac }} />
+                      {v.ten}
+                    </span>
+                    <div className="pl-[18px] text-[11px] text-ink-muted">{v.rangeStart} đến {v.rangeEnd}</div>
+                  </td>
+                  <OSoSanh thucTe={r.doanhThu} mucTieu={v.doanhThuCamKet} tien />
+                  <OSoSanh thucTe={r.soCongTy} mucTieu={v.mucTieuCongTy} />
+                  <OSoSanh thucTe={r.soKhach} mucTieu={v.mucTieuKhach} />
+                  <td className="px-3 py-3 text-right">{r.xacNhan}</td>
+                  <td className="px-3 py-3 text-right">{r.checkin}</td>
+                  <td className="px-6 py-3 text-right">
+                    {r.thiep}
+                    <span className="text-ink-muted"> / {v.quota || "-"}</span>
+                  </td>
+                </tr>
+              ))}
+              <tr className="border-t border-ivory-deep bg-ivory/50 font-medium">
+                <td className="px-6 py-3 text-ink">Tổng</td>
+                <OSoSanh thucTe={tongVenue.doanhThu} mucTieu={venues.reduce((s, v) => s + v.doanhThuCamKet, 0)} tien />
+                <OSoSanh thucTe={tongVenue.soCongTy} mucTieu={venues.reduce((s, v) => s + v.mucTieuCongTy, 0)} />
+                <OSoSanh thucTe={tongVenue.soKhach} mucTieu={venues.reduce((s, v) => s + v.mucTieuKhach, 0)} />
+                <td className="px-3 py-3 text-right">{tongVenue.xacNhan}</td>
+                <td className="px-3 py-3 text-right">{tongVenue.checkin}</td>
+                <td className="px-6 py-3 text-right">
+                  {tongVenue.thiep}
+                  <span className="text-ink-muted"> / {venues.reduce((s, v) => s + v.quota, 0)}</span>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -175,16 +216,32 @@ export default async function Dashboard() {
   );
 }
 
+// O so sanh thuc te voi muc tieu, kem % dat
+function OSoSanh({ thucTe, mucTieu, tien }: { thucTe: number; mucTieu: number; tien?: boolean }) {
+  const hien = (n: number) => (tien ? dinhDangTien(n) : n.toLocaleString("vi-VN"));
+  const pct = mucTieu > 0 ? Math.round((thucTe / mucTieu) * 100) : null;
+  return (
+    <td className="px-3 py-3 text-right align-top">
+      <div className="whitespace-nowrap text-ink">{tien && !thucTe ? "-" : hien(thucTe)}</div>
+      {mucTieu > 0 && (
+        <div className="whitespace-nowrap text-[11px] text-ink-muted">
+          / {hien(mucTieu)} · <span className={pct! >= 100 ? "text-sage" : ""}>{pct}%</span>
+        </div>
+      )}
+    </td>
+  );
+}
+
 function Kpi({
-  nhan, so, phu, tiLe, noiBat, canhBao,
+  nhan, so, hien, phu, tiLe, noiBat, canhBao,
 }: {
-  nhan: string; so: number; phu: string; tiLe?: number; noiBat?: boolean; canhBao?: boolean;
+  nhan: string; so: number; hien?: string; phu: string; tiLe?: number; noiBat?: boolean; canhBao?: boolean;
 }) {
   return (
     <div className={`card p-5 ${noiBat ? "ring-1 ring-brand/30" : ""} ${canhBao ? "ring-1 ring-wine/30" : ""}`}>
       <div className="text-[11px] uppercase tracking-wider text-ink-muted">{nhan}</div>
       <div className={`mt-1.5 font-display text-3xl ${canhBao && so > 0 ? "text-wine" : "text-ink"}`}>
-        {so.toLocaleString("vi-VN")}
+        {hien ?? so.toLocaleString("vi-VN")}
       </div>
       <div className="mt-0.5 text-[11px] text-ink-muted">{phu}</div>
       {typeof tiLe === "number" && (

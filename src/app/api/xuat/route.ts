@@ -27,7 +27,7 @@ export async function GET() {
     "Họ và tên người phụ trách tiếp khách", "Phòng ban", "Ghi chú",
     "Số thứ tự thiệp", "Trạng thái", "Số người xác nhận", "Số người thực tế đến", "Giờ check in", "Mã thiệp", "Link thiệp",
   ];
-  const daNhanOnline = ["DA_MOI", "THAM_DU", "CHUA_PHAN_HOI", "KHONG_THAM_DU", "DA_CHECKIN", "VANG_MAT"];
+  const daNhanOnline = ["DA_MOI", "THAM_DU", "KHONG_THAM_DU", "DA_CHECKIN", "VANG_MAT"];
   const dong = ds.map((g, i) =>
     [
       o(i + 1), o(g.venue.ten), o(g.nhomKhachMoi), o(g.donViKinhDoanh), o(g.maCorp), o(g.congTy), o(g.nhomKhach),

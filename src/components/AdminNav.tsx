@@ -10,14 +10,14 @@ const MUC = [
   { href: "/admin/duyet", ten: "Chờ duyệt" },
   { href: "/admin/quota", ten: "Quota venue" },
   { href: "/admin/tai-khoan", ten: "Tài khoản" },
-  { href: "/admin/du-lieu", ten: "Dữ liệu" },
+  { href: "/admin/du-lieu", ten: "Dữ liệu", quanTri: true },
 ];
 
-export function AdminNav({ soCho }: { soCho: number }) {
+export function AdminNav({ soCho, quanTri }: { soCho: number; quanTri: boolean }) {
   const path = usePathname();
   return (
     <nav className="-mx-5 flex gap-1.5 overflow-x-auto px-5 pb-1">
-      {MUC.map((m) => {
+      {MUC.filter((m) => quanTri || !m.quanTri).map((m) => {
         const active = m.href === "/admin" ? path === "/admin" : path.startsWith(m.href);
         return (
           <Link

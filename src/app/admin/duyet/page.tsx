@@ -23,10 +23,11 @@ export default async function DuyetPage() {
 
   const items: ChoDuyetItem[] = ds.map((g) => {
     const khoa = khoaTen(g.hoTen, g.maCorp, g.congTy);
+    const canhBao = (g.lyDoChoDuyet || "").split(",").filter(Boolean);
     const khac =
-      g.lyDoChoDuyet === "TRUNG_SDT" && g.sdt
+      canhBao.includes("TRUNG_SDT") && g.sdt
         ? conLai.find((x) => x.id !== g.id && x.sdt === g.sdt)
-        : g.lyDoChoDuyet === "TRUNG_TEN" && khoa
+        : canhBao.includes("TRUNG_TEN") && khoa
         ? conLai.find((x) => x.id !== g.id && khoaTen(x.hoTen, x.maCorp, x.congTy) === khoa)
         : undefined;
     return {
@@ -38,7 +39,8 @@ export default async function DuyetPage() {
       venueTen: g.venue.ten,
       soNguoiMoi: g.soNguoiMoi,
       salesOwner: g.salesOwner,
-      lyDo: g.lyDoChoDuyet,
+      canhBao,
+      doanhThuDuKien: g.doanhThuDuKien,
       isVip: g.isVip,
       xungDot: khac
         ? {
@@ -58,7 +60,8 @@ export default async function DuyetPage() {
       <div>
         <h1 className="font-display text-2xl text-ink">Chờ duyệt</h1>
         <p className="mt-1 text-sm text-ink-muted">
-          BTC chống trùng và duyệt VIP. {items.length} trường hợp đang chờ.
+          Sales đã gửi duyệt, BTC duyệt để phát hành vé. {items.length} khách đang chờ, trong đó{" "}
+          {items.filter((i) => i.canhBao.length > 0).length} khách có cảnh báo cần xem kỹ.
         </p>
       </div>
       <ApproveQueue items={items} />

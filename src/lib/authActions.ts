@@ -55,8 +55,8 @@ export async function khoiTaoBTC(_: TrangThaiForm, fd: FormData): Promise<TrangT
   const daCo = await prisma.staffUser.findUnique({ where: { username } });
   if (daCo && daCo.vaiTro !== "ADMIN") return { loi: "Tên đăng nhập này đang thuộc tài khoản khác. Chọn tên khác." };
   const u = daCo
-    ? await prisma.staffUser.update({ where: { id: daCo.id }, data: { hoTen, matKhau: bamMatKhau(matKhau), doiMatKhau: false } })
-    : await prisma.staffUser.create({ data: { username, hoTen, vaiTro: "ADMIN", matKhau: bamMatKhau(matKhau) } });
+    ? await prisma.staffUser.update({ where: { id: daCo.id }, data: { hoTen, matKhau: bamMatKhau(matKhau), doiMatKhau: false, quanTri: true } })
+    : await prisma.staffUser.create({ data: { username, hoTen, vaiTro: "ADMIN", quanTri: true, matKhau: bamMatKhau(matKhau) } });
   await prisma.caiDat.deleteMany({ where: { khoa: "maKhoiTao" } });
   await taoPhien(u.id);
   redirect("/admin");

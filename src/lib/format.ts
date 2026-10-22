@@ -45,3 +45,25 @@ export function chuanHoaSdt(raw: string | number | null | undefined): string {
 export function sdtHopLe(sdt: string): boolean {
   return /^0\d{9,10}$/.test(sdt);
 }
+
+// Doc doanh thu ghi dang chu ("95.000.000 đ", "95 triệu", "1,2 tỷ") thanh so dong
+export function docTien(raw: string | null | undefined): number {
+  if (!raw) return 0;
+  const s = boDau(String(raw));
+  const heSo = /\d\s*ty\b/.test(s) ? 1e9 : /\d\s*(tr|trieu)\b/.test(s) ? 1e6 : 1;
+  if (heSo > 1) {
+    const m = s.match(/\d+(?:[.,]\d+)?/);
+    return m ? Math.round(parseFloat(m[0].replace(",", ".")) * heSo) : 0;
+  }
+  // Bo phan le kieu ",00" o cuoi
+  const so = s.replace(/[.,]\d{1,2}(?=\D*$)/, "").replace(/[^\d]/g, "");
+  return so ? parseInt(so, 10) : 0;
+}
+
+// Hien thi tien gon: 1,25 tỷ / 950 triệu / 12.000.000 đ
+export function dinhDangTien(n: number): string {
+  if (!n) return "0";
+  if (n >= 1e9) return `${(n / 1e9).toLocaleString("vi-VN", { maximumFractionDigits: 2 })} tỷ`;
+  if (n >= 1e6) return `${(n / 1e6).toLocaleString("vi-VN", { maximumFractionDigits: 1 })} triệu`;
+  return `${n.toLocaleString("vi-VN")} đ`;
+}

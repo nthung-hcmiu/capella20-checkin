@@ -4,6 +4,7 @@
 import { PrismaClient } from "@prisma/client";
 import { dongBoVenue, gieoDuLieu } from "../src/lib/seedData";
 import { damBaoMaKhoiTao, docCaiDat, ghiCaiDat } from "../src/lib/caiDat";
+import { PHIEN_BAN_KPI } from "../src/lib/constants";
 
 const PHIEN_BAN_MAU = "2";
 // Tai khoan cua ban demo dau tien (khong dau, mat khau ghi trong README cu)
@@ -36,7 +37,37 @@ async function main() {
     console.log(`[capella] CSDL da co ${soKhach} khach, giu nguyen.`);
   }
 
-  await dongBoVenue(prisma);
+  // KPI venue: ghi de quota va muc tieu mot lan cho moi phien ban KPI
+  const kpiDaApDung = (await docCaiDat(prisma, "phienBanKpi")) === PHIEN_BAN_KPI;
+  await dongBoVenue(prisma, !kpiDaApDung);
+  if (!kpiDaApDung) {
+    await ghiCaiDat(prisma, "phienBanKpi", PHIEN_BAN_KPI);
+    console.log(`[capella] Ap dung KPI venue ${PHIEN_BAN_KPI}: quota theo target gui thu moi.`);
+  }
+
+  // Trang thai cu da bo: Danh sach cho thanh Cho duyet, Chua phan hoi thanh Da moi
+  const doi1 = await prisma.guest.updateMany({
+    where: { trangThai: "DANH_SACH_CHO" },
+    data: { trangThai: "CHO_DUYET", lyDoChoDuyet: "HET_QUOTA" },
+  });
+  const doi2 = await prisma.guest.updateMany({ where: { trangThai: "CHUA_PHAN_HOI" }, data: { trangThai: "DA_MOI" } });
+  if (doi1.count + doi2.count > 0) {
+    console.log(`[capella] Chuyen trang thai cu: ${doi1.count} Danh sach cho, ${doi2.count} Chua phan hoi.`);
+  }
+
+  // Dam bao co mot tai khoan Quan tri: uu tien nthung, khong thi tai khoan BTC tao som nhat
+  const coQuanTri = await prisma.staffUser.count({ where: { vaiTro: "ADMIN", quanTri: true } });
+  if (!coQuanTri) {
+    const btc = await prisma.staffUser.findMany({
+      where: { vaiTro: "ADMIN", matKhau: { startsWith: "scrypt$" } },
+      orderBy: { createdAt: "asc" },
+    });
+    const chon = btc.find((t) => t.username === "nthung") || btc.find((t) => t.username.includes("nthung")) || btc[0];
+    if (chon) {
+      await prisma.staffUser.update({ where: { id: chon.id }, data: { quanTri: true } });
+      console.log(`[capella] Tai khoan Quan tri: ${chon.username}`);
+    }
+  }
 
   const ma = await damBaoMaKhoiTao(prisma);
   if (ma) {

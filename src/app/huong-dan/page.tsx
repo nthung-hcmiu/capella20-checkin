@@ -13,18 +13,17 @@ type VaiTro = { ma: string; ten: string; moTa: string; muc: Muc[]; luuY: string[
 const HUONG_DAN: VaiTro[] = [
   {
     ma: "ADMIN",
-    ten: "Admin (MKT Manager)",
-    moTa: "Giữ danh sách: tạo tài khoản, nhập và duyệt khách, phát hành thiệp, theo dõi số liệu.",
+    ten: "BTC (MKT Manager)",
+    moTa: "Giữ danh sách: nhập và duyệt khách, phát hành vé, theo dõi KPI venue và số liệu.",
     muc: [
       {
         tieuDe: "Trước sự kiện",
         buoc: [
-          ["Tạo tài khoản", "Tài khoản > Thêm tài khoản cho từng sales và lễ tân. Họ tên sales phải trùng cột người phụ trách trong file."],
-          ["Nhập danh sách", "Nhập danh sách > Tải file mẫu nếu cần > chọn file Excel > Kiểm tra trước > Nhập."],
-          ["Duyệt", "Chờ duyệt: khách trùng SĐT, trùng tên cùng công ty, hoặc VIP. Bấm Duyệt hoặc Từ chối."],
-          ["Phát hành thiệp", "Danh sách khách > Thao tác > Phát hành thiệp. Chỉ thiệp đã phát hành sales mới gửi và xác nhận được."],
+          ["Nhập danh sách", "Nhập danh sách > chọn file Excel > chọn trạng thái sau khi nhập (Chờ duyệt hoặc Đã phát hành vé) > Kiểm tra trước > Nhập."],
+          ["Duyệt", "Chờ duyệt: khách sales đã gửi. Xem cảnh báo (trùng SĐT, trùng tên cùng công ty, VIP, venue hết quota) rồi Duyệt hoặc Từ chối. Khách không có cảnh báo duyệt một lần bằng nút Duyệt tất cả."],
+          ["Xem khách", "Danh sách khách: bấm vào dòng nào là mở toàn bộ thông tin và các nút xử lý của khách đó."],
           ["In QR thiệp giấy", "Danh sách khách > In QR thiệp giấy. Lọc theo venue, sales, hoặc chỉ thiệp giấy chưa gửi."],
-          ["Theo dõi", "Bảng điều khiển: số người xác nhận, đối soát theo nhóm khách mời và theo sales. Quota venue: số thiệp còn lại."],
+          ["Theo dõi", "Bảng điều khiển: doanh thu dự kiến, số công ty, số khách theo venue so với KPI. Quota và KPI venue: số thiệp còn lại, mục tiêu từng venue."],
         ],
       },
       {
@@ -35,42 +34,45 @@ const HUONG_DAN: VaiTro[] = [
         ],
       },
       {
-        tieuDe: "Sau sự kiện",
-        buoc: [["Báo cáo", "Dữ liệu > Tải file CSV. File theo đúng cột mẫu năm trước, kèm trạng thái và số người thực tế đến."]],
+        tieuDe: "Sau sự kiện (Quản trị)",
+        buoc: [
+          ["Chốt vắng mặt", "Dữ liệu > Chốt vắng mặt: khách Tham dự mà không check in chuyển sang Vắng mặt."],
+          ["Báo cáo", "Dữ liệu > Tải file CSV, hoặc Danh sách khách > Xuất CSV."],
+        ],
       },
     ],
     luuY: [
+      "Chỉ tài khoản Quản trị được tạo tài khoản, đặt mật khẩu cho người khác và vào tab Dữ liệu. Tài khoản BTC khác chỉ xem danh sách tài khoản.",
       "Xóa toàn bộ danh sách không hoàn tác được. Luôn tải CSV sao lưu trước.",
-      "BTC cũng xác nhận thay khách được: Danh sách khách > Thao tác > Xác nhận.",
-      "Sửa thông tin khách: Danh sách khách > Thao tác > Sửa thông tin.",
+      "BTC cũng xác nhận thay khách và sửa thông tin được ngay trong dòng khách đã mở.",
     ],
   },
   {
     ma: "SALES",
     ten: "Sales",
-    moTa: "Giữ quan hệ: gửi thiệp, hỏi khách, xác nhận tham dự thay khách trên hệ thống.",
+    moTa: "Giữ quan hệ: lập khách, gửi duyệt, gửi thiệp, hỏi khách, xác nhận tham dự thay khách.",
     muc: [
       {
-        tieuDe: "Mỗi khách đi qua 3 bước",
+        tieuDe: "Lập khách",
         buoc: [
-          ["Gửi thiệp online", "Bấm Chép lời mời > dán vào Zalo gửi khách > bấm Đã gửi."],
-          ["Gửi thiệp giấy", "Bấm Tải QR (hoặc In QR ở đầu danh sách) > dán QR lên thiệp giấy > gửi khách > bấm Đã gửi."],
-          ["Xác nhận thay khách", "Sau khi hỏi khách: Xác nhận thay khách > chọn số người > Tham dự hoặc Không tham dự."],
+          ["Thêm khách", "Tab Thêm khách, ghi cả doanh thu dự kiến. Khách mới lưu ở trạng thái Nháp."],
+          ["Gửi duyệt", "Kiểm tra lại rồi bấm Gửi duyệt trên từng khách, hoặc Gửi duyệt tất cả. Nháp sai thì bấm Xóa nháp."],
+          ["Chờ BTC", "BTC duyệt xong khách chuyển sang Đã phát hành vé, lúc đó mới gửi thiệp được."],
         ],
       },
       {
-        tieuDe: "Làm việc nhanh",
+        tieuDe: "Mỗi khách đã phát hành vé đi qua 3 bước",
         buoc: [
-          ["Lọc", "Cần gửi thiệp, Chờ xác nhận, Đã xác nhận, Chưa phát hành."],
-          ["Thêm khách", "Tab Thêm khách. Khách mới cần BTC phát hành thiệp rồi mới gửi được."],
-          ["Đổi xác nhận", "Khách đổi ý: mở lại Đổi xác nhận và chọn lại."],
+          ["Gửi thiệp online", "Bấm Chép lời mời > dán vào Zalo gửi khách > bấm Đã gửi."],
+          ["Gửi thiệp giấy", "Bấm Tải QR (hoặc In QR ở đầu danh sách) > dán QR lên thiệp giấy > gửi khách > bấm Đã gửi."],
+          ["Xác nhận thay khách", "Sau khi hỏi khách: Xác nhận thay khách > chọn số người > Tham dự hoặc Không tham dự. Khách đổi ý thì Đổi xác nhận hoặc Bỏ xác nhận."],
         ],
       },
     ],
     luuY: [
       "Khách không tự xác nhận. Thiệp online chỉ để xem thông tin và mã QR check in.",
       "Khách hỏi cách vào cửa: đưa mã QR trong thiệp online hoặc trên thiệp giấy, hoặc đọc số thứ tự thiệp.",
-      "Lần đầu đăng nhập, đổi mật khẩu riêng. Quên mật khẩu thì nhờ BTC đặt lại.",
+      "Lần đầu đăng nhập, đổi mật khẩu riêng. Quên mật khẩu thì nhờ Quản trị đặt lại.",
     ],
   },
   {

@@ -27,7 +27,7 @@ export default async function InQRPage({
 
   const guests = await prisma.guest.findMany({
     where: {
-      trangThai: { notIn: [TRANG_THAI.NHAP, TRANG_THAI.CHO_DUYET, TRANG_THAI.DANH_SACH_CHO, TRANG_THAI.DA_HUY] },
+      trangThai: { notIn: [TRANG_THAI.NHAP, TRANG_THAI.CHO_DUYET, TRANG_THAI.DA_HUY] },
       ...(laBTC ? {} : { salesOwner: u.hoTen }),
       ...(laBTC && searchParams.venue ? { venueId: searchParams.venue } : {}),
       ...(laBTC && searchParams.sales ? { salesOwner: searchParams.sales } : {}),

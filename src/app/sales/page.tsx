@@ -4,15 +4,10 @@ import { prisma } from "@/lib/db";
 import { yeuCauTrang } from "@/lib/auth";
 import { SalesPortal } from "@/components/SalesPortal";
 import { UserBar } from "@/components/UserBar";
-import { TRANG_THAI } from "@/lib/constants";
+import { CHIEM_QUOTA, TRANG_THAI } from "@/lib/constants";
 import { urlQR } from "@/lib/codes";
 
 export const dynamic = "force-dynamic";
-
-const CHIEM = [
-  TRANG_THAI.NHAP, TRANG_THAI.CHO_DUYET, TRANG_THAI.DA_PHAT_HANH, TRANG_THAI.DA_MOI,
-  TRANG_THAI.THAM_DU, TRANG_THAI.CHUA_PHAN_HOI, TRANG_THAI.DA_CHECKIN,
-];
 
 export default async function SalesPage() {
   const u = await yeuCauTrang(["SALES", "ADMIN"], "/sales");
@@ -24,7 +19,7 @@ export default async function SalesPage() {
       orderBy: { soThuTu: "asc" },
     }),
     prisma.venue.findMany({ where: { quota: { gt: 0 } }, orderBy: { thuTu: "asc" } }),
-    prisma.guest.groupBy({ by: ["venueId"], where: { trangThai: { in: CHIEM } }, _count: { _all: true } }),
+    prisma.guest.groupBy({ by: ["venueId"], where: { trangThai: { in: CHIEM_QUOTA } }, _count: { _all: true } }),
   ]);
 
   return (

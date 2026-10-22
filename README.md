@@ -56,6 +56,8 @@ Huong dan su dung cho tung vai tro nam ngay trong app: `/huong-dan`.
   Mo `/dang-nhap` > Khoi tao tai khoan BTC, nhap ma do de tao tai khoan BTC dau tien.
 - BTC tao tai khoan sales, le tan trong trang `/admin/tai-khoan`. Tai khoan mau (sales, le tan) chua co mat khau,
   BTC dat mat khau chung hoac rieng tung nguoi.
+- Tai khoan BTC tao bang ma khoi tao (hoac nthung) la Quan tri: tao tai khoan, dat mat khau cho nguoi khac, vao tab Du lieu.
+  Cac tai khoan BTC khac khong lam duoc ba viec do.
 - BTC vao moi phan he. Sales chi thay khach co cot sales trung ho ten cua minh. Le tan chi vao `/checkin`.
 
 ## Nam nguyen tac da cai vao he thong
@@ -75,20 +77,23 @@ Huong dan su dung cho tung vai tro nam ngay trong app: `/huong-dan`.
 | 3xxx | Parkview |
 | 4xxx | Claris Palace |
 | 5xxx | Chloe Gallery |
-| 6xxx - 7xxx | Du phong |
+| 6xxx | Chill |
+| 7xxx | Marketing |
 | 8xxx | Khach bo sung tai cua |
-| 9xxx | Khach BOD / BTC |
+| 9xxx | BGD Capella + Holdings |
 
 Sua o `src/lib/constants.ts` (DAI_VENUE) va seed lai.
 
 ## Vong doi khach
 
-`Nhap` -> (`Cho duyet` neu trung SDT hoac VIP | `Danh sach cho` neu het quota) -> `Da phat hanh` -> `Da moi` -> `Tham du` / `Chua phan hoi` / `Khong tham du` -> `Da check in` / `Vang mat`.
+`Nhap` (sales xoa duoc) -> `Cho duyet` (sales bam Gui duyet) -> `Da phat hanh ve` (BTC duyet) -> `Da moi` -> `Tham du` / `Khong tham du` -> `Da check in` / `Vang mat` (Quan tri bam Chot vang mat sau su kien).
+Trung SDT, trung ten cung cong ty, VIP, venue het quota khong chan ma thanh canh bao cho BTC khi duyet.
 Huy duoc o moi buoc truoc su kien, ma vo hieu.
 
 ## Con so mac dinh (gia dinh, BTC chinh sau)
 
-Sua o `src/lib/constants.ts` (CHISO): nguong xac nhan 889, thiep phat hanh 977, quota binh quan 176 moi venue, 4 lan quet cong lan VIP cong quay ho tro, 12 le tan.
+Quota va KPI tung venue (target gui thu moi, muc tieu cong ty, so khach, doanh thu cam ket) nam o `src/lib/constants.ts` (DAI_VENUE).
+Doi so roi tang PHIEN_BAN_KPI thi lan build ke tiep ghi de vao CSDL. Tong: 930 thiep, 400 cong ty, 800 khach, 31,425 ty.
 
 ## Deploy production
 

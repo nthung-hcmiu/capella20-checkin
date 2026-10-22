@@ -20,11 +20,16 @@ datasource db {
 // 5 venue chinh + cac dai so du phong / tai cua / BOD
 model Venue {
   id         String  @id @default(cuid())
-  code       String  @unique // RIVERSIDE, GALLERY, PARKVIEW, CLARIS, CHLOE, DUPHONG, TAICUA, BOD
+  code       String  @unique // RIVERSIDE, GALLERY, PARKVIEW, CLARIS, CHLOE, CHILL, MARKETING, TAICUA, BOD
   ten        String
   rangeStart Int // dau dai so thu tu, vi du 1000
   rangeEnd   Int // cuoi dai so thu tu, vi du 1999
-  quota      Int     @default(0) // so thiep duoc cap
+  quota      Int     @default(0) // so thiep duoc cap (target gui thu moi)
+  mucTieuCongTy   Int   @default(0) // muc tieu cong ty check in
+  mucTieuKhach    Int   @default(0)
+  doanhThuCamKet  Float @default(0) // VND
+  soHopDongDuKien Int   @default(0)
+  giaTriTiecTB    Float @default(0) // VND
   mauSac     String  @default("#b08d42")
   thuTu      Int     @default(0)
   guests     Guest[]
@@ -97,6 +102,7 @@ model StaffUser {
   matKhau    String          @default("") // dang "scrypt$salt$hash"; rong = chua dat, khong dang nhap duoc
   hoTen      String
   vaiTro     String // ADMIN | LE_TAN | SALES
+  quanTri    Boolean         @default(false) // ADMIN co quyen quan tri: tai khoan, mat khau, tab Du lieu
   ca         String? // ca truc cua le tan
   doiMatKhau Boolean         @default(false) // bat doi mat khau o lan dang nhap ke tiep
   createdAt  DateTime        @default(now())

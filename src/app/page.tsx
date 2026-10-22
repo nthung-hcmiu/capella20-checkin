@@ -23,7 +23,7 @@ const MODULES = [
     ma: "B",
     ten: "Quản trị BTC",
     thietBi: "Máy tính",
-    mo: "Nhập danh sách, chống trùng, duyệt VIP, phát hành thiệp, in QR thiệp giấy, đối soát và báo cáo.",
+    mo: "Nhập danh sách, duyệt và phát hành vé, theo dõi KPI venue, in QR thiệp giấy, đối soát và báo cáo.",
     mau: "#6b2b36",
     vaiTro: ["ADMIN"],
   },
@@ -139,8 +139,8 @@ export default async function Home({ searchParams }: { searchParams: { khongQuye
             <h2 className="font-display text-lg text-ink">Vòng đời khách</h2>
             <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
               {[
-                "Nháp", "Chờ duyệt / Danh sách chờ", "Đã phát hành", "Đã mời",
-                "Tham dự / Chưa phản hồi / Không tham dự", "Đã check in / Vắng mặt",
+                "Nháp", "Chờ duyệt", "Đã phát hành vé", "Đã mời",
+                "Tham dự / Không tham dự", "Đã check in / Vắng mặt",
               ].map((b, i, arr) => (
                 <span key={b} className="flex items-center gap-2">
                   <span className="chip bg-ivory-deep text-ink-soft">{b}</span>
@@ -149,7 +149,8 @@ export default async function Home({ searchParams }: { searchParams: { khongQuye
               ))}
             </div>
             <p className="mt-4 text-xs text-ink-muted">
-              Hủy được ở mọi bước trước sự kiện, mã thiệp mất hiệu lực. Các con số mục tiêu là giả định mặc định, BTC chỉnh sau.
+              Sales lưu nháp và bấm Gửi duyệt, BTC duyệt thì phát hành vé. Hủy được ở mọi bước trước sự kiện, mã thiệp mất hiệu lực.
+              Quota và mục tiêu venue lấy theo bảng KPI.
             </p>
           </div>
         </section>

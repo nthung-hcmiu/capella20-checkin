@@ -14,6 +14,7 @@ export interface NguoiDung {
   username: string;
   hoTen: string;
   vaiTro: string;
+  quanTri: boolean;
   ca: string | null;
   doiMatKhau: boolean;
 }
@@ -68,7 +69,7 @@ export const layNguoiDung = cache(async (): Promise<NguoiDung | null> => {
   });
   if (!phien || phien.hetHan < new Date()) return null;
   const u = phien.user;
-  return { id: u.id, username: u.username, hoTen: u.hoTen, vaiTro: u.vaiTro, ca: u.ca, doiMatKhau: u.doiMatKhau };
+  return { id: u.id, username: u.username, hoTen: u.hoTen, vaiTro: u.vaiTro, quanTri: u.vaiTro === "ADMIN" && u.quanTri, ca: u.ca, doiMatKhau: u.doiMatKhau };
 });
 
 // Dung trong trang (server component): chua dang nhap hoac sai vai tro thi chuyen huong
@@ -87,6 +88,13 @@ export async function yeuCauQuyen(vaiTro: string[]): Promise<NguoiDung | null> {
   return u;
 }
 
+// Trang chi danh cho Quan tri (tai khoan BTC co quyen quan tri)
+export async function yeuCauTrangQuanTri(tiep: string): Promise<NguoiDung> {
+  const u = await yeuCauTrang(["ADMIN"], tiep);
+  if (!u.quanTri) redirect("/admin?khongQuyen=1");
+  return u;
+}
+
 export class LoiQuyen extends Error {
   constructor() {
     super("Bạn không có quyền thực hiện thao tác này. Hãy đăng nhập lại.");
@@ -96,5 +104,11 @@ export class LoiQuyen extends Error {
 export async function batBuocQuyen(vaiTro: string[]): Promise<NguoiDung> {
   const u = await yeuCauQuyen(vaiTro);
   if (!u) throw new LoiQuyen();
+  return u;
+}
+
+export async function batBuocQuanTri(): Promise<NguoiDung> {
+  const u = await yeuCauQuyen(["ADMIN"]);
+  if (!u || !u.quanTri) throw new LoiQuyen();
   return u;
 }

@@ -1,7 +1,7 @@
 // Logic gieo du lieu mau, dung chung cho CLI, buoc build tren Vercel va nut "Nap du lieu mau" cua BTC
 
 import type { PrismaClient } from "@prisma/client";
-import { DAI_VENUE, TRANG_THAI, CHISO } from "./constants";
+import { DAI_VENUE, TRANG_THAI } from "./constants";
 import { boDau } from "./format";
 
 const BANG_MA = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
@@ -26,16 +26,20 @@ export function tenDangNhapTu(hoTen: string): string {
   return boDau(hoTen).replace(/[^a-z0-9]/g, "");
 }
 
-// Tao ten venue dung theo DAI_VENUE (khong dong vao quota BTC da chinh)
-export async function dongBoVenue(prisma: PrismaClient) {
+// Dong bo venue theo DAI_VENUE. capNhatKpi: ghi de quota va muc tieu (chi khi KPI doi phien ban).
+export async function dongBoVenue(prisma: PrismaClient, capNhatKpi = false) {
+  // Dai 6xxx, 7xxx truoc day la Du phong, nay la Chill va Marketing
+  const duPhong = await prisma.venue.findUnique({ where: { code: "DUPHONG" }, include: { _count: { select: { guests: true } } } });
+  if (duPhong && duPhong._count.guests === 0) await prisma.venue.delete({ where: { id: duPhong.id } });
   for (const v of DAI_VENUE) {
+    const kpi = {
+      quota: v.quota, mucTieuCongTy: v.mucTieuCongTy, mucTieuKhach: v.mucTieuKhach,
+      doanhThuCamKet: v.doanhThuCamKet, soHopDongDuKien: v.soHopDongDuKien, giaTriTiecTB: v.giaTriTiecTB,
+    };
     await prisma.venue.upsert({
       where: { code: v.code },
-      update: { ten: v.ten, rangeStart: v.rangeStart, rangeEnd: v.rangeEnd, mauSac: v.mauSac, thuTu: v.thuTu },
-      create: {
-        code: v.code, ten: v.ten, rangeStart: v.rangeStart, rangeEnd: v.rangeEnd, mauSac: v.mauSac, thuTu: v.thuTu,
-        quota: ["RIVERSIDE", "GALLERY", "PARKVIEW", "CLARIS", "CHLOE"].includes(v.code) ? CHISO.quotaBinhQuan : v.code === "BOD" ? 98 : 0,
-      },
+      update: { ten: v.ten, rangeStart: v.rangeStart, rangeEnd: v.rangeEnd, mauSac: v.mauSac, thuTu: v.thuTu, ...(capNhatKpi ? kpi : {}) },
+      create: { code: v.code, ten: v.ten, rangeStart: v.rangeStart, rangeEnd: v.rangeEnd, mauSac: v.mauSac, thuTu: v.thuTu, ...kpi },
     });
   }
 }
@@ -68,14 +72,14 @@ export async function gieoDuLieu(
 
   let salesTeam = SALES_MAU;
   if (tuyChon.giuTaiKhoan) {
-    await dongBoVenue(prisma);
+    await dongBoVenue(prisma, true);
     const ds = await prisma.staffUser.findMany({ where: { vaiTro: "SALES" }, select: { hoTen: true } });
     if (ds.length > 0) salesTeam = ds.map((d) => d.hoTen);
   } else {
     await prisma.venue.deleteMany();
     await prisma.phienDangNhap.deleteMany();
     await prisma.staffUser.deleteMany();
-    await dongBoVenue(prisma);
+    await dongBoVenue(prisma, true);
     // Tai khoan mau chua co mat khau: BTC dat mat khau trong trang Tai khoan truoc khi dung
     for (const s of SALES_MAU) {
       await prisma.staffUser.create({ data: { username: tenDangNhapTu(s), hoTen: s, vaiTro: "SALES" } });
@@ -90,15 +94,15 @@ export async function gieoDuLieu(
   const venues = await prisma.venue.findMany();
   const theoCode = (c: string) => venues.find((v) => v.code === c)!;
 
-  const phanBo: Record<string, number> = { RIVERSIDE: 18, GALLERY: 14, PARKVIEW: 12, CLARIS: 10, CHLOE: 9 };
+  const phanBo: Record<string, number> = { RIVERSIDE: 18, GALLERY: 12, PARKVIEW: 10, CLARIS: 7, CHLOE: 7, CHILL: 5, MARKETING: 4 };
   const trangThaiPool = [
     TRANG_THAI.DA_CHECKIN, TRANG_THAI.DA_CHECKIN,
     TRANG_THAI.THAM_DU, TRANG_THAI.THAM_DU, TRANG_THAI.THAM_DU,
     TRANG_THAI.DA_MOI, TRANG_THAI.DA_MOI,
     TRANG_THAI.DA_PHAT_HANH,
-    TRANG_THAI.CHUA_PHAN_HOI,
+    TRANG_THAI.DA_MOI,
     TRANG_THAI.KHONG_THAM_DU,
-    TRANG_THAI.DANH_SACH_CHO,
+    TRANG_THAI.CHO_DUYET,
     TRANG_THAI.NHAP,
   ];
   const sdtDaTao: string[] = [];
@@ -117,7 +121,7 @@ export async function gieoDuLieu(
       const now = Date.now();
       const daPhatHanh = [
         TRANG_THAI.DA_PHAT_HANH, TRANG_THAI.DA_MOI, TRANG_THAI.THAM_DU,
-        TRANG_THAI.CHUA_PHAN_HOI, TRANG_THAI.KHONG_THAM_DU, TRANG_THAI.DA_CHECKIN,
+        TRANG_THAI.KHONG_THAM_DU, TRANG_THAI.DA_CHECKIN,
       ].includes(trangThai as any);
       const checkinLuc = trangThai === TRANG_THAI.DA_CHECKIN ? new Date(now - 3600000 * Math.random()) : null;
 
@@ -138,6 +142,7 @@ export async function gieoDuLieu(
           linhVuc: LINH_VUC[ct % LINH_VUC.length],
           nguonKhach: chon(["Netsuite", "Netsuite", "Netsuite", "Contact mới"]),
           phongBan: nhomMoi === "Đối tác Capella" ? "Marketing" : "Phòng kinh doanh",
+          doanhThuDuKien: Math.random() < 0.75 ? `${(10 + Math.floor(Math.random() * 190)) * 1000000}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " đ" : null,
           daGuiThiepGiay: daPhatHanh && Math.random() < 0.5,
           soThuTu, maBiMat: sinhMa(), hoTen, sdt: i > 0 && Math.random() < 0.3 ? null : sdt, venueId: venue.id,
           soNguoiMoi, soNguoiXacNhan, trangThai, isVip: false, salesOwner: phuTrach, xacNhanBoi: daXacNhan ? phuTrach : null,

@@ -120,7 +120,7 @@ export function ImportManager({ venues, salesTeam }: { venues: { id: string; ten
   const [daNhap, setDaNhap] = useState<KetQuaNhap | null>(null);
   const [pending, start] = useTransition();
   const [chiXemLoi, setChiXemLoi] = useState(false);
-  const [vipDaDuyet, setVipDaDuyet] = useState(false);
+  const [phatHanhLuon, setPhatHanhLuon] = useState(false);
 
   const tieuDe = bang[dongTieuDe] || [];
   const dongDuLieu = useMemo(
@@ -181,7 +181,7 @@ export function ImportManager({ venues, salesTeam }: { venues: { id: string; ten
     start(async () => {
       const r = await nhapDanhSach(dongNhap(), {
         venueMacDinh: venueMacDinh || undefined,
-        vipDaDuyet,
+        phatHanhLuon,
         salesMacDinh: salesMacDinh || undefined,
         dongBatDau: dongTieuDe + 2,
         ghi,
@@ -286,13 +286,18 @@ export function ImportManager({ venues, salesTeam }: { venues: { id: string; ten
               </select>
               <p className="mt-1 text-xs text-ink-muted">Dùng cho dòng không ghi sales.</p>
             </div>
-            <label className="flex items-start gap-2 text-sm text-ink-soft sm:col-span-2 lg:col-span-3">
-              <input type="checkbox" className="mt-0.5 h-4 w-4 accent-brand" checked={vipDaDuyet} onChange={(e) => { setVipDaDuyet(e.target.checked); setKiemTra(null); }} />
-              <span>
-                Khách VIP trong file này BTC đã duyệt
-                <span className="block text-xs text-ink-muted">Bỏ trống thì khách VIP vào hàng Chờ duyệt như khi sales tự thêm.</span>
-              </span>
-            </label>
+            <div>
+              <label className="label">Trạng thái sau khi nhập</label>
+              <select
+                className="input"
+                value={phatHanhLuon ? "DA_PHAT_HANH" : "CHO_DUYET"}
+                onChange={(e) => { setPhatHanhLuon(e.target.value === "DA_PHAT_HANH"); setKiemTra(null); }}
+              >
+                <option value="CHO_DUYET">Chờ duyệt</option>
+                <option value="DA_PHAT_HANH">Đã phát hành vé (BTC đã duyệt file)</option>
+              </select>
+              <p className="mt-1 text-xs text-ink-muted">Khách trùng SĐT hoặc trùng tên cùng công ty luôn vào Chờ duyệt.</p>
+            </div>
           </div>
 
           <details className="mt-4 rounded-xl border border-ivory-deep bg-ivory/40 p-4" open={soCotPhu < 6}>
@@ -371,9 +376,9 @@ export function ImportManager({ venues, salesTeam }: { venues: { id: string; ten
           )}
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
             <O nhan="Hợp lệ" so={ketQua.tongHop.hopLe} />
-            <O nhan="Nháp" so={ketQua.tongHop.nhap} />
             <O nhan="Chờ duyệt" so={ketQua.tongHop.choDuyet} />
-            <O nhan="Danh sách chờ" so={ketQua.tongHop.danhSachCho} />
+            <O nhan="Đã phát hành vé" so={ketQua.tongHop.phatHanh} />
+            <O nhan="Có cảnh báo" so={ketQua.tongHop.canhBao} />
             <O nhan="Lỗi, bỏ qua" so={ketQua.tongHop.loi} do />
           </div>
 
@@ -441,9 +446,9 @@ export function ImportManager({ venues, salesTeam }: { venues: { id: string; ten
         <div className="font-medium text-ink">Quy tắc khi nhập</div>
         <ul className="mt-2 list-disc space-y-1 pl-5">
           <li>Dùng được thẳng file danh sách mẫu các năm trước (sheet đầu tiên). Cột SĐT không bắt buộc.</li>
-          <li>Chống trùng: có SĐT thì theo SĐT (chuẩn hóa +84, dấu cách, mất số 0 do Excel). Không có SĐT thì theo tên khách cùng mã CORP, hoặc cùng công ty. Trùng thì vào hàng Chờ duyệt.</li>
-          <li>Cột VIP ghi VIP, x, có hoặc 1 là khách VIP (THƯỜNG là khách thường). Khách VIP vào hàng Chờ duyệt, trừ khi tích ô BTC đã duyệt.</li>
-          <li>Venue hết quota thì khách vào Danh sách chờ. Venue ghi tên ngắn như “Riverside”, “Claris” vẫn nhận được.</li>
+          <li>Chống trùng: có SĐT thì theo SĐT (chuẩn hóa +84, dấu cách, mất số 0 do Excel). Không có SĐT thì theo tên khách cùng mã CORP, hoặc cùng công ty. Trùng thì luôn vào Chờ duyệt.</li>
+          <li>Cột VIP ghi VIP, x, có hoặc 1 là khách VIP (THƯỜNG là khách thường). Khách VIP và venue hết quota được gắn cảnh báo để BTC xem khi duyệt.</li>
+          <li>Venue ghi tên ngắn như “Riverside”, “Claris” vẫn nhận được.</li>
           <li>Tên sales phải trùng họ tên tài khoản sales thì sales đó mới thấy khách trong Cổng Sales.</li>
         </ul>
       </div>

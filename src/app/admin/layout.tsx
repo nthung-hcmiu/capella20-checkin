@@ -24,7 +24,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <UserBar u={u} />
           </div>
           <div className="mt-3">
-            <AdminNav soCho={soCho} />
+            <AdminNav soCho={soCho} quanTri={u.quanTri} />
           </div>
         </div>
       </header>

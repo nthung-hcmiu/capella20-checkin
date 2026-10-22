@@ -3,9 +3,9 @@
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { StatusBadge } from "./StatusBadge";
-import { NHAN_TRANG_THAI, TRANG_THAI } from "@/lib/constants";
-import { che4SoCuoi, boDau } from "@/lib/format";
-import { taoKhach, suaKhach, datThiepGiay, xacNhanKhach, phatHanh, danhDauDaMoi, huyKhach, duyetKhach, xoaKhach } from "@/lib/actions";
+import { DUOC_XAC_NHAN, NHAN_CANH_BAO, NHAN_TRANG_THAI, TRANG_THAI } from "@/lib/constants";
+import { che4SoCuoi, boDau, dinhDangGio } from "@/lib/format";
+import { taoKhach, suaKhach, datThiepGiay, xacNhanKhach, guiDuyet, danhDauDaMoi, huyKhach, duyetKhach, xoaKhach } from "@/lib/actions";
 import { DANH_XUNG, NHAN_TRUONG, TRUONG_CHU, tenGoi, type ThongTinThem, type TruongChu } from "@/lib/khach";
 
 export interface GuestRow {
@@ -21,8 +21,14 @@ export interface GuestRow {
   soNguoiXacNhan: number | null;
   trangThai: string;
   isVip: boolean;
-  ban: string | null;
   salesOwner: string;
+  lyDoChoDuyet: string | null;
+  xacNhanBoi: string | null;
+  xacNhanLuc: string | null;
+  phatHanhLuc: string | null;
+  checkinLuc: string | null;
+  soNguoiDen: number | null;
+  createdAt: string;
   ghiChu: string | null;
   daGuiThiepGiay: boolean;
   them: ThongTinThem;
@@ -160,9 +166,9 @@ export function GuestManager({
                 <th className="px-4 py-3 font-medium">Số</th>
                 <th className="px-3 py-3 font-medium">Khách</th>
                 <th className="px-3 py-3 font-medium">Venue</th>
+                <th className="px-3 py-3 text-right font-medium">Doanh thu dự kiến</th>
                 <th className="px-3 py-3 text-center font-medium">Mời / XN</th>
-                <th className="px-3 py-3 font-medium">Trạng thái</th>
-                <th className="px-4 py-3 text-right font-medium">Thao tác</th>
+                <th className="px-4 py-3 font-medium">Trạng thái</th>
               </tr>
             </thead>
             <tbody>
@@ -197,12 +203,31 @@ function Dong({ g, salesTeam }: { g: GuestRow; salesTeam: string[] }) {
   const [sua, setSua] = useState(false);
   const [xacNhanXoa, setXacNhanXoa] = useState(false);
   const [soXN, setSoXN] = useState(g.soNguoiXacNhan || g.soNguoiMoi);
+  const [tb, setTb] = useState<string | null>(null);
 
-  const act = (fn: () => Promise<unknown>) => start(() => void fn());
+  const act = (fn: () => Promise<unknown>) =>
+    start(async () => {
+      const r = (await fn()) as { thongBao?: string } | undefined;
+      setTb(r?.thongBao || null);
+    });
+  const batTat = () => {
+    setMo((v) => !v);
+    setXacNhanXoa(false);
+    setSua(false);
+    setTb(null);
+  };
+  const canhBao = (g.lyDoChoDuyet || "").split(",").filter(Boolean);
+  const chuaPhatHanh = g.trangThai === TRANG_THAI.NHAP || g.trangThai === TRANG_THAI.CHO_DUYET;
 
   return (
     <>
-      <tr className="border-t border-ivory-deep hover:bg-ivory/50">
+      <tr
+        className={`cursor-pointer border-t border-ivory-deep ${mo ? "bg-ivory/60" : "hover:bg-ivory/50"}`}
+        onClick={batTat}
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); batTat(); } }}
+        aria-expanded={mo}
+      >
         <td className="px-4 py-3">
           <span className="font-mono text-ink">{g.soThuTu}</span>
           {g.isVip && <span className="ml-1.5 chip bg-brand/15 text-brand-deep">VIP</span>}
@@ -223,39 +248,45 @@ function Dong({ g, salesTeam }: { g: GuestRow; salesTeam: string[] }) {
             {g.venueTen}
           </span>
         </td>
+        <td className="whitespace-nowrap px-3 py-3 text-right text-xs text-ink-soft">{g.them.doanhThuDuKien || "-"}</td>
         <td className="px-3 py-3 text-center">
           <span className="text-ink">{g.soNguoiMoi}</span>
           <span className="text-ink-muted"> / {g.soNguoiXacNhan ?? "-"}</span>
         </td>
-        <td className="px-3 py-3">
-          <StatusBadge trangThai={g.trangThai} />
-        </td>
-        <td className="px-4 py-3 text-right">
-          <button className="btn-ghost btn-sm" disabled={pending} onClick={() => { setMo((v) => !v); setXacNhanXoa(false); setSua(false); }}>
-            {pending ? "..." : "Thao tác"}
-          </button>
+        <td className="px-4 py-3">
+          <div className="flex items-center justify-between gap-2">
+            <StatusBadge trangThai={g.trangThai} />
+            <span className={`text-ink-muted transition ${mo ? "rotate-180" : ""}`} aria-hidden>
+              ▾
+            </span>
+          </div>
+          {chuaPhatHanh && canhBao.length > 0 && (
+            <div className="mt-1 text-[11px] text-wine">{canhBao.map((c) => NHAN_CANH_BAO[c] || c).join(", ")}</div>
+          )}
         </td>
       </tr>
       {mo && (
         <tr className="border-t border-ivory-deep bg-ivory/40">
-          <td colSpan={6} className="px-4 py-3">
-            <div className="flex flex-wrap items-center gap-2">
-              {g.trangThai === TRANG_THAI.CHO_DUYET && (
-                <button className="btn-brand btn-sm" onClick={() => act(() => duyetKhach(g.id))}>
-                  Duyệt và phát hành
+          <td colSpan={6} className="px-4 py-4">
+            <ChiTiet g={g} canhBao={canhBao} />
+
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              {g.trangThai === TRANG_THAI.NHAP && (
+                <button className="btn-ink btn-sm" disabled={pending} onClick={() => act(() => guiDuyet([g.id]))}>
+                  Gửi duyệt
                 </button>
               )}
-              {[TRANG_THAI.NHAP, TRANG_THAI.DANH_SACH_CHO].includes(g.trangThai as any) && (
-                <button className="btn-brand btn-sm" onClick={() => act(() => phatHanh(g.id))}>
-                  Phát hành thiệp
+              {chuaPhatHanh && (
+                <button className="btn-brand btn-sm" disabled={pending} onClick={() => act(() => duyetKhach(g.id))}>
+                  Duyệt, phát hành vé
                 </button>
               )}
               {g.trangThai === TRANG_THAI.DA_PHAT_HANH && (
-                <button className="btn-ink btn-sm" onClick={() => act(() => danhDauDaMoi(g.id))}>
+                <button className="btn-ink btn-sm" disabled={pending} onClick={() => act(() => danhDauDaMoi(g.id))}>
                   Đã gửi thiệp online
                 </button>
               )}
-              {[TRANG_THAI.DA_PHAT_HANH, TRANG_THAI.DA_MOI, TRANG_THAI.CHUA_PHAN_HOI, TRANG_THAI.THAM_DU, TRANG_THAI.KHONG_THAM_DU].includes(g.trangThai as any) && (
+              {DUOC_XAC_NHAN.includes(g.trangThai) && (
                 <span className="inline-flex items-center gap-1 rounded-full border border-ink/15 bg-white py-0.5 pl-3 pr-0.5">
                   <span className="text-xs text-ink-muted">Xác nhận</span>
                   <select className="bg-transparent text-xs outline-none" value={soXN} onChange={(e) => setSoXN(parseInt(e.target.value, 10))}>
@@ -265,12 +296,17 @@ function Dong({ g, salesTeam }: { g: GuestRow; salesTeam: string[] }) {
                       </option>
                     ))}
                   </select>
-                  <button className="btn-brand btn-sm" onClick={() => act(() => xacNhanKhach(g.id, "THAM_DU", soXN))}>
+                  <button className="btn-brand btn-sm" disabled={pending} onClick={() => act(() => xacNhanKhach(g.id, "THAM_DU", soXN))}>
                     Tham dự
                   </button>
-                  <button className="btn-ghost btn-sm" onClick={() => act(() => xacNhanKhach(g.id, "KHONG_THAM_DU"))}>
+                  <button className="btn-ghost btn-sm" disabled={pending} onClick={() => act(() => xacNhanKhach(g.id, "KHONG_THAM_DU"))}>
                     Không
                   </button>
+                  {(g.trangThai === TRANG_THAI.THAM_DU || g.trangThai === TRANG_THAI.KHONG_THAM_DU) && (
+                    <button className="btn-ghost btn-sm" disabled={pending} onClick={() => act(() => xacNhanKhach(g.id, "DA_MOI"))}>
+                      Bỏ xác nhận
+                    </button>
+                  )}
                 </span>
               )}
               <Link href={`/thiep/${g.maBiMat}`} target="_blank" className="btn-ghost btn-sm">
@@ -282,17 +318,14 @@ function Dong({ g, salesTeam }: { g: GuestRow; salesTeam: string[] }) {
               <button className="btn-ghost btn-sm" onClick={() => setSua((v) => !v)}>
                 {sua ? "Đóng sửa" : "Sửa thông tin"}
               </button>
-              <button className="btn-ghost btn-sm" onClick={() => act(() => datThiepGiay(g.id, !g.daGuiThiepGiay))}>
+              <button className="btn-ghost btn-sm" disabled={pending} onClick={() => act(() => datThiepGiay(g.id, !g.daGuiThiepGiay))}>
                 {g.daGuiThiepGiay ? "Bỏ đánh dấu thiệp giấy" : "Đã gửi thiệp giấy"}
               </button>
-              <span className="text-xs text-ink-muted">
-                {g.sdt ? `SĐT ${g.sdt} · ` : ""}Mã <span className="font-mono">{g.maBiMat}</span>
-                {g.them.maCorp ? ` · ${g.them.maCorp}` : ""}
-              </span>
               <span className="ml-auto flex gap-2">
                 {g.trangThai !== TRANG_THAI.DA_HUY && g.trangThai !== TRANG_THAI.DA_CHECKIN && (
                   <button
                     className="rounded-full border border-wine/30 px-3.5 py-1.5 text-xs text-wine hover:bg-wine/5"
+                    disabled={pending}
                     onClick={() => act(() => huyKhach(g.id))}
                   >
                     Hủy thiệp
@@ -301,6 +334,7 @@ function Dong({ g, salesTeam }: { g: GuestRow; salesTeam: string[] }) {
                 {xacNhanXoa ? (
                   <button
                     className="rounded-full bg-wine px-3.5 py-1.5 text-xs text-white"
+                    disabled={pending}
                     onClick={() => act(() => xoaKhach(g.id))}
                   >
                     Bấm lần nữa để xóa hẳn
@@ -315,11 +349,44 @@ function Dong({ g, salesTeam }: { g: GuestRow; salesTeam: string[] }) {
                 )}
               </span>
             </div>
+            {tb && <div className="mt-3 rounded-xl bg-white px-4 py-2 text-sm text-ink-soft">{tb}</div>}
             {sua && <FormKhach g={g} salesTeam={salesTeam} onXong={() => setSua(false)} />}
           </td>
         </tr>
       )}
     </>
+  );
+}
+
+// Toan bo thong tin khach khi bam vao dong
+function ChiTiet({ g, canhBao }: { g: GuestRow; canhBao: string[] }) {
+  const gio = (d: string | null) => (d ? dinhDangGio(d) : null);
+  const o: [string, React.ReactNode][] = [
+    ["Số điện thoại", g.sdt],
+    ["Mã thiệp", <span key="ma" className="font-mono">{g.maBiMat}</span>],
+    ...TRUONG_CHU.filter((k) => k !== "danhXung" && k !== "chucVu" && k !== "congTy").map(
+      (k) => [NHAN_TRUONG[k], g.them[k]] as [string, React.ReactNode]
+    ),
+    ["Người phụ trách", g.salesOwner],
+    ["Số người mời", g.soNguoiMoi],
+    ["Số người xác nhận", g.soNguoiXacNhan],
+    ["Xác nhận bởi", g.xacNhanBoi ? `${g.xacNhanBoi}${g.xacNhanLuc ? `, ${gio(g.xacNhanLuc)}` : ""}` : null],
+    ["Phát hành vé", gio(g.phatHanhLuc)],
+    ["Check in", g.checkinLuc ? `${gio(g.checkinLuc)}${g.soNguoiDen ? `, ${g.soNguoiDen} người` : ""}` : null],
+    ["Thiệp giấy", g.daGuiThiepGiay ? "Đã gửi" : "Chưa gửi"],
+    ["Cảnh báo khi duyệt", canhBao.length ? canhBao.map((c) => NHAN_CANH_BAO[c] || c).join(", ") : null],
+    ["Ghi chú", g.ghiChu],
+    ["Tạo lúc", gio(g.createdAt)],
+  ];
+  return (
+    <dl className="grid gap-x-6 gap-y-2.5 text-sm sm:grid-cols-2 lg:grid-cols-4">
+      {o.map(([nhan, gt]) => (
+        <div key={nhan} className="min-w-0">
+          <dt className="text-[11px] uppercase tracking-wider text-ink-muted">{nhan}</dt>
+          <dd className="break-words text-ink">{gt === null || gt === undefined || gt === "" ? <span className="text-ink-muted">-</span> : gt}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }
 

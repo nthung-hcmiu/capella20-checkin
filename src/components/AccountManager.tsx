@@ -9,6 +9,7 @@ export interface TaiKhoanRow {
   username: string;
   hoTen: string;
   vaiTro: string;
+  quanTri: boolean;
   ca: string | null;
   coMatKhau: boolean;
   doiMatKhau: boolean;
@@ -17,7 +18,7 @@ export interface TaiKhoanRow {
 
 const THU_TU = ["ADMIN", "SALES", "LE_TAN"];
 
-export function AccountManager({ ds }: { ds: TaiKhoanRow[] }) {
+export function AccountManager({ ds, quanTri }: { ds: TaiKhoanRow[]; quanTri: boolean }) {
   const [kq, setKq] = useState<KetQua | null>(null);
   const [moForm, setMoForm] = useState(false);
   const soChuaCo = ds.filter((d) => !d.coMatKhau).length;
@@ -29,20 +30,23 @@ export function AccountManager({ ds }: { ds: TaiKhoanRow[] }) {
           <h1 className="font-display text-2xl text-ink">Tài khoản</h1>
           <p className="mt-1 text-sm text-ink-muted">
             BTC vào mọi phân hệ. Sales chỉ thấy khách mang đúng họ tên của mình. Lễ tân chỉ vào app check in.
+            {" "}Chỉ Quản trị được tạo tài khoản, đặt mật khẩu cho người khác và vào tab Dữ liệu.
           </p>
         </div>
-        <button className="btn-brand" onClick={() => setMoForm((v) => !v)}>
-          {moForm ? "Đóng" : "+ Thêm tài khoản"}
-        </button>
+        {quanTri && (
+          <button className="btn-brand" onClick={() => setMoForm((v) => !v)}>
+            {moForm ? "Đóng" : "+ Thêm tài khoản"}
+          </button>
+        )}
       </div>
 
       {kq && (
         <div className={`rounded-xl px-4 py-3 text-sm ${kq.ok ? "bg-sage/10 text-sage" : "bg-wine/10 text-wine"}`}>{kq.thongBao}</div>
       )}
 
-      {moForm && <FormThem onKq={setKq} onXong={() => setMoForm(false)} />}
+      {quanTri && moForm && <FormThem onKq={setKq} onXong={() => setMoForm(false)} />}
 
-      {soChuaCo > 0 && <MatKhauChung soChuaCo={soChuaCo} onKq={setKq} />}
+      {quanTri && soChuaCo > 0 && <MatKhauChung soChuaCo={soChuaCo} onKq={setKq} />}
 
       {THU_TU.map((vt) => {
         const nhom = ds.filter((d) => d.vaiTro === vt).sort((a, b) => a.hoTen.localeCompare(b.hoTen, "vi", { numeric: true }));
@@ -55,7 +59,7 @@ export function AccountManager({ ds }: { ds: TaiKhoanRow[] }) {
             </div>
             <div className="hairline" />
             {nhom.map((t) => (
-              <Dong key={t.id} t={t} onKq={setKq} />
+              <Dong key={t.id} t={t} onKq={setKq} quanTri={quanTri} />
             ))}
           </div>
         );
@@ -64,7 +68,7 @@ export function AccountManager({ ds }: { ds: TaiKhoanRow[] }) {
   );
 }
 
-function Dong({ t, onKq }: { t: TaiKhoanRow; onKq: (k: KetQua) => void }) {
+function Dong({ t, onKq, quanTri }: { t: TaiKhoanRow; onKq: (k: KetQua) => void; quanTri: boolean }) {
   const [pending, start] = useTransition();
   const [mo, setMo] = useState(false);
   const [mk, setMk] = useState("");
@@ -76,7 +80,8 @@ function Dong({ t, onKq }: { t: TaiKhoanRow; onKq: (k: KetQua) => void }) {
       <div className="flex flex-wrap items-center gap-3">
         <div className="min-w-0 flex-1">
           <div className="text-sm font-medium text-ink">
-            {t.hoTen} {t.laToi && <span className="chip ml-1 bg-ivory-deep text-ink-muted">bạn</span>}
+            {t.hoTen} {t.quanTri && <span className="chip ml-1 bg-brand text-white">Quản trị</span>}
+            {t.laToi && <span className="chip ml-1 bg-ivory-deep text-ink-muted">bạn</span>}
           </div>
           <div className="text-xs text-ink-muted">
             <span className="font-mono">{t.username}</span>
@@ -88,10 +93,12 @@ function Dong({ t, onKq }: { t: TaiKhoanRow; onKq: (k: KetQua) => void }) {
         >
           {!t.coMatKhau ? "Chưa có mật khẩu" : t.doiMatKhau ? "Phải đổi khi đăng nhập" : "Đang dùng"}
         </span>
-        <button className="btn-ghost btn-sm" onClick={() => { setMo((v) => !v); setXacNhanXoa(false); }}>
-          {t.coMatKhau ? "Đặt lại mật khẩu" : "Đặt mật khẩu"}
-        </button>
-        {!t.laToi &&
+        {quanTri && (
+          <button className="btn-ghost btn-sm" onClick={() => { setMo((v) => !v); setXacNhanXoa(false); }}>
+            {t.coMatKhau ? "Đặt lại mật khẩu" : "Đặt mật khẩu"}
+          </button>
+        )}
+        {quanTri && !t.laToi &&
           (xacNhanXoa ? (
             <button
               className="rounded-full bg-wine px-3.5 py-1.5 text-xs text-white"
@@ -109,7 +116,7 @@ function Dong({ t, onKq }: { t: TaiKhoanRow; onKq: (k: KetQua) => void }) {
             </button>
           ))}
       </div>
-      {mo && (
+      {quanTri && mo && (
         <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl bg-ivory/60 p-3">
           <input
             className="input max-w-[220px] py-2"

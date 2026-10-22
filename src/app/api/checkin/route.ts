@@ -56,9 +56,9 @@ export async function POST(req: NextRequest) {
   const canhBao =
     guest.trangThai === TRANG_THAI.KHONG_THAM_DU
       ? `Sales ${guest.salesOwner} đã ghi nhận khách không tham dự`
-      : [TRANG_THAI.CHUA_PHAN_HOI, TRANG_THAI.DA_MOI, TRANG_THAI.DA_PHAT_HANH].includes(guest.trangThai)
+      : [TRANG_THAI.DA_MOI, TRANG_THAI.DA_PHAT_HANH].includes(guest.trangThai as any)
       ? `Khách chưa được xác nhận tham dự (sales ${guest.salesOwner})`
-      : [TRANG_THAI.NHAP, TRANG_THAI.CHO_DUYET, TRANG_THAI.DANH_SACH_CHO].includes(guest.trangThai)
+      : [TRANG_THAI.NHAP, TRANG_THAI.CHO_DUYET].includes(guest.trangThai as any)
       ? "Thiệp của khách chưa được BTC phát hành. Báo BTC"
       : null;
 
