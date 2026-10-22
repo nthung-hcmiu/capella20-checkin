@@ -26,7 +26,6 @@ const TRUONG: { key: Truong; nhan: string; batBuoc?: boolean; phu?: boolean; don
   { key: "nguonKhach", nhan: "Phân loại khách", phu: true, dongNghia: ["phan loai khach", "nguon khach"] },
   { key: "doanhThuDuKien", nhan: "Doanh thu dự kiến", phu: true, dongNghia: ["doanh thu du kien", "doanh thu"] },
   { key: "phongBan", nhan: "Phòng ban", phu: true, dongNghia: ["phong ban", "bo phan"] },
-  { key: "soGhe", nhan: "Số ghế cho khách VIP", phu: true, dongNghia: ["so ghe ngoi cho khach vip", "so ghe cho khach vip", "so ghe"] },
   { key: "thiepGiay", nhan: "Round 2: Đã gửi thiệp giấy", phu: true, dongNghia: ["round 2 da gui thiep giay", "da gui thiep giay", "thiep giay"] },
   { key: "ghiChu", nhan: "Ghi chú", phu: true, dongNghia: ["ghi chu", "note", "notes", "chu thich"] },
 ];
@@ -209,9 +208,9 @@ export function ImportManager({ venues, salesTeam }: { venues: { id: string; ten
 
       {/* Buoc 1 */}
       <div className="card p-6">
-        <div className="text-xs font-medium uppercase tracking-wider text-gold-deep">Bước 1</div>
+        <div className="text-xs font-medium uppercase tracking-wider text-brand-deep">Bước 1</div>
         <h2 className="mt-1 font-display text-lg text-ink">Chọn file</h2>
-        <label className="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-ink/15 bg-ivory/50 px-6 py-8 text-center hover:border-gold">
+        <label className="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-ink/15 bg-ivory/50 px-6 py-8 text-center hover:border-brand">
           <input
             type="file"
             accept=".xlsx,.csv,.txt"
@@ -229,7 +228,7 @@ export function ImportManager({ venues, salesTeam }: { venues: { id: string; ten
       {/* Buoc 2 */}
       {bang.length > 0 && cot && !daNhap && (
         <div className="card p-6">
-          <div className="text-xs font-medium uppercase tracking-wider text-gold-deep">Bước 2</div>
+          <div className="text-xs font-medium uppercase tracking-wider text-brand-deep">Bước 2</div>
           <h2 className="mt-1 font-display text-lg text-ink">Ghép cột</h2>
           <p className="mt-1 text-sm text-ink-muted">Hệ thống đã đoán theo tiêu đề. Kiểm tra lại, cột nào sai thì chọn lại.</p>
 
@@ -288,7 +287,7 @@ export function ImportManager({ venues, salesTeam }: { venues: { id: string; ten
               <p className="mt-1 text-xs text-ink-muted">Dùng cho dòng không ghi sales.</p>
             </div>
             <label className="flex items-start gap-2 text-sm text-ink-soft sm:col-span-2 lg:col-span-3">
-              <input type="checkbox" className="mt-0.5 h-4 w-4 accent-gold" checked={vipDaDuyet} onChange={(e) => { setVipDaDuyet(e.target.checked); setKiemTra(null); }} />
+              <input type="checkbox" className="mt-0.5 h-4 w-4 accent-brand" checked={vipDaDuyet} onChange={(e) => { setVipDaDuyet(e.target.checked); setKiemTra(null); }} />
               <span>
                 Khách VIP trong file này BTC đã duyệt
                 <span className="block text-xs text-ink-muted">Bỏ trống thì khách VIP vào hàng Chờ duyệt như khi sales tự thêm.</span>
@@ -348,7 +347,7 @@ export function ImportManager({ venues, salesTeam }: { venues: { id: string; ten
               {pending && !kiemTra ? "Đang kiểm tra..." : "Kiểm tra trước"}
             </button>
             {kiemTra && kiemTra.tongHop.hopLe > 0 && (
-              <button className="btn-gold" disabled={pending} onClick={() => chay(true)}>
+              <button className="btn-brand" disabled={pending} onClick={() => chay(true)}>
                 {pending ? "Đang nhập..." : `Nhập ${kiemTra.tongHop.hopLe.toLocaleString("vi-VN")} khách`}
               </button>
             )}
@@ -360,7 +359,7 @@ export function ImportManager({ venues, salesTeam }: { venues: { id: string; ten
       {/* Ket qua */}
       {ketQua && (
         <div className="card p-6">
-          <div className="text-xs font-medium uppercase tracking-wider text-gold-deep">{daNhap ? "Đã nhập" : "Bước 3"}</div>
+          <div className="text-xs font-medium uppercase tracking-wider text-brand-deep">{daNhap ? "Đã nhập" : "Bước 3"}</div>
           <h2 className="mt-1 font-display text-lg text-ink">{daNhap ? "Kết quả nhập" : "Kết quả kiểm tra"}</h2>
           <div className={`mt-3 rounded-xl px-4 py-2.5 text-sm ${ketQua.ok ? "bg-sage/10 text-sage" : "bg-wine/10 text-wine"}`}>
             {ketQua.thongBao}
@@ -380,11 +379,11 @@ export function ImportManager({ venues, salesTeam }: { venues: { id: string; ten
 
           <div className="mt-5 flex items-center justify-between">
             <label className="flex items-center gap-2 text-sm text-ink-soft">
-              <input type="checkbox" className="h-4 w-4 accent-gold" checked={chiXemLoi} onChange={(e) => setChiXemLoi(e.target.checked)} />
+              <input type="checkbox" className="h-4 w-4 accent-brand" checked={chiXemLoi} onChange={(e) => setChiXemLoi(e.target.checked)} />
               Chỉ xem dòng lỗi hoặc cần chú ý
             </label>
             {daNhap && (
-              <Link href="/admin/khach" className="btn-gold btn-sm">
+              <Link href="/admin/khach" className="btn-brand btn-sm">
                 Xem danh sách khách
               </Link>
             )}
@@ -415,7 +414,7 @@ export function ImportManager({ venues, salesTeam }: { venues: { id: string; ten
                       ) : (
                         <div className="space-y-1">
                           {d.trangThai && <StatusBadge trangThai={d.trangThai} />}
-                          {d.canhBao && <div className="text-gold-deep">{d.canhBao}</div>}
+                          {d.canhBao && <div className="text-brand-deep">{d.canhBao}</div>}
                         </div>
                       )}
                     </td>

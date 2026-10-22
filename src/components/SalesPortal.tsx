@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { StatusBadge } from "./StatusBadge";
 import { che4SoCuoi, boDau } from "@/lib/format";
-import { taoKhach, danhDauDaMoi, datThiepGiay } from "@/lib/actions";
+import { taoKhach, danhDauDaMoi, datThiepGiay, xacNhanKhach } from "@/lib/actions";
 import { DANH_XUNG, tenGoi } from "@/lib/khach";
 import { SU_KIEN, TRANG_THAI } from "@/lib/constants";
 
@@ -36,7 +36,7 @@ export function SalesPortal({ guests, venues, ten }: { guests: SalesGuest[]; ven
 
   return (
     <div className="mx-auto max-w-md px-4 py-5">
-      <div className="mb-4 rounded-xl bg-gold px-4 py-2.5 text-sm text-white">
+      <div className="mb-4 rounded-xl bg-brand px-4 py-2.5 text-sm text-white">
         Sales: <span className="font-medium">{ten}</span>
       </div>
 
@@ -60,14 +60,26 @@ export function SalesPortal({ guests, venues, ten }: { guests: SalesGuest[]; ven
   );
 }
 
+const NHOM = [
+  { key: "tatCa", nhan: "Tất cả", tt: null as string[] | null },
+  { key: "canGui", nhan: "Cần gửi thiệp", tt: [TRANG_THAI.DA_PHAT_HANH] },
+  { key: "choXN", nhan: "Chờ xác nhận", tt: [TRANG_THAI.DA_MOI, TRANG_THAI.CHUA_PHAN_HOI] },
+  { key: "daXN", nhan: "Đã xác nhận", tt: [TRANG_THAI.THAM_DU, TRANG_THAI.KHONG_THAM_DU, TRANG_THAI.DA_CHECKIN] },
+  { key: "chuaPH", nhan: "Chưa phát hành", tt: [TRANG_THAI.NHAP, TRANG_THAI.CHO_DUYET, TRANG_THAI.DANH_SACH_CHO] },
+];
+
 function DanhSach({ guests }: { guests: SalesGuest[] }) {
   const [q, setQ] = useState("");
+  const [nhom, setNhom] = useState("tatCa");
   const ds = useMemo(() => {
     const s = boDau(q);
-    return s
-      ? guests.filter((g) => boDau(g.hoTen).includes(s) || boDau(g.congTy || "").includes(s) || (g.sdt || "").includes(q.trim()))
-      : guests;
-  }, [guests, q]);
+    const tt = NHOM.find((n) => n.key === nhom)?.tt;
+    return guests.filter(
+      (g) =>
+        (!tt || tt.includes(g.trangThai as any)) &&
+        (!s || boDau(g.hoTen).includes(s) || boDau(g.congTy || "").includes(s) || (g.sdt || "").includes(q.trim()))
+    );
+  }, [guests, q, nhom]);
 
   if (guests.length === 0) {
     return (
@@ -78,7 +90,27 @@ function DanhSach({ guests }: { guests: SalesGuest[] }) {
   }
   return (
     <div className="space-y-2.5">
-      <input className="input" placeholder="Tìm tên, công ty hoặc SĐT..." value={q} onChange={(e) => setQ(e.target.value)} />
+      <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1">
+        {NHOM.map((n) => {
+          const dem = n.tt ? guests.filter((g) => n.tt!.includes(g.trangThai as any)).length : guests.length;
+          return (
+            <button
+              key={n.key}
+              onClick={() => setNhom(n.key)}
+              className={`chip shrink-0 whitespace-nowrap px-3 py-1.5 ${nhom === n.key ? "bg-ink text-ivory" : "bg-white text-ink-soft"}`}
+            >
+              {n.nhan} {dem}
+            </button>
+          );
+        })}
+      </div>
+      <div className="flex gap-2">
+        <input className="input" placeholder="Tìm tên, công ty hoặc SĐT..." value={q} onChange={(e) => setQ(e.target.value)} />
+        <a href="/in-qr" target="_blank" className="btn-ghost shrink-0 px-3 text-xs">
+          In QR
+        </a>
+      </div>
+      {ds.length === 0 && <p className="py-6 text-center text-sm text-ink-muted">Không có khách trong nhóm này.</p>}
       {ds.map((g) => (
         <TheKhach key={g.id} g={g} />
       ))}
@@ -89,17 +121,22 @@ function DanhSach({ guests }: { guests: SalesGuest[] }) {
 function TheKhach({ g }: { g: SalesGuest }) {
   const [pending, start] = useTransition();
   const [daChep, setDaChep] = useState(false);
-  const coTheGui = [TRANG_THAI.DA_PHAT_HANH, TRANG_THAI.DA_MOI, TRANG_THAI.CHUA_PHAN_HOI, TRANG_THAI.THAM_DU].includes(g.trangThai as any);
+  const [moXN, setMoXN] = useState(false);
+  const [so, setSo] = useState(g.soNguoiXacNhan || g.soNguoiMoi);
+  const [tb, setTb] = useState<string | null>(null);
+  const daPhatHanh = ![TRANG_THAI.NHAP, TRANG_THAI.CHO_DUYET, TRANG_THAI.DANH_SACH_CHO].includes(g.trangThai as any);
+  const daCheckin = g.trangThai === TRANG_THAI.DA_CHECKIN;
+  const daGuiOnline = daPhatHanh && g.trangThai !== TRANG_THAI.DA_PHAT_HANH;
 
   const chepLoiMoi = async () => {
-    const link = g.linkThiep;
+    const goi = g.danhXung ? tenGoi(g) : `anh/chị ${g.hoTen}`;
+    const ai = g.danhXung ? g.danhXung.toLowerCase() : "anh/chị";
     const loi =
-      `Kính gửi ${g.danhXung ? tenGoi(g) : `anh/chị ${g.hoTen}`},\n` +
-      `Capella trân trọng kính mời ${g.danhXung ? g.danhXung.toLowerCase() : "anh/chị"} đến dự Đêm tri ân khách hàng nhân dịp kỷ niệm 20 năm Capella, ` +
+      `Kính gửi ${goi},\n` +
+      `Capella trân trọng kính mời ${ai} đến dự Đêm tri ân khách hàng nhân dịp kỷ niệm 20 năm Capella, ` +
       `ngày ${SU_KIEN.ngay} tại ${SU_KIEN.diaDiem}.\n` +
-      `Kính mong ${g.danhXung ? g.danhXung.toLowerCase() : "anh/chị"} xác nhận tham dự tại: ${link}\n` +
-      `Số thứ tự thiệp: ${g.soThuTu}.` +
-      (g.sdt ? " Khi xác nhận, nhập số này và 4 số cuối điện thoại." : " Khi xác nhận, nhập số này.");
+      `Thiệp mời online của ${ai}: ${g.linkThiep}\n` +
+      `Khi đến sự kiện, ${ai} vui lòng đưa mã QR trong thiệp (hoặc thiệp giấy) cho lễ tân để check in. Số thứ tự thiệp: ${g.soThuTu}.`;
     try {
       await navigator.clipboard.writeText(loi);
       setDaChep(true);
@@ -109,6 +146,13 @@ function TheKhach({ g }: { g: SalesGuest }) {
     }
   };
 
+  const xn = (kq: "THAM_DU" | "KHONG_THAM_DU" | "CHUA_PHAN_HOI") =>
+    start(async () => {
+      const r = await xacNhanKhach(g.id, kq, so);
+      setTb(r.thongBao);
+      if (r.ok) setMoXN(false);
+    });
+
   return (
     <div className="card p-4">
       <div className="flex items-start justify-between gap-3">
@@ -116,37 +160,85 @@ function TheKhach({ g }: { g: SalesGuest }) {
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-mono text-xs text-ink-muted">{g.soThuTu}</span>
             <span className="font-medium text-ink">{tenGoi(g)}</span>
-            {g.isVip && <span className="chip bg-gold/15 text-gold-deep">VIP</span>}
+            {g.isVip && <span className="chip bg-brand/15 text-brand-deep">VIP</span>}
           </div>
           {(g.chucVu || g.congTy) && <div className="mt-0.5 text-xs text-ink-soft">{[g.chucVu, g.congTy].filter(Boolean).join(" · ")}</div>}
           <div className="mt-0.5 text-xs text-ink-muted">
             {che4SoCuoi(g.sdt)} · {g.venueTen} · mời {g.soNguoiMoi}
-            {g.soNguoiXacNhan != null ? ` · xác nhận ${g.soNguoiXacNhan}` : ""}
+            {g.trangThai === TRANG_THAI.THAM_DU && g.soNguoiXacNhan != null ? ` · tham dự ${g.soNguoiXacNhan}` : ""}
           </div>
         </div>
         <StatusBadge trangThai={g.trangThai} />
       </div>
-      {coTheGui ? (
-        <div className="mt-3 flex flex-wrap gap-2">
-          <button className="btn-gold btn-sm" onClick={chepLoiMoi}>
-            {daChep ? "Đã chép, dán vào Zalo" : "Chép lời mời"}
-          </button>
-          {g.trangThai === TRANG_THAI.DA_PHAT_HANH && (
-            <button className="btn-ink btn-sm" disabled={pending} onClick={() => start(() => void danhDauDaMoi(g.id))}>
-              {pending ? "..." : "Đã gửi thiệp"}
-            </button>
-          )}
-          <a href={`/api/qr/${g.maBiMat}`} target="_blank" className="btn-ghost btn-sm">
-            QR
-          </a>
-          <button className="btn-ghost btn-sm" disabled={pending} onClick={() => start(() => void datThiepGiay(g.id, !g.daGuiThiepGiay))}>
-            {g.daGuiThiepGiay ? "✓ Đã gửi thiệp giấy" : "Đã gửi thiệp giấy"}
-          </button>
-        </div>
+
+      {!daPhatHanh ? (
+        <p className="mt-2 text-xs text-ink-muted">Chờ BTC phát hành thiệp rồi mới gửi và xác nhận được.</p>
       ) : (
-        [TRANG_THAI.NHAP, TRANG_THAI.CHO_DUYET, TRANG_THAI.DANH_SACH_CHO].includes(g.trangThai as any) && (
-          <p className="mt-2 text-xs text-ink-muted">Chờ BTC phát hành thiệp rồi mới gửi được.</p>
-        )
+        <div className="mt-3 space-y-2 border-t border-ivory-deep pt-3">
+          {/* 1. Thiep online */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={`w-24 shrink-0 text-xs ${daGuiOnline ? "text-sage" : "text-ink-muted"}`}>{daGuiOnline ? "✓ " : ""}Thiệp online</span>
+            <button className="btn-brand btn-sm" onClick={chepLoiMoi}>
+              {daChep ? "Đã chép, dán vào Zalo" : "Chép lời mời"}
+            </button>
+            {g.trangThai === TRANG_THAI.DA_PHAT_HANH && (
+              <button className="btn-ink btn-sm" disabled={pending} onClick={() => start(() => void danhDauDaMoi(g.id))}>
+                Đã gửi
+              </button>
+            )}
+          </div>
+          {/* 2. Thiep giay */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={`w-24 shrink-0 text-xs ${g.daGuiThiepGiay ? "text-sage" : "text-ink-muted"}`}>{g.daGuiThiepGiay ? "✓ " : ""}Thiệp giấy</span>
+            <a href={`/api/qr/${g.maBiMat}`} download={`qr-${g.soThuTu}.png`} className="btn-ghost btn-sm">
+              Tải QR
+            </a>
+            <button className="btn-ghost btn-sm" disabled={pending} onClick={() => start(() => void datThiepGiay(g.id, !g.daGuiThiepGiay))}>
+              {g.daGuiThiepGiay ? "Bỏ đánh dấu" : "Đã gửi"}
+            </button>
+          </div>
+          {/* 3. Xac nhan */}
+          {!daCheckin && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className={`w-24 shrink-0 text-xs ${[TRANG_THAI.THAM_DU, TRANG_THAI.KHONG_THAM_DU].includes(g.trangThai as any) ? "text-sage" : "text-ink-muted"}`}
+              >
+                {[TRANG_THAI.THAM_DU, TRANG_THAI.KHONG_THAM_DU].includes(g.trangThai as any) ? "✓ " : ""}Xác nhận
+              </span>
+              <button className={moXN ? "btn-ink btn-sm" : "btn-ghost btn-sm"} onClick={() => setMoXN((v) => !v)}>
+                {g.trangThai === TRANG_THAI.THAM_DU || g.trangThai === TRANG_THAI.KHONG_THAM_DU ? "Đổi xác nhận" : "Xác nhận thay khách"}
+              </button>
+            </div>
+          )}
+          {moXN && (
+            <div className="rounded-xl bg-ivory/70 p-3">
+              <div className="text-xs text-ink-muted">Sau khi đã hỏi khách. Số người tham dự (tối đa {g.soNguoiMoi}):</div>
+              <div className="mt-2 flex items-center gap-2">
+                {Array.from({ length: g.soNguoiMoi }, (_, i) => i + 1).map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => setSo(n)}
+                    className={`h-9 w-9 rounded-lg border text-sm ${so === n ? "border-brand bg-brand text-white" : "border-ink/15 bg-white text-ink-soft"}`}
+                  >
+                    {n}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button className="btn-brand btn-sm" disabled={pending} onClick={() => xn("THAM_DU")}>
+                  Tham dự {so} người
+                </button>
+                <button className="btn-sm rounded-full border border-wine/30 px-3.5 py-1.5 text-xs text-wine" disabled={pending} onClick={() => xn("KHONG_THAM_DU")}>
+                  Không tham dự
+                </button>
+                <button className="btn-ghost btn-sm" disabled={pending} onClick={() => xn("CHUA_PHAN_HOI")}>
+                  Chưa phản hồi
+                </button>
+              </div>
+            </div>
+          )}
+          {tb && <p className="text-xs text-sage">{tb}</p>}
+        </div>
       )}
     </div>
   );
@@ -237,7 +329,7 @@ function ThemKhach({ venues, onXong }: { venues: SalesVenue[]; onXong: () => voi
           <input name="soNguoiMoi" type="number" min={1} max={10} defaultValue={1} className="input" />
         </div>
         <label className="flex items-end gap-2 pb-2.5 text-sm text-ink-soft">
-          <input name="isVip" type="checkbox" className="h-4 w-4 accent-gold" />
+          <input name="isVip" type="checkbox" className="h-4 w-4 accent-brand" />
           Khách VIP
         </label>
       </div>
@@ -247,7 +339,7 @@ function ThemKhach({ venues, onXong }: { venues: SalesVenue[]; onXong: () => voi
       )}
 
       <div className="flex gap-2">
-        <button type="submit" className="btn-gold flex-1" disabled={pending}>
+        <button type="submit" className="btn-brand flex-1" disabled={pending}>
           {pending ? "Đang lưu..." : "Thêm khách"}
         </button>
         <button type="button" className="btn-ghost" onClick={onXong}>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Brand } from "@/components/Brand";
 import { prisma } from "@/lib/db";
 import { yeuCauTrang } from "@/lib/auth";
 import { SalesPortal } from "@/components/SalesPortal";
@@ -30,8 +31,8 @@ export default async function SalesPage() {
     <div className="min-h-screen bg-ivory">
       <header className="border-b border-ivory-deep bg-white">
         <div className="mx-auto flex max-w-md items-center justify-between px-4 py-3">
-          <Link href="/sales" className="font-display text-sm tracking-[0.2em] text-ink">
-            CAPELLA <span className="text-gold">20</span>
+          <Link href="/sales">
+            <Brand />
           </Link>
           <UserBar u={u} />
         </div>

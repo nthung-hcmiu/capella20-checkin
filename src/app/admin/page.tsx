@@ -128,7 +128,7 @@ export default async function Dashboard() {
       <div className="card overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4">
           <h2 className="font-display text-lg text-ink">Theo venue</h2>
-          <Link href="/admin/quota" className="text-xs font-medium text-gold hover:underline">
+          <Link href="/admin/quota" className="text-xs font-medium text-brand hover:underline">
             Xem quota →
           </Link>
         </div>
@@ -181,7 +181,7 @@ function Kpi({
   nhan: string; so: number; phu: string; tiLe?: number; noiBat?: boolean; canhBao?: boolean;
 }) {
   return (
-    <div className={`card p-5 ${noiBat ? "ring-1 ring-gold/30" : ""} ${canhBao ? "ring-1 ring-wine/30" : ""}`}>
+    <div className={`card p-5 ${noiBat ? "ring-1 ring-brand/30" : ""} ${canhBao ? "ring-1 ring-wine/30" : ""}`}>
       <div className="text-[11px] uppercase tracking-wider text-ink-muted">{nhan}</div>
       <div className={`mt-1.5 font-display text-3xl ${canhBao && so > 0 ? "text-wine" : "text-ink"}`}>
         {so.toLocaleString("vi-VN")}
@@ -189,7 +189,7 @@ function Kpi({
       <div className="mt-0.5 text-[11px] text-ink-muted">{phu}</div>
       {typeof tiLe === "number" && (
         <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-ivory-deep">
-          <div className="h-full rounded-full bg-gold" style={{ width: `${tiLe}%` }} />
+          <div className="h-full rounded-full bg-brand" style={{ width: `${tiLe}%` }} />
         </div>
       )}
     </div>

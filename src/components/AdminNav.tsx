@@ -9,7 +9,6 @@ const MUC = [
   { href: "/admin/nhap", ten: "Nhập danh sách" },
   { href: "/admin/duyet", ten: "Chờ duyệt" },
   { href: "/admin/quota", ten: "Quota venue" },
-  { href: "/admin/xepban", ten: "Xếp chỗ ngồi" },
   { href: "/admin/tai-khoan", ten: "Tài khoản" },
   { href: "/admin/du-lieu", ten: "Dữ liệu" },
 ];
@@ -28,7 +27,7 @@ export function AdminNav({ soCho }: { soCho: number }) {
           >
             {m.ten}
             {m.href === "/admin/duyet" && soCho > 0 && (
-              <span className="ml-1.5 rounded-full bg-gold px-1.5 text-[10px] text-white">{soCho}</span>
+              <span className="ml-1.5 rounded-full bg-brand px-1.5 text-[10px] text-white">{soCho}</span>
             )}
           </Link>
         );

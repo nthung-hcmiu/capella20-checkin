@@ -14,8 +14,8 @@ const MODULES = [
     ma: "A",
     ten: "Cổng Sales",
     thietBi: "Điện thoại",
-    mo: "Lập danh sách khách, theo dõi quota, gửi thiệp và xem trạng thái khách của mình.",
-    mau: "#b08d42",
+    mo: "Lập danh sách khách, gửi thiệp online và thiệp giấy, xác nhận tham dự thay khách sau khi đã hỏi khách.",
+    mau: "#b5303a",
     vaiTro: ["ADMIN", "SALES"],
   },
   {
@@ -23,16 +23,16 @@ const MODULES = [
     ma: "B",
     ten: "Quản trị BTC",
     thietBi: "Máy tính",
-    mo: "Chống trùng, duyệt VIP, phân quota, nhập danh sách, phát hành thiệp, xếp bàn, báo cáo.",
+    mo: "Nhập danh sách, chống trùng, duyệt VIP, phát hành thiệp, in QR thiệp giấy, đối soát và báo cáo.",
     mau: "#6b2b36",
     vaiTro: ["ADMIN"],
   },
   {
     href: "/thiep/demo",
     ma: "C",
-    ten: "Trang thiệp khách",
+    ten: "Thiệp online",
     thietBi: "Công khai",
-    mo: "Khách quét QR, nhập số thứ tự và 4 số cuối điện thoại để xác nhận tham dự.",
+    mo: "Khách mở thiệp xem thông tin sự kiện và mã QR, đưa mã QR này (hoặc thiệp giấy) cho lễ tân khi đến.",
     mau: "#5c6b4f",
     vaiTro: ["ADMIN"],
   },
@@ -63,19 +63,20 @@ export default async function Home({ searchParams }: { searchParams: { khongQuye
 
   return (
     <main className="min-h-screen">
-      <section className="bg-ink text-ivory">
-        <div className="mx-auto max-w-5xl px-5 pt-6 pb-14">
+      <section className="border-b border-ivory-deep bg-white">
+        <div className="h-1.5 bg-brand" />
+        <div className="mx-auto max-w-5xl px-5 pt-5 pb-14">
           <div className="flex items-center justify-between gap-3">
-            <Brand light sub="Hệ thống khách mời" />
-            <UserBar u={u} light />
+            <Brand sub="Hệ thống khách mời" />
+            <UserBar u={u} />
           </div>
           <div className="mt-12 text-center">
-            <div className="text-xs uppercase tracking-[0.3em] text-gold-soft">Đêm tri ân khách hàng</div>
-            <h1 className="mt-4 font-display text-4xl text-ivory sm:text-5xl">
-              Capella <span className="text-gold-soft">20 năm</span>
+            <div className="text-xs font-medium uppercase tracking-[0.3em] text-brand">Đêm tri ân khách hàng</div>
+            <h1 className="mt-4 font-display text-4xl text-ink sm:text-5xl">
+              Capella <span className="text-brand">20 năm</span>
             </h1>
             <div className="mx-auto mt-5 deco-line w-40" />
-            <p className="mt-5 text-sm text-ivory/70">
+            <p className="mt-5 text-sm text-ink-muted">
               {SU_KIEN.ngay} · {SU_KIEN.diaDiem} · {SU_KIEN.soKhach} khách · 5 venue
             </p>
           </div>
@@ -122,7 +123,7 @@ export default async function Home({ searchParams }: { searchParams: { khongQuye
                     <span className="chip bg-ivory-deep text-ink-muted">{m.thietBi}</span>
                   </div>
                   <p className="mt-1.5 text-sm text-ink-soft">{m.mo}</p>
-                  <span className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-gold group-hover:gap-2">
+                  <span className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-brand group-hover:gap-2">
                     Mở phân hệ <span aria-hidden>→</span>
                   </span>
                 </div>
@@ -143,7 +144,7 @@ export default async function Home({ searchParams }: { searchParams: { khongQuye
               ].map((b, i, arr) => (
                 <span key={b} className="flex items-center gap-2">
                   <span className="chip bg-ivory-deep text-ink-soft">{b}</span>
-                  {i < arr.length - 1 && <span className="text-gold">→</span>}
+                  {i < arr.length - 1 && <span className="text-brand">→</span>}
                 </span>
               ))}
             </div>

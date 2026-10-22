@@ -51,7 +51,7 @@ function The({ it }: { it: ChoDuyetItem }) {
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <span
-              className={`chip ${laTrung ? "bg-wine/12 text-wine" : "bg-gold/15 text-gold-deep"}`}
+              className={`chip ${laTrung ? "bg-wine/12 text-wine" : "bg-brand/15 text-brand-deep"}`}
             >
               {it.lyDo === "TRUNG_SDT" ? "Trùng SĐT" : it.lyDo === "TRUNG_TEN" ? "Trùng tên và công ty" : "Khách VIP"}
             </span>
@@ -65,7 +65,7 @@ function The({ it }: { it: ChoDuyetItem }) {
         </div>
         <div className="flex gap-2">
           <button
-            className="btn-gold btn-sm"
+            className="btn-brand btn-sm"
             disabled={pending}
             onClick={() => start(() => void duyetKhach(it.id))}
           >

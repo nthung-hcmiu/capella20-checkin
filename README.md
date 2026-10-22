@@ -35,10 +35,19 @@ npm run build     # build production
 |----|---------|-----------|----------|
 | A | Cong Sales | `/sales` | Dien thoai |
 | B | Quan tri BTC | `/admin` | May tinh |
-| C | Trang thiep khach | `/thiep/[ma]` (demo: `/thiep/demo`) | Cong khai |
+| C | Thiep online (khach xem thong tin va ma QR check in) | `/thiep/[ma]` | Cong khai |
 | D | App check in | `/checkin` | Le tan theo ca |
 
 Trang chu `/` la cong vao ca bon phan he.
+
+## Flow khach moi
+
+1. BTC nhap danh sach (`/admin/nhap`), duyet trung / VIP, phat hanh thiep.
+2. Sales gui thiep online (chep loi moi vao Zalo), gui thiep giay co QR (`/in-qr`), hoi khach roi xac nhan thay khach tren he thong.
+3. Khach khong tu xac nhan. Thiep online chi hien thong tin su kien va ma QR.
+4. Ngay su kien: le tan quet QR tren thiep online hoac thiep giay, hoac nhap so thu tu, tim ten / cong ty.
+
+Huong dan su dung cho tung vai tro nam ngay trong app: `/huong-dan`.
 
 ## Dang nhap va phan quyen
 

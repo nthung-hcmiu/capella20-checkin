@@ -8,7 +8,7 @@
 
 html,
 body {
-  background: #f7f3ec;
+  background: #f6f4f3;
   color: #1a1613;
   -webkit-font-smoothing: antialiased;
 }
@@ -21,8 +21,9 @@ h1,
 h2,
 h3,
 .font-display {
-  font-family: "Playfair Display", Georgia, "Times New Roman", serif;
-  letter-spacing: 0;
+  font-family: "Be Vietnam Pro", system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   font-variant-numeric: lining-nums;
 }
 
@@ -33,8 +34,8 @@ h3,
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none;
   }
-  .btn-gold {
-    @apply btn bg-gold text-white hover:bg-gold-deep;
+  .btn-brand {
+    @apply btn bg-brand text-white hover:bg-brand-deep;
   }
   .btn-ink {
     @apply btn bg-ink text-ivory hover:bg-ink-soft;
@@ -49,7 +50,7 @@ h3,
     @apply block text-xs font-medium uppercase tracking-wider text-ink-muted mb-1.5;
   }
   .input {
-    @apply w-full rounded-xl border border-ink/15 bg-white px-4 py-2.5 text-ink outline-none transition focus:border-gold focus:ring-2 focus:ring-gold/20;
+    @apply w-full rounded-xl border border-ink/15 bg-white px-4 py-2.5 text-ink outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20;
   }
   .chip {
     @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium;
@@ -61,7 +62,7 @@ h3,
 
 /* Vien trang tri mong manh kieu thiep */
 .deco-line {
-  background: linear-gradient(90deg, transparent, #b08d42, transparent);
+  background: linear-gradient(90deg, transparent, #b5303a, transparent);
   height: 1px;
 }
 
@@ -70,6 +71,6 @@ h3,
   height: 10px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #d9cfbd;
+  background: #d6cfcc;
   border-radius: 6px;
 }

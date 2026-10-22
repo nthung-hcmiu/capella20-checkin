@@ -28,7 +28,7 @@ export default async function DangNhapPage({ searchParams }: { searchParams: { t
     <AuthShell tieuDe="Đăng nhập" moTa="Dành cho BTC, sales và lễ tân.">
       <FormDangNhap tiep={searchParams.tiep} />
       {!daCoBTC && (
-        <div className="mt-5 rounded-xl border border-dashed border-gold/40 bg-gold/5 p-4 text-sm text-gold-deep">
+        <div className="mt-5 rounded-xl border border-dashed border-brand/40 bg-brand/5 p-4 text-sm text-brand-deep">
           Hệ thống chưa có tài khoản BTC.{" "}
           <a href="/dang-nhap?khoiTao=1" className="font-medium underline">
             Khởi tạo tài khoản BTC

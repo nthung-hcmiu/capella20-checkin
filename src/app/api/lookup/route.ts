@@ -64,7 +64,6 @@ function guiGon(g: any) {
     danhXung: g.danhXung,
     chucVu: g.chucVu,
     congTy: g.congTy,
-    soGhe: g.soGhe,
     sdt: g.sdt,
     venue: g.venue?.ten,
     venueCode: g.venue?.code,

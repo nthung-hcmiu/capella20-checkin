@@ -52,11 +52,14 @@ export async function POST(req: NextRequest) {
     });
   }
 
+  // Sales xac nhan thay khach; canh bao le tan khi khach den ma chua duoc xac nhan
   const canhBao =
     guest.trangThai === TRANG_THAI.KHONG_THAM_DU
-      ? "Khách trước đó báo không tham dự"
-      : guest.trangThai === TRANG_THAI.CHUA_PHAN_HOI
-      ? "Khách chưa phản hồi xác nhận"
+      ? `Sales ${guest.salesOwner} đã ghi nhận khách không tham dự`
+      : [TRANG_THAI.CHUA_PHAN_HOI, TRANG_THAI.DA_MOI, TRANG_THAI.DA_PHAT_HANH].includes(guest.trangThai)
+      ? `Khách chưa được xác nhận tham dự (sales ${guest.salesOwner})`
+      : [TRANG_THAI.NHAP, TRANG_THAI.CHO_DUYET, TRANG_THAI.DANH_SACH_CHO].includes(guest.trangThai)
+      ? "Thiệp của khách chưa được BTC phát hành. Báo BTC"
       : null;
 
   // Cap nhat co dieu kien: hai lan quet cung luc thi chi mot lan thanh cong
@@ -90,7 +93,6 @@ function gon(g: any) {
     danhXung: g.danhXung,
     chucVu: g.chucVu,
     congTy: g.congTy,
-    soGhe: g.soGhe,
     soNguoiDen: g.soNguoiDen,
     venue: g.venue?.ten,
     soNguoiMoi: g.soNguoiMoi,

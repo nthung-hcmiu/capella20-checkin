@@ -41,7 +41,7 @@ export const MAU_TRANG_THAI: Record<string, { bg: string; text: string }> = {
   THAM_DU: { bg: "#d8e8d4", text: "#3d6b36" },
   CHUA_PHAN_HOI: { bg: "#f0e6d0", text: "#8a6d2f" },
   KHONG_THAM_DU: { bg: "#efe2e2", text: "#8a4a4a" },
-  DA_CHECKIN: { bg: "#b08d42", text: "#ffffff" },
+  DA_CHECKIN: { bg: "#b5303a", text: "#ffffff" },
   VANG_MAT: { bg: "#e8d9d9", text: "#6b2b36" },
   DA_HUY: { bg: "#e4e0da", text: "#9a9086" },
 };
@@ -86,11 +86,11 @@ export interface DaiVenue {
 }
 
 export const DAI_VENUE: DaiVenue[] = [
-  { code: "RIVERSIDE", ten: "Riverside Palace", rangeStart: 1000, rangeEnd: 1999, mauSac: "#b08d42", thuTu: 1 },
-  { code: "GALLERY", ten: "Gallery Hall", rangeStart: 2000, rangeEnd: 2999, mauSac: "#6b2b36", thuTu: 2 },
+  { code: "RIVERSIDE", ten: "Riverside Palace", rangeStart: 1000, rangeEnd: 1999, mauSac: "#b5303a", thuTu: 1 },
+  { code: "GALLERY", ten: "Gallery Hall", rangeStart: 2000, rangeEnd: 2999, mauSac: "#c2853d", thuTu: 2 },
   { code: "PARKVIEW", ten: "Parkview", rangeStart: 3000, rangeEnd: 3999, mauSac: "#5c6b4f", thuTu: 3 },
   { code: "CLARIS", ten: "Claris Palace", rangeStart: 4000, rangeEnd: 4999, mauSac: "#3a5a6b", thuTu: 4 },
-  { code: "CHLOE", ten: "Chloe Gallery", rangeStart: 5000, rangeEnd: 5999, mauSac: "#8a6d2f", thuTu: 5 },
+  { code: "CHLOE", ten: "Chloe Gallery", rangeStart: 5000, rangeEnd: 5999, mauSac: "#7b5a8c", thuTu: 5 },
   { code: "DUPHONG", ten: "Dự phòng", rangeStart: 6000, rangeEnd: 7999, mauSac: "#9a9086", thuTu: 6 },
   { code: "TAICUA", ten: "Khách bổ sung tại cửa", rangeStart: 8000, rangeEnd: 8999, mauSac: "#6b6255", thuTu: 7 },
   { code: "BOD", ten: "Khách BOD / BTC", rangeStart: 9000, rangeEnd: 9999, mauSac: "#1a1613", thuTu: 8 },

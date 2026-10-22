@@ -5,7 +5,7 @@ import Link from "next/link";
 import { StatusBadge } from "./StatusBadge";
 import { NHAN_TRANG_THAI, TRANG_THAI } from "@/lib/constants";
 import { che4SoCuoi, boDau } from "@/lib/format";
-import { taoKhach, suaKhach, datThiepGiay, phatHanh, danhDauDaMoi, huyKhach, duyetKhach, xoaKhach } from "@/lib/actions";
+import { taoKhach, suaKhach, datThiepGiay, xacNhanKhach, phatHanh, danhDauDaMoi, huyKhach, duyetKhach, xoaKhach } from "@/lib/actions";
 import { DANH_XUNG, NHAN_TRUONG, TRUONG_CHU, tenGoi, type ThongTinThem, type TruongChu } from "@/lib/khach";
 
 export interface GuestRow {
@@ -93,7 +93,10 @@ export function GuestManager({
           <a href="/api/xuat" className="btn-ghost">
             Xuất CSV
           </a>
-          <button className="btn-gold" onClick={() => setMoForm((v) => !v)}>
+          <a href="/in-qr" target="_blank" className="btn-ghost">
+            In QR thiệp giấy
+          </a>
+          <button className="btn-brand" onClick={() => setMoForm((v) => !v)}>
             {moForm ? "Đóng" : "+ Thêm khách"}
           </button>
         </div>
@@ -193,6 +196,7 @@ function Dong({ g, salesTeam }: { g: GuestRow; salesTeam: string[] }) {
   const [mo, setMo] = useState(false);
   const [sua, setSua] = useState(false);
   const [xacNhanXoa, setXacNhanXoa] = useState(false);
+  const [soXN, setSoXN] = useState(g.soNguoiXacNhan || g.soNguoiMoi);
 
   const act = (fn: () => Promise<unknown>) => start(() => void fn());
 
@@ -201,7 +205,7 @@ function Dong({ g, salesTeam }: { g: GuestRow; salesTeam: string[] }) {
       <tr className="border-t border-ivory-deep hover:bg-ivory/50">
         <td className="px-4 py-3">
           <span className="font-mono text-ink">{g.soThuTu}</span>
-          {g.isVip && <span className="ml-1.5 chip bg-gold/15 text-gold-deep">VIP</span>}
+          {g.isVip && <span className="ml-1.5 chip bg-brand/15 text-brand-deep">VIP</span>}
         </td>
         <td className="px-3 py-3">
           <div className="font-medium text-ink">{tenGoi({ danhXung: g.them.danhXung, hoTen: g.hoTen })}</div>
@@ -237,19 +241,37 @@ function Dong({ g, salesTeam }: { g: GuestRow; salesTeam: string[] }) {
           <td colSpan={6} className="px-4 py-3">
             <div className="flex flex-wrap items-center gap-2">
               {g.trangThai === TRANG_THAI.CHO_DUYET && (
-                <button className="btn-gold btn-sm" onClick={() => act(() => duyetKhach(g.id))}>
+                <button className="btn-brand btn-sm" onClick={() => act(() => duyetKhach(g.id))}>
                   Duyệt và phát hành
                 </button>
               )}
               {[TRANG_THAI.NHAP, TRANG_THAI.DANH_SACH_CHO].includes(g.trangThai as any) && (
-                <button className="btn-gold btn-sm" onClick={() => act(() => phatHanh(g.id))}>
+                <button className="btn-brand btn-sm" onClick={() => act(() => phatHanh(g.id))}>
                   Phát hành thiệp
                 </button>
               )}
               {g.trangThai === TRANG_THAI.DA_PHAT_HANH && (
                 <button className="btn-ink btn-sm" onClick={() => act(() => danhDauDaMoi(g.id))}>
-                  Đánh dấu đã mời
+                  Đã gửi thiệp online
                 </button>
+              )}
+              {[TRANG_THAI.DA_PHAT_HANH, TRANG_THAI.DA_MOI, TRANG_THAI.CHUA_PHAN_HOI, TRANG_THAI.THAM_DU, TRANG_THAI.KHONG_THAM_DU].includes(g.trangThai as any) && (
+                <span className="inline-flex items-center gap-1 rounded-full border border-ink/15 bg-white py-0.5 pl-3 pr-0.5">
+                  <span className="text-xs text-ink-muted">Xác nhận</span>
+                  <select className="bg-transparent text-xs outline-none" value={soXN} onChange={(e) => setSoXN(parseInt(e.target.value, 10))}>
+                    {Array.from({ length: g.soNguoiMoi }, (_, i) => i + 1).map((n) => (
+                      <option key={n} value={n}>
+                        {n} người
+                      </option>
+                    ))}
+                  </select>
+                  <button className="btn-brand btn-sm" onClick={() => act(() => xacNhanKhach(g.id, "THAM_DU", soXN))}>
+                    Tham dự
+                  </button>
+                  <button className="btn-ghost btn-sm" onClick={() => act(() => xacNhanKhach(g.id, "KHONG_THAM_DU"))}>
+                    Không
+                  </button>
+                </span>
               )}
               <Link href={`/thiep/${g.maBiMat}`} target="_blank" className="btn-ghost btn-sm">
                 Trang thiệp
@@ -332,7 +354,6 @@ function OThongTin({ them }: { them?: ThongTinThem }) {
       {o("donViKinhDoanh")}
       {o("doanhThuDuKien")}
       {o("phongBan", "Phòng kinh doanh")}
-      {o("soGhe", "10.01")}
     </>
   );
 }
@@ -389,12 +410,12 @@ function FormKhach({ g, salesTeam, onXong }: { g: GuestRow; salesTeam: string[];
           <input name="ghiChu" className="input" defaultValue={g.ghiChu || ""} />
         </div>
         <label className="flex items-end gap-2 pb-2.5 text-sm text-ink-soft">
-          <input name="isVip" type="checkbox" defaultChecked={g.isVip} className="h-4 w-4 accent-gold" />
+          <input name="isVip" type="checkbox" defaultChecked={g.isVip} className="h-4 w-4 accent-brand" />
           Khách VIP
         </label>
       </div>
       {kq && <div className={`rounded-xl px-4 py-2 text-sm ${kq.ok ? "bg-sage/10 text-sage" : "bg-wine/10 text-wine"}`}>{kq.msg}</div>}
-      <button type="submit" className="btn-gold btn-sm" disabled={pending}>
+      <button type="submit" className="btn-brand btn-sm" disabled={pending}>
         {pending ? "Đang lưu..." : "Lưu thay đổi"}
       </button>
     </form>
@@ -460,7 +481,7 @@ function FormTao({ venues, salesTeam, onXong }: { venues: VenueOpt[]; salesTeam:
         </div>
         <div className="flex items-end">
           <label className="flex items-center gap-2 pb-2.5 text-sm text-ink-soft">
-            <input name="isVip" type="checkbox" className="h-4 w-4 accent-gold" />
+            <input name="isVip" type="checkbox" className="h-4 w-4 accent-brand" />
             Khách VIP (cần BTC duyệt)
           </label>
         </div>
@@ -474,7 +495,7 @@ function FormTao({ venues, salesTeam, onXong }: { venues: VenueOpt[]; salesTeam:
         <div className={`rounded-xl px-4 py-2.5 text-sm ${kq.ok ? "bg-sage/10 text-sage" : "bg-wine/10 text-wine"}`}>{kq.msg}</div>
       )}
       <div className="flex gap-2">
-        <button type="submit" className="btn-gold" disabled={pending}>
+        <button type="submit" className="btn-brand" disabled={pending}>
           {pending ? "Đang lưu..." : "Lưu khách"}
         </button>
         <button type="button" className="btn-ghost" onClick={onXong}>

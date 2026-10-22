@@ -12,7 +12,6 @@ interface KhachGon {
   danhXung?: string | null;
   chucVu?: string | null;
   congTy?: string | null;
-  soGhe?: string | null;
   soNguoiDen?: number | null;
   venue?: string;
   soNguoiMoi: number;
@@ -189,7 +188,7 @@ function NhapSo({ onMa }: { onMa: (ma: string) => void }) {
         placeholder="1234"
         autoFocus
       />
-      <button className="btn-gold mt-3 w-full" disabled={!v.trim()} onClick={gui}>
+      <button className="btn-brand mt-3 w-full" disabled={!v.trim()} onClick={gui}>
         Check in
       </button>
       <p className="mt-2 text-center text-xs text-ink-muted">
@@ -239,18 +238,17 @@ function TimTen({ onChon }: { onChon: (id: string) => void }) {
           <button
             key={g.id}
             onClick={() => onChon(g.id)}
-            className="flex w-full items-center justify-between rounded-lg border border-ivory-deep bg-white px-3 py-2.5 text-left hover:border-gold"
+            className="flex w-full items-center justify-between rounded-lg border border-ivory-deep bg-white px-3 py-2.5 text-left hover:border-brand"
           >
             <span>
               <span className="font-mono text-xs text-ink-muted">{g.soThuTu}</span> <span className="text-sm text-ink">{tenGoi(g)}</span>
-              {g.isVip && <span className="ml-1.5 chip bg-gold/15 text-gold-deep">VIP</span>}
+              {g.isVip && <span className="ml-1.5 chip bg-brand/15 text-brand-deep">VIP</span>}
               {g.congTy && <div className="text-xs text-ink-soft">{g.congTy}</div>}
               <div className="text-xs text-ink-muted">
                 {g.venue}
-                {g.ban ? ` · ${g.ban}` : ""}
               </div>
             </span>
-            <span className="text-xs font-medium text-gold">Check in</span>
+            <span className="text-xs font-medium text-brand">Check in</span>
           </button>
         ))}
       </div>
@@ -321,7 +319,7 @@ function QuetQR({ onMa }: { onMa: (ma: string) => void }) {
             </div>
           </div>
         )}
-        {chay && <div className="pointer-events-none absolute inset-8 rounded-xl border-2 border-gold/80" />}
+        {chay && <div className="pointer-events-none absolute inset-8 rounded-xl border-2 border-brand/80" />}
       </div>
       {loi && <div className="mt-3 rounded-xl bg-wine/10 px-3 py-2 text-xs text-wine">{loi}</div>}
       <div className="mt-3">
@@ -330,7 +328,7 @@ function QuetQR({ onMa }: { onMa: (ma: string) => void }) {
             Dừng quét
           </button>
         ) : (
-          <button className="btn-gold w-full" onClick={bat}>
+          <button className="btn-brand w-full" onClick={bat}>
             Bật camera
           </button>
         )}
@@ -342,7 +340,7 @@ function QuetQR({ onMa }: { onMa: (ma: string) => void }) {
 function KetQuaCard({ kq, onDong }: { kq: KetQua; onDong: () => void }) {
   const thanhCong = kq.ok;
   const trungLap = kq.ketQua === "TRUNG_LAP";
-  const mauNen = thanhCong ? "bg-sage" : trungLap ? "bg-gold-deep" : "bg-wine";
+  const mauNen = thanhCong ? "bg-sage" : trungLap ? "bg-brand-deep" : "bg-wine";
 
   return (
     <div className="fixed inset-0 z-30 grid place-items-center bg-ink/40 p-5" onClick={onDong}>
@@ -361,12 +359,10 @@ function KetQuaCard({ kq, onDong }: { kq: KetQua; onDong: () => void }) {
               <span className="font-mono">{kq.guest.soThuTu}</span> · {kq.guest.venue}
             </div>
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-              {kq.guest.isVip && <span className="chip bg-gold/15 text-gold-deep">VIP</span>}
-              {kq.guest.ban && <span className="chip bg-ink text-ivory">{kq.guest.ban}</span>}
-              {kq.guest.soGhe && <span className="chip bg-gold text-white">Ghế {kq.guest.soGhe}</span>}
+              {kq.guest.isVip && <span className="chip bg-brand/15 text-brand-deep">VIP</span>}
             </div>
             {kq.guest.trangThai === "DA_CHECKIN" && <SoNguoiDen g={kq.guest} />}
-            {kq.canhBao && <div className="mt-4 rounded-xl bg-gold/10 px-3 py-2 text-xs text-gold-deep">{kq.canhBao}</div>}
+            {kq.canhBao && <div className="mt-4 rounded-xl bg-brand/10 px-3 py-2 text-xs text-brand-deep">{kq.canhBao}</div>}
           </div>
         )}
         <div className="px-6 pb-5">

@@ -5,7 +5,7 @@ import { prisma } from "./db";
 import { TRANG_THAI } from "./constants";
 import { boDau, chuanHoaSdt, sdtHopLe } from "./format";
 import { batBuocQuyen } from "./auth";
-import { TRUONG_CHU, khoaTen, lamSach, chuanSoGhe, type ThongTinThem } from "./khach";
+import { TRUONG_CHU, khoaTen, lamSach, type ThongTinThem } from "./khach";
 
 export interface DongNhap extends ThongTinThem {
   hoTen: string;
@@ -144,7 +144,6 @@ export async function nhapDanhSach(
       return;
     }
     const them = lamSach(Object.fromEntries(TRUONG_CHU.map((k) => [k, r[k] ?? null])) as ThongTinThem);
-    them.soGhe = chuanSoGhe(r.soGhe);
     const khoa = khoaTen(hoTen, them.maCorp, them.congTy);
     kq.congTy = them.congTy;
     const khopVenue = r.venue?.trim() ? timVenue(r.venue) : venueMacDinh ? { v: venueMacDinh, chinhXac: true } : null;

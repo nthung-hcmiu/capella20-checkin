@@ -101,7 +101,6 @@ export async function gieoDuLieu(
     TRANG_THAI.DANH_SACH_CHO,
     TRANG_THAI.NHAP,
   ];
-  const soBanTheoVenue: Record<string, number> = {};
   const sdtDaTao: string[] = [];
 
   for (const [code, n] of Object.entries(phanBo)) {
@@ -122,18 +121,14 @@ export async function gieoDuLieu(
       ].includes(trangThai as any);
       const checkinLuc = trangThai === TRANG_THAI.DA_CHECKIN ? new Date(now - 3600000 * Math.random()) : null;
 
-      let ban: string | null = null;
-      if ([TRANG_THAI.THAM_DU, TRANG_THAI.DA_CHECKIN].includes(trangThai as any)) {
-        soBanTheoVenue[code] = (soBanTheoVenue[code] || 0) + 1;
-        const so = Math.ceil(soBanTheoVenue[code] / 10) * 2 + 7;
-        ban = `LINE ${so} & ${so + 1}`;
-      }
 
       const ct = Math.floor(Math.random() * CONG_TY_MAU.length);
+      const phuTrach = chon(salesTeam);
+      const hoTen = tenNgauNhien();
       const nhomMoi = chon(NHOM_MOI);
       const guest = await prisma.guest.create({
         data: {
-          danhXung: Math.random() < 0.6 ? "Bà" : "Ông",
+          danhXung: hoTen.includes(" Thị ") ? "Bà" : hoTen.includes(" Văn ") ? "Ông" : chon(["Ông", "Bà"]),
           chucVu: chon(CHUC_VU),
           congTy: CONG_TY_MAU[ct],
           maCorp: `COR${String(9000000 + ct * 137).padStart(7, "0")}`,
@@ -144,8 +139,8 @@ export async function gieoDuLieu(
           nguonKhach: chon(["Netsuite", "Netsuite", "Netsuite", "Contact mới"]),
           phongBan: nhomMoi === "Đối tác Capella" ? "Marketing" : "Phòng kinh doanh",
           daGuiThiepGiay: daPhatHanh && Math.random() < 0.5,
-          soThuTu, maBiMat: sinhMa(), hoTen: tenNgauNhien(), sdt: i > 0 && Math.random() < 0.3 ? null : sdt, venueId: venue.id,
-          soNguoiMoi, soNguoiXacNhan, trangThai, isVip: false, ban, salesOwner: chon(salesTeam),
+          soThuTu, maBiMat: sinhMa(), hoTen, sdt: i > 0 && Math.random() < 0.3 ? null : sdt, venueId: venue.id,
+          soNguoiMoi, soNguoiXacNhan, trangThai, isVip: false, salesOwner: phuTrach, xacNhanBoi: daXacNhan ? phuTrach : null,
           phatHanhLuc: daPhatHanh ? new Date(now - 86400000 * (5 + Math.random() * 10)) : null,
           xacNhanLuc: daXacNhan ? new Date(now - 86400000 * (1 + Math.random() * 4)) : null,
           checkinLuc,
@@ -171,7 +166,6 @@ export async function gieoDuLieu(
       data: {
         soThuTu: bod.rangeStart + i, maBiMat: sinhMa(), hoTen: tenNgauNhien(), sdt: sdtNgauNhien(),
         danhXung: i % 2 ? "Bà" : "Ông", chucVu: "Tổng Giám Đốc", congTy: CONG_TY_MAU[i + 4], nhomKhachMoi: "Đối tác Capella",
-        soGhe: `1.0${i + 1}`, ban: "LINE 1 & 2",
         venueId: bod.id, soNguoiMoi: 2, trangThai: i < 2 ? TRANG_THAI.CHO_DUYET : TRANG_THAI.DA_PHAT_HANH,
         isVip: true, salesOwner: salesTeam[i % salesTeam.length], lyDoChoDuyet: i < 2 ? "VIP" : null,
       },

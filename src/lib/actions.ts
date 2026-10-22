@@ -194,24 +194,41 @@ export async function suaKhach(
     : { ok: true, thongBao: "Đã lưu thông tin khách." };
 }
 
+// Sales (hoac BTC) xac nhan thay khach sau khi da hoi khach
+export async function xacNhanKhach(id: string, ketQua: "THAM_DU" | "KHONG_THAM_DU" | "CHUA_PHAN_HOI", soNguoi = 1): Promise<KetQua> {
+  const u = await batBuocQuyen(["ADMIN", "SALES"]);
+  const g = await prisma.guest.findUnique({ where: { id } });
+  if (!g) return { ok: false, thongBao: "Không tìm thấy khách." };
+  if (u.vaiTro === "SALES" && g.salesOwner !== u.hoTen) return { ok: false, thongBao: "Khách này không do bạn phụ trách." };
+  const duocXacNhan = [
+    TRANG_THAI.DA_PHAT_HANH, TRANG_THAI.DA_MOI, TRANG_THAI.CHUA_PHAN_HOI, TRANG_THAI.THAM_DU, TRANG_THAI.KHONG_THAM_DU,
+  ];
+  if (!duocXacNhan.includes(g.trangThai as any)) {
+    return { ok: false, thongBao: g.trangThai === TRANG_THAI.DA_CHECKIN ? "Khách đã check in tại sự kiện." : "Thiệp chưa được BTC phát hành." };
+  }
+  const so = Math.min(g.soNguoiMoi, Math.max(1, soNguoi || 1));
+  await prisma.guest.update({
+    where: { id },
+    data: {
+      trangThai: ketQua,
+      soNguoiXacNhan: ketQua === "THAM_DU" ? so : ketQua === "KHONG_THAM_DU" ? 0 : null,
+      xacNhanLuc: ketQua === "CHUA_PHAN_HOI" ? null : new Date(),
+      xacNhanBoi: ketQua === "CHUA_PHAN_HOI" ? null : u.hoTen,
+    },
+  });
+  lamTuoi();
+  return {
+    ok: true,
+    thongBao: ketQua === "THAM_DU" ? `Đã xác nhận tham dự ${so} người.` : ketQua === "KHONG_THAM_DU" ? "Đã ghi nhận không tham dự." : "Đã chuyển về chưa phản hồi.",
+  };
+}
+
 // Round 2: danh dau da gui thiep giay (BTC, hoac sales cho khach cua minh)
 export async function datThiepGiay(id: string, daGui: boolean) {
   const u = await batBuocQuyen(["ADMIN", "SALES"]);
   const g = await prisma.guest.findUnique({ where: { id } });
   if (!g || (u.vaiTro === "SALES" && g.salesOwner !== u.hoTen)) return;
   await prisma.guest.update({ where: { id }, data: { daGuiThiepGiay: daGui } });
-  lamTuoi();
-}
-
-export async function xepCho(id: string, line: string, soGhe: string) {
-  await batBuocQuyen(["ADMIN"]);
-  await prisma.guest.update({ where: { id }, data: { ban: line.trim() || null, soGhe: soGhe.trim() || null } });
-  lamTuoi();
-}
-
-export async function xepBan(id: string, ban: string) {
-  await batBuocQuyen(["ADMIN"]);
-  await prisma.guest.update({ where: { id }, data: { ban: ban.trim() || null } });
   lamTuoi();
 }
 

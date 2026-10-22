@@ -6,7 +6,7 @@ import { dangNhap, doiMatKhau, khoiTaoBTC, type TrangThaiForm } from "@/lib/auth
 function NutGui({ chu, chuDang }: { chu: string; chuDang: string }) {
   const { pending } = useFormStatus();
   return (
-    <button type="submit" className="btn-gold w-full" disabled={pending}>
+    <button type="submit" className="btn-brand w-full" disabled={pending}>
       {pending ? chuDang : chu}
     </button>
   );

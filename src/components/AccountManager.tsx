@@ -31,7 +31,7 @@ export function AccountManager({ ds }: { ds: TaiKhoanRow[] }) {
             BTC vào mọi phân hệ. Sales chỉ thấy khách mang đúng họ tên của mình. Lễ tân chỉ vào app check in.
           </p>
         </div>
-        <button className="btn-gold" onClick={() => setMoForm((v) => !v)}>
+        <button className="btn-brand" onClick={() => setMoForm((v) => !v)}>
           {moForm ? "Đóng" : "+ Thêm tài khoản"}
         </button>
       </div>
@@ -84,7 +84,7 @@ function Dong({ t, onKq }: { t: TaiKhoanRow; onKq: (k: KetQua) => void }) {
           </div>
         </div>
         <span
-          className={`chip ${!t.coMatKhau ? "bg-wine/10 text-wine" : t.doiMatKhau ? "bg-gold/15 text-gold-deep" : "bg-sage/10 text-sage"}`}
+          className={`chip ${!t.coMatKhau ? "bg-wine/10 text-wine" : t.doiMatKhau ? "bg-brand/15 text-brand-deep" : "bg-sage/10 text-sage"}`}
         >
           {!t.coMatKhau ? "Chưa có mật khẩu" : t.doiMatKhau ? "Phải đổi khi đăng nhập" : "Đang dùng"}
         </span>
@@ -119,11 +119,11 @@ function Dong({ t, onKq }: { t: TaiKhoanRow; onKq: (k: KetQua) => void }) {
             onChange={(e) => setMk(e.target.value)}
           />
           <label className="flex items-center gap-2 text-xs text-ink-soft">
-            <input type="checkbox" className="h-4 w-4 accent-gold" checked={batDoi} onChange={(e) => setBatDoi(e.target.checked)} />
+            <input type="checkbox" className="h-4 w-4 accent-brand" checked={batDoi} onChange={(e) => setBatDoi(e.target.checked)} />
             Bắt đổi ở lần đăng nhập đầu
           </label>
           <button
-            className="btn-gold btn-sm"
+            className="btn-brand btn-sm"
             disabled={pending || mk.length < 8}
             onClick={() =>
               start(async () => {
@@ -145,7 +145,7 @@ function MatKhauChung({ soChuaCo, onKq }: { soChuaCo: number; onKq: (k: KetQua) 
   const [pending, start] = useTransition();
   const [mk, setMk] = useState("");
   return (
-    <div className="card border-gold/30 p-5">
+    <div className="card border-brand/30 p-5">
       <div className="text-sm font-medium text-ink">{soChuaCo} tài khoản chưa có mật khẩu</div>
       <p className="mt-1 text-xs text-ink-muted">
         Tiện cho đợt dùng thử: đặt một mật khẩu chung cho tất cả tài khoản này, gửi cho mọi người. Trước sự kiện nên đặt lại riêng từng người.
@@ -219,12 +219,12 @@ function FormThem({ onKq, onXong }: { onKq: (k: KetQua) => void; onXong: () => v
         </div>
         <div className="flex items-end">
           <label className="flex items-center gap-2 pb-2.5 text-sm text-ink-soft">
-            <input name="batDoi" type="checkbox" defaultChecked className="h-4 w-4 accent-gold" />
+            <input name="batDoi" type="checkbox" defaultChecked className="h-4 w-4 accent-brand" />
             Bắt đổi mật khẩu ở lần đăng nhập đầu
           </label>
         </div>
       </div>
-      <button type="submit" className="btn-gold" disabled={pending}>
+      <button type="submit" className="btn-brand" disabled={pending}>
         {pending ? "Đang tạo..." : "Tạo tài khoản"}
       </button>
     </form>

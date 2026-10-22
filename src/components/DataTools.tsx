@@ -48,7 +48,7 @@ export function DataTools({ soKhach, soCheckin }: { soKhach: number; soCheckin: 
         </p>
         {xacNhanMau ? (
           <div className="mt-4 flex flex-wrap gap-2">
-            <button className="btn-gold" disabled={pending} onClick={() => chay(napDuLieuMau)}>
+            <button className="btn-brand" disabled={pending} onClick={() => chay(napDuLieuMau)}>
               {pending ? "Đang nạp..." : `Xác nhận, thay ${soKhach} khách hiện có`}
             </button>
             <button className="btn-ghost" onClick={() => setXacNhanMau(false)}>

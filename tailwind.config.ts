@@ -11,19 +11,20 @@ const config: Config = {
           muted: "#6b6255",
         },
         ivory: {
-          DEFAULT: "#f7f3ec",
-          deep: "#efe8db",
+          DEFAULT: "#f6f4f3",
+          deep: "#ebe6e3",
         },
-        gold: {
-          DEFAULT: "#b08d42",
-          soft: "#c9a85f",
-          deep: "#8a6d2f",
+        // Do Capella theo logo
+        brand: {
+          DEFAULT: "#b5303a",
+          soft: "#d4545c",
+          deep: "#8c2029",
         },
-        wine: "#6b2b36",
+        wine: "#7a1f28",
         sage: "#5c6b4f",
       },
       fontFamily: {
-        serif: ["Playfair Display", "Georgia", "Times New Roman", "serif"],
+        serif: ["Be Vietnam Pro", "system-ui", "sans-serif"],
         sans: ["Be Vietnam Pro", "system-ui", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif"],
       },
       boxShadow: {

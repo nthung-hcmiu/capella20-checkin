@@ -5,7 +5,7 @@ import { boDau } from "./format";
 // Cac truong chu (khong bat buoc) ngoai ho ten, SDT
 export const TRUONG_CHU = [
   "danhXung", "chucVu", "congTy", "maCorp", "nhomKhachMoi", "donViKinhDoanh",
-  "nhomKhach", "linhVuc", "nguonKhach", "doanhThuDuKien", "phongBan", "soGhe",
+  "nhomKhach", "linhVuc", "nguonKhach", "doanhThuDuKien", "phongBan",
 ] as const;
 export type TruongChu = (typeof TRUONG_CHU)[number];
 export type ThongTinThem = Partial<Record<TruongChu, string | null>>;
@@ -22,7 +22,6 @@ export const NHAN_TRUONG: Record<TruongChu, string> = {
   nguonKhach: "Phân loại khách",
   doanhThuDuKien: "Doanh thu dự kiến",
   phongBan: "Phòng ban",
-  soGhe: "Số ghế VIP",
 };
 
 export const DANH_XUNG = ["Ông", "Bà", "Anh", "Chị"];
@@ -53,10 +52,3 @@ export function tenGoi(g: { danhXung?: string | null; hoTen: string }): string {
   return [g.danhXung, g.hoTen].filter(Boolean).join(" ");
 }
 
-// Excel hay doc so ghe 10.10 thanh 10.1: giu 2 chu so sau dau cham
-export function chuanSoGhe(v: unknown): string | null {
-  if (v == null || v === "") return null;
-  if (typeof v === "number") return Number.isInteger(v) ? String(v) : v.toFixed(2);
-  const s = String(v).trim();
-  return /^\d+\.\d$/.test(s) ? s + "0" : s || null;
-}

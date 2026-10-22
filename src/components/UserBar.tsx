@@ -16,7 +16,11 @@ export function UserBar({ u, light }: { u: NguoiDung; light?: boolean }) {
           Trang chủ
         </Link>
       )}
-      <Link href="/doi-mat-khau" className={light ? "rounded-full border border-ivory/30 px-3 py-1.5 hover:bg-ivory/10" : "btn-ghost btn-sm"}>
+      <Link href="/huong-dan" title="Hướng dẫn sử dụng" className={light ? "rounded-full border border-ivory/30 px-3 py-1.5 hover:bg-ivory/10" : "btn-ghost btn-sm"}>
+        <span className="sm:hidden">?</span>
+        <span className="hidden sm:inline">Hướng dẫn</span>
+      </Link>
+      <Link href="/doi-mat-khau" className={`hidden sm:inline-flex ${light ? "rounded-full border border-ivory/30 px-3 py-1.5 hover:bg-ivory/10" : "btn-ghost btn-sm"}`}>
         Đổi mật khẩu
       </Link>
       <form action={dangXuat}>

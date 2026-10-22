@@ -63,6 +63,7 @@ model Guest {
   lyDoChoDuyet   String? // ly do vao hang cho duyet: TRUNG_SDT | VIP
   phatHanhLuc    DateTime?
   xacNhanLuc     DateTime?
+  xacNhanBoi     String? // nguoi xac nhan tham du thay khach (sales / BTC)
   checkinLuc     DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
