@@ -143,6 +143,12 @@ export const CHISO = {
   soLeTan: 12,
 };
 
+// Giai doan demo: thanh thong bao tren dau moi trang tu an tu thoi diem launch (gio Viet Nam)
+export const LAUNCH = {
+  ngay: "26/10/2026",
+  luc: "2026-10-26T00:00:00+07:00",
+};
+
 export const SU_KIEN = {
   ten: "Capella 20 năm, Đêm tri ân khách hàng",
   ngay: "12/11/2026",
