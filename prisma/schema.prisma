@@ -33,6 +33,7 @@ model Venue {
   mauSac     String  @default("#b08d42")
   thuTu      Int     @default(0)
   guests     Guest[]
+  nhanVien   StaffUser[]
 }
 
 // Mot khach = mot ma. Khoa chong trung la SDT, xu ly o tang ung dung.
@@ -105,6 +106,8 @@ model StaffUser {
   vaiTro     String // ADMIN | LE_TAN | SALES
   quanTri    Boolean         @default(false) // ADMIN co quyen quan tri: tai khoan, mat khau, tab Du lieu
   ca         String? // ca truc cua le tan
+  venueId    String? // sales thuoc venue nao; co venue thi chi moi khach cho venue do
+  venue      Venue?          @relation(fields: [venueId], references: [id], onDelete: SetNull)
   doiMatKhau Boolean         @default(false) // bat doi mat khau o lan dang nhap ke tiep
   createdAt  DateTime        @default(now())
   phien      PhienDangNhap[]

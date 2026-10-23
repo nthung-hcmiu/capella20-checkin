@@ -16,6 +16,8 @@ export interface NguoiDung {
   vaiTro: string;
   quanTri: boolean;
   ca: string | null;
+  venueId: string | null;
+  venueTen: string | null;
   doiMatKhau: boolean;
 }
 
@@ -65,11 +67,14 @@ export const layNguoiDung = cache(async (): Promise<NguoiDung | null> => {
   if (!token) return null;
   const phien = await prisma.phienDangNhap.findUnique({
     where: { tokenHash: bamToken(token) },
-    include: { user: true },
+    include: { user: { include: { venue: true } } },
   });
   if (!phien || phien.hetHan < new Date()) return null;
   const u = phien.user;
-  return { id: u.id, username: u.username, hoTen: u.hoTen, vaiTro: u.vaiTro, quanTri: u.vaiTro === "ADMIN" && u.quanTri, ca: u.ca, doiMatKhau: u.doiMatKhau };
+  return { id: u.id, username: u.username, hoTen: u.hoTen, vaiTro: u.vaiTro, quanTri: u.vaiTro === "ADMIN" && u.quanTri, ca: u.ca,
+    venueId: u.vaiTro === "SALES" ? u.venueId : null, venueTen: u.vaiTro === "SALES" ? u.venue?.ten ?? null : null,
+    doiMatKhau: u.doiMatKhau,
+  };
 });
 
 // Dung trong trang (server component): chua dang nhap hoac sai vai tro thi chuyen huong

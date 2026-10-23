@@ -112,19 +112,22 @@ export function ImportManager({
   venues,
   salesTeam,
   laSales = false,
+  venueCoDinh,
 }: {
   venues: { id: string; ten: string }[];
   salesTeam: string[];
   laSales?: boolean;
+  venueCoDinh?: { id: string; ten: string };
 }) {
-  // Sales: khong ghep cot nguoi phu trach (luon la chinh minh)
-  const truongChinh = TRUONG.filter((f) => !f.phu && !(laSales && f.key === "sales"));
-  const truongXem = TRUONG_XEM.filter((f) => !(laSales && f.key === "sales"));
+  // Sales: khong ghep cot nguoi phu trach (luon la chinh minh); sales thuoc venue thi khong ghep cot venue
+  const boQua = (k: string) => (laSales && k === "sales") || (!!venueCoDinh && k === "venue");
+  const truongChinh = TRUONG.filter((f) => !f.phu && !boQua(f.key));
+  const truongXem = TRUONG_XEM.filter((f) => !boQua(f.key));
   const [tenFile, setTenFile] = useState("");
   const [bang, setBang] = useState<string[][]>([]);
   const [dongTieuDe, setDongTieuDe] = useState(0);
   const [cot, setCot] = useState<Record<Truong, number> | null>(null);
-  const [venueMacDinh, setVenueMacDinh] = useState("");
+  const [venueMacDinh, setVenueMacDinh] = useState(venueCoDinh?.id || "");
   const [salesMacDinh, setSalesMacDinh] = useState("");
   const [loiDoc, setLoiDoc] = useState<string | null>(null);
   const [dangDoc, setDangDoc] = useState(false);
@@ -276,6 +279,13 @@ export function ImportManager({
                 </select>
               </div>
             ))}
+            {venueCoDinh ? (
+              <div>
+                <label className="label">Venue</label>
+                <div className="input bg-ivory text-ink-soft">{venueCoDinh.ten}</div>
+                <p className="mt-1 text-xs text-ink-muted">Tài khoản của bạn thuộc venue này, mọi khách trong file vào đây.</p>
+              </div>
+            ) : (
             <div>
               <label className="label">Venue mặc định {cot.venue < 0 && <span className="text-wine">*</span>}</label>
               <select className="input" value={venueMacDinh} onChange={(e) => { setVenueMacDinh(e.target.value); setKiemTra(null); }}>
@@ -288,6 +298,7 @@ export function ImportManager({
               </select>
               <p className="mt-1 text-xs text-ink-muted">Dùng cho dòng không ghi venue.</p>
             </div>
+            )}
             {!laSales && (
             <div>
               <label className="label">Sales mặc định</label>

@@ -110,6 +110,7 @@ export async function nhapDanhSach(
   };
 
   const venueMacDinh = tuyChon.venueMacDinh ? venues.find((v) => v.id === tuyChon.venueMacDinh) : undefined;
+  const venueSales = laSales && u.venueId ? venues.find((v) => v.id === u.venueId) : undefined;
   const conHieuLuc = daCo.filter((g) => g.trangThai !== TRANG_THAI.DA_HUY);
   const sdtDaCo = new Set(conHieuLuc.map((g) => g.sdt).filter(Boolean) as string[]);
   const tenDaCo = new Set(conHieuLuc.map((g) => khoaTen(g.hoTen, g.maCorp, g.congTy)).filter(Boolean) as string[]);
@@ -169,7 +170,10 @@ export async function nhapDanhSach(
     const them = lamSach(Object.fromEntries(TRUONG_CHU.map((k) => [k, r[k] ?? null])) as ThongTinThem);
     const khoa = khoaTen(hoTen, them.maCorp, them.congTy);
     kq.congTy = them.congTy;
-    const khopVenue = r.venue?.trim() ? timVenue(r.venue) : venueMacDinh ? { v: venueMacDinh, chinhXac: true } : null;
+    // Sales thuoc venue: moi dong deu vao venue cua sales, bo qua cot venue trong file
+    const khopVenue = venueSales
+      ? { v: venueSales, chinhXac: true }
+      : r.venue?.trim() ? timVenue(r.venue) : venueMacDinh ? { v: venueMacDinh, chinhXac: true } : null;
     const venue = khopVenue?.v;
     if (!venue) {
       kq.loi = r.venue?.trim() ? `Không nhận ra venue "${r.venue}"` : "Thiếu venue";

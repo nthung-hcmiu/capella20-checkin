@@ -42,6 +42,7 @@ const HUONG_DAN: VaiTro[] = [
       },
     ],
     luuY: [
+      "Tạo tài khoản sales: Tài khoản > Tạo nhiều tài khoản > dán danh sách họ tên > chọn venue. Tên đăng nhập theo công thức tên chính + chữ cái đầu họ và tên đệm, mật khẩu tạm ngẫu nhiên chỉ hiện một lần.",
       "Chỉ tài khoản Quản trị được tạo tài khoản, đặt mật khẩu cho người khác, xuất CSV và vào tab Dữ liệu. Tài khoản BTC khác chỉ xem danh sách tài khoản.",
       "Xóa toàn bộ danh sách không hoàn tác được. Luôn tải CSV sao lưu trước.",
       "BTC cũng xác nhận thay khách và sửa thông tin được ngay trong dòng khách đã mở.",
@@ -56,6 +57,7 @@ const HUONG_DAN: VaiTro[] = [
         tieuDe: "Lập khách",
         buoc: [
           ["Thêm khách", "Khách của tôi > Thêm khách. Bắt buộc tên và chức vụ; mời 2 người thì điền cả tên và chức vụ khách thứ 2. Chọn lĩnh vực, phân loại khách (Khách cũ hoặc Khách tiềm năng), ghi doanh thu dự kiến. Khách mới lưu ở trạng thái Nháp."],
+          ["Venue", "Tài khoản gắn với venue nào thì chỉ thêm và nhập khách cho venue đó."],
           ["Nhập từ Excel", "Nhập danh sách > Tải file mẫu > điền > chọn file > Kiểm tra trước > Nhập. Mọi khách trong file do bạn phụ trách."],
           ["Gửi duyệt", "Kiểm tra lại rồi bấm Gửi duyệt trên từng khách, hoặc Gửi duyệt tất cả. Nháp sai thì bấm Xóa nháp."],
           ["Chờ BTC", "BTC duyệt xong khách chuyển sang Đã phát hành vé, lúc đó mới gửi thiệp được."],

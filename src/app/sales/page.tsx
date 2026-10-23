@@ -19,9 +19,11 @@ export default async function SalesPage({ searchParams }: { searchParams: { nhom
     prisma.venue.findMany({ orderBy: { thuTu: "asc" } }),
     prisma.guest.groupBy({ by: ["venueId"], where: { trangThai: { in: CHIEM_QUOTA } }, _count: { _all: true } }),
   ]);
-  const venueThem = venues.filter((v) => v.quota > 0);
-  // Venue de sua: cac venue co quota, cong venue hien tai cua khach (neu khac)
-  const venuesSua = venues.filter((v) => v.quota > 0 || guests.some((g) => g.venueId === v.id)).map((v) => ({ id: v.id, ten: v.ten }));
+  // Sales thuoc venue chi thay venue cua minh
+  const duocMoi = (v: { id: string; quota: number }) => (u.venueId ? v.id === u.venueId : v.quota > 0);
+  const venueThem = venues.filter(duocMoi);
+  // Venue de sua: venue duoc moi, cong venue hien tai cua khach (neu khac)
+  const venuesSua = venues.filter((v) => duocMoi(v) || guests.some((g) => g.venueId === v.id)).map((v) => ({ id: v.id, ten: v.ten }));
 
   return (
     <SalesPortal

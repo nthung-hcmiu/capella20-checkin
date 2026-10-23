@@ -8,6 +8,8 @@ import { chuanHoaSdt, sdtHopLe } from "./format";
 import { ghiDiCung, khoaTen, lamSach, lamSachDiCung, thieuThongTinMoi, type NguoiDiCung, type ThongTinThem } from "./khach";
 import { batBuocQuanTri, batBuocQuyen, bamMatKhau } from "./auth";
 import { gieoDuLieu } from "./seedData";
+import { chuanHoTen, tenDangNhapGoiY } from "./taiKhoan";
+import crypto from "crypto";
 
 function lamTuoi() {
   revalidatePath("/", "layout");
@@ -82,6 +84,8 @@ export async function taoKhach(input: {
   diCung?: NguoiDiCung[];
 }): Promise<KetQuaTao> {
   const u = await batBuocQuyen(["ADMIN", "SALES"]);
+  // Sales thuoc mot venue thi chi moi khach cho venue do
+  if (u.vaiTro === "SALES" && u.venueId) input = { ...input, venueId: u.venueId };
   const hoTen = input.hoTen?.trim().replace(/\s+/g, " ");
   const sdt = chuanHoaSdt(input.sdt) || null;
   if (!hoTen || !input.venueId) {
@@ -271,6 +275,9 @@ export async function suaKhach(
   let venueId = cu.venueId;
   let soThuTu = cu.soThuTu;
   if (input.venueId && input.venueId !== cu.venueId) {
+    if (laSales && u.venueId && input.venueId !== u.venueId) {
+      return { ok: false, thongBao: `Tài khoản của bạn chỉ mời khách cho ${u.venueTen || "venue được giao"}.` };
+    }
     if (!chuaPhatHanh) return { ok: false, thongBao: "Vé đã phát hành, không đổi venue được. Liên hệ BTC." };
     if (!(await prisma.venue.findUnique({ where: { id: input.venueId } }))) return { ok: false, thongBao: "Venue không hợp lệ." };
     try {
@@ -381,6 +388,7 @@ export async function taoTaiKhoan(input: {
   username: string;
   vaiTro: string;
   ca?: string;
+  venueId?: string;
   matKhau: string;
   batDoi: boolean;
 }): Promise<KetQua> {
@@ -396,12 +404,17 @@ export async function taoTaiKhoan(input: {
   if (await prisma.staffUser.findUnique({ where: { username } })) {
     return { ok: false, thongBao: "Tên đăng nhập đã tồn tại." };
   }
+  // Sales nhan khach theo ho ten, nen ho ten sales khong duoc trung
+  if (input.vaiTro === "SALES" && (await prisma.staffUser.findFirst({ where: { vaiTro: "SALES", hoTen } }))) {
+    return { ok: false, thongBao: `Đã có sales tên ${hoTen}. Thêm chữ phân biệt vào họ tên.` };
+  }
   await prisma.staffUser.create({
     data: {
       hoTen,
       username,
       vaiTro: input.vaiTro,
       ca: input.vaiTro === "LE_TAN" ? input.ca?.trim() || null : null,
+      venueId: input.vaiTro === "SALES" ? input.venueId || null : null,
       matKhau: bamMatKhau(input.matKhau),
       doiMatKhau: input.batDoi,
     },
@@ -443,4 +456,78 @@ export async function xoaTaiKhoan(id: string): Promise<KetQua> {
   await prisma.staffUser.delete({ where: { id } });
   lamTuoi();
   return { ok: true, thongBao: `Đã xóa tài khoản ${t.username}.` };
+}
+
+// Mat khau tam ngau nhien, bo cac ky tu de nham (0 O 1 l I)
+function matKhauNgauNhien(): string {
+  const bang = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+  let mk = "";
+  for (let i = 0; i < 10; i++) mk += bang[crypto.randomInt(bang.length)];
+  return mk;
+}
+
+export interface TaiKhoanMoi {
+  hoTen: string;
+  username: string;
+  matKhau: string;
+  ghiChu?: string;
+}
+
+// Tao nhieu tai khoan mot lan: moi dong mot ho ten. Ten dang nhap theo cong thuc,
+// mat khau tam ngau nhien chi tra ve mot lan, bat doi o lan dang nhap dau.
+export async function taoNhieuTaiKhoan(input: {
+  danhSach: string;
+  vaiTro: string;
+  venueId?: string;
+  ca?: string;
+}): Promise<{ ok: boolean; thongBao: string; ds: TaiKhoanMoi[] }> {
+  await batBuocQuanTri();
+  if (!["SALES", "LE_TAN"].includes(input.vaiTro)) return { ok: false, thongBao: "Chỉ tạo hàng loạt cho sales hoặc lễ tân.", ds: [] };
+  if (input.venueId && !(await prisma.venue.findUnique({ where: { id: input.venueId } }))) {
+    return { ok: false, thongBao: "Venue không hợp lệ.", ds: [] };
+  }
+  const ten = [...new Set(input.danhSach.split(/\r?\n|,|;/).map(chuanHoTen).filter(Boolean))];
+  if (ten.length === 0) return { ok: false, thongBao: "Nhập ít nhất một họ tên.", ds: [] };
+  if (ten.length > 100) return { ok: false, thongBao: "Mỗi lần tối đa 100 tài khoản.", ds: [] };
+
+  const ds: TaiKhoanMoi[] = [];
+  for (const hoTen of ten) {
+    if (input.vaiTro === "SALES" && (await prisma.staffUser.findFirst({ where: { vaiTro: "SALES", hoTen } }))) {
+      ds.push({ hoTen, username: "", matKhau: "", ghiChu: "Đã có sales trùng họ tên, bỏ qua" });
+      continue;
+    }
+    const goc = tenDangNhapGoiY(hoTen);
+    if (goc.length < 3) {
+      ds.push({ hoTen, username: "", matKhau: "", ghiChu: "Họ tên quá ngắn, tạo tay" });
+      continue;
+    }
+    let username = goc;
+    for (let i = 2; await prisma.staffUser.findUnique({ where: { username } }); i++) username = `${goc}${i}`;
+    const matKhau = matKhauNgauNhien();
+    await prisma.staffUser.create({
+      data: {
+        hoTen,
+        username,
+        vaiTro: input.vaiTro,
+        venueId: input.vaiTro === "SALES" ? input.venueId || null : null,
+        ca: input.vaiTro === "LE_TAN" ? input.ca?.trim() || null : null,
+        matKhau: bamMatKhau(matKhau),
+        doiMatKhau: true,
+      },
+    });
+    ds.push({ hoTen, username, matKhau });
+  }
+  lamTuoi();
+  const soTao = ds.filter((d) => d.matKhau).length;
+  return { ok: soTao > 0, thongBao: `Đã tạo ${soTao} tài khoản.`, ds };
+}
+
+// Doi venue cua tai khoan sales
+export async function datVenueTaiKhoan(id: string, venueId: string | null): Promise<KetQua> {
+  await batBuocQuanTri();
+  const t = await prisma.staffUser.findUnique({ where: { id } });
+  if (!t || t.vaiTro !== "SALES") return { ok: false, thongBao: "Chỉ gán venue cho tài khoản sales." };
+  await prisma.staffUser.update({ where: { id }, data: { venueId: venueId || null } });
+  lamTuoi();
+  return { ok: true, thongBao: `Đã cập nhật venue cho ${t.hoTen}.` };
 }
