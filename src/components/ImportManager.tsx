@@ -107,7 +107,18 @@ function taiFileMau() {
   URL.revokeObjectURL(url);
 }
 
-export function ImportManager({ venues, salesTeam }: { venues: { id: string; ten: string }[]; salesTeam: string[] }) {
+export function ImportManager({
+  venues,
+  salesTeam,
+  laSales = false,
+}: {
+  venues: { id: string; ten: string }[];
+  salesTeam: string[];
+  laSales?: boolean;
+}) {
+  // Sales: khong ghep cot nguoi phu trach (luon la chinh minh)
+  const truongChinh = TRUONG.filter((f) => !f.phu && !(laSales && f.key === "sales"));
+  const truongXem = TRUONG_XEM.filter((f) => !(laSales && f.key === "sales"));
   const [tenFile, setTenFile] = useState("");
   const [bang, setBang] = useState<string[][]>([]);
   const [dongTieuDe, setDongTieuDe] = useState(0);
@@ -120,7 +131,7 @@ export function ImportManager({ venues, salesTeam }: { venues: { id: string; ten
   const [daNhap, setDaNhap] = useState<KetQuaNhap | null>(null);
   const [pending, start] = useTransition();
   const [chiXemLoi, setChiXemLoi] = useState(false);
-  const [phatHanhLuon, setPhatHanhLuon] = useState(false);
+  const [trangThaiDich, setTrangThaiDich] = useState<"NHAP" | "CHO_DUYET" | "DA_PHAT_HANH">(laSales ? "NHAP" : "CHO_DUYET");
 
   const tieuDe = bang[dongTieuDe] || [];
   const dongDuLieu = useMemo(
@@ -181,7 +192,7 @@ export function ImportManager({ venues, salesTeam }: { venues: { id: string; ten
     start(async () => {
       const r = await nhapDanhSach(dongNhap(), {
         venueMacDinh: venueMacDinh || undefined,
-        phatHanhLuon,
+        trangThaiDich,
         salesMacDinh: salesMacDinh || undefined,
         dongBatDau: dongTieuDe + 2,
         ghi,
@@ -198,7 +209,9 @@ export function ImportManager({ venues, salesTeam }: { venues: { id: string; ten
         <div>
           <h1 className="font-display text-2xl text-ink">Nhập danh sách khách</h1>
           <p className="mt-1 text-sm text-ink-muted">
-            Từ file Excel (.xlsx) hoặc CSV. Hệ thống tự chống trùng SĐT, xét VIP, quota và cấp số thứ tự theo dải của venue.
+            {laSales
+              ? "Từ file Excel (.xlsx) hoặc CSV theo file mẫu. Khách nhập vào sẽ do bạn phụ trách, hệ thống tự cấp số thứ tự theo venue."
+              : "Từ file Excel (.xlsx) hoặc CSV. Hệ thống tự chống trùng SĐT, xét VIP, quota và cấp số thứ tự theo dải của venue."}
           </p>
         </div>
         <button className="btn-ghost" onClick={taiFileMau}>
@@ -243,7 +256,7 @@ export function ImportManager({ venues, salesTeam }: { venues: { id: string; ten
                 ))}
               </select>
             </div>
-            {TRUONG.filter((f) => !f.phu).map((f) => (
+            {truongChinh.map((f) => (
               <div key={f.key}>
                 <label className="label">
                   {f.nhan} {f.batBuoc && <span className="text-wine">*</span>}
@@ -274,6 +287,7 @@ export function ImportManager({ venues, salesTeam }: { venues: { id: string; ten
               </select>
               <p className="mt-1 text-xs text-ink-muted">Dùng cho dòng không ghi venue.</p>
             </div>
+            {!laSales && (
             <div>
               <label className="label">Sales mặc định</label>
               <select className="input" value={salesMacDinh} onChange={(e) => { setSalesMacDinh(e.target.value); setKiemTra(null); }}>
@@ -286,17 +300,31 @@ export function ImportManager({ venues, salesTeam }: { venues: { id: string; ten
               </select>
               <p className="mt-1 text-xs text-ink-muted">Dùng cho dòng không ghi sales.</p>
             </div>
+            )}
             <div>
               <label className="label">Trạng thái sau khi nhập</label>
               <select
                 className="input"
-                value={phatHanhLuon ? "DA_PHAT_HANH" : "CHO_DUYET"}
-                onChange={(e) => { setPhatHanhLuon(e.target.value === "DA_PHAT_HANH"); setKiemTra(null); }}
+                value={trangThaiDich}
+                onChange={(e) => { setTrangThaiDich(e.target.value as typeof trangThaiDich); setKiemTra(null); }}
               >
-                <option value="CHO_DUYET">Chờ duyệt</option>
-                <option value="DA_PHAT_HANH">Đã phát hành vé (BTC đã duyệt file)</option>
+                {laSales ? (
+                  <>
+                    <option value="NHAP">Nháp (kiểm tra lại rồi gửi duyệt sau)</option>
+                    <option value="CHO_DUYET">Gửi duyệt luôn</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="CHO_DUYET">Chờ duyệt</option>
+                    <option value="DA_PHAT_HANH">Đã phát hành vé (BTC đã duyệt file)</option>
+                  </>
+                )}
               </select>
-              <p className="mt-1 text-xs text-ink-muted">Khách trùng SĐT hoặc trùng tên cùng công ty luôn vào Chờ duyệt.</p>
+              <p className="mt-1 text-xs text-ink-muted">
+                {laSales
+                  ? "Khách trùng, VIP, venue hết quota được gắn cảnh báo cho BTC."
+                  : "Khách trùng SĐT hoặc trùng tên cùng công ty luôn vào Chờ duyệt."}
+              </p>
             </div>
           </div>
 
@@ -329,7 +357,7 @@ export function ImportManager({ venues, salesTeam }: { venues: { id: string; ten
             <table className="w-full text-xs">
               <thead className="bg-ivory/70 text-left text-ink-muted">
                 <tr>
-                  {TRUONG_XEM.map((f) => (
+                  {truongXem.map((f) => (
                     <th key={f.key} className="whitespace-nowrap px-3 py-2 font-medium">{f.nhan}</th>
                   ))}
                 </tr>
@@ -337,7 +365,7 @@ export function ImportManager({ venues, salesTeam }: { venues: { id: string; ten
               <tbody>
                 {dongNhap().slice(0, 5).map((r, i) => (
                   <tr key={i} className="border-t border-ivory-deep">
-                    {TRUONG_XEM.map((f) => (
+                    {truongXem.map((f) => (
                       <td key={f.key} className="px-3 py-2 text-ink">{r[f.key] || <span className="text-ink-muted">-</span>}</td>
                     ))}
                   </tr>
@@ -376,8 +404,8 @@ export function ImportManager({ venues, salesTeam }: { venues: { id: string; ten
           )}
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
             <O nhan="Hợp lệ" so={ketQua.tongHop.hopLe} />
+            {laSales ? <O nhan="Nháp" so={ketQua.tongHop.nhap} /> : <O nhan="Đã phát hành vé" so={ketQua.tongHop.phatHanh} />}
             <O nhan="Chờ duyệt" so={ketQua.tongHop.choDuyet} />
-            <O nhan="Đã phát hành vé" so={ketQua.tongHop.phatHanh} />
             <O nhan="Có cảnh báo" so={ketQua.tongHop.canhBao} />
             <O nhan="Lỗi, bỏ qua" so={ketQua.tongHop.loi} do />
           </div>
@@ -388,7 +416,7 @@ export function ImportManager({ venues, salesTeam }: { venues: { id: string; ten
               Chỉ xem dòng lỗi hoặc cần chú ý
             </label>
             {daNhap && (
-              <Link href="/admin/khach" className="btn-brand btn-sm">
+              <Link href={laSales ? "/sales" : "/admin/khach"} className="btn-brand btn-sm">
                 Xem danh sách khách
               </Link>
             )}
@@ -449,7 +477,11 @@ export function ImportManager({ venues, salesTeam }: { venues: { id: string; ten
           <li>Chống trùng: có SĐT thì theo SĐT (chuẩn hóa +84, dấu cách, mất số 0 do Excel). Không có SĐT thì theo tên khách cùng mã CORP, hoặc cùng công ty. Trùng thì luôn vào Chờ duyệt.</li>
           <li>Cột VIP ghi VIP, x, có hoặc 1 là khách VIP (THƯỜNG là khách thường). Khách VIP và venue hết quota được gắn cảnh báo để BTC xem khi duyệt.</li>
           <li>Venue ghi tên ngắn như “Riverside”, “Claris” vẫn nhận được.</li>
-          <li>Tên sales phải trùng họ tên tài khoản sales thì sales đó mới thấy khách trong Cổng Sales.</li>
+          {laSales ? (
+            <li>Cột người phụ trách trong file được bỏ qua: mọi khách nhập vào đều do bạn phụ trách. Mỗi lần tối đa 500 dòng.</li>
+          ) : (
+            <li>Tên sales phải trùng họ tên tài khoản sales thì sales đó mới thấy khách trong Cổng Sales.</li>
+          )}
         </ul>
       </div>
     </div>

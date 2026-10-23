@@ -34,6 +34,7 @@ export interface KetQuaDong {
 export interface TongHopNhap {
   hopLe: number;
   loi: number;
+  nhap: number;
   choDuyet: number;
   phatHanh: number;
   canhBao: number;
@@ -58,17 +59,28 @@ function laCo(s: string): boolean {
 }
 
 function tongHopRong(): TongHopNhap {
-  return { hopLe: 0, loi: 0, choDuyet: 0, phatHanh: 0, canhBao: 0, khongSdt: 0 };
+  return { hopLe: 0, loi: 0, nhap: 0, choDuyet: 0, phatHanh: 0, canhBao: 0, khongSdt: 0 };
 }
 
 export async function nhapDanhSach(
   rows: DongNhap[],
-  tuyChon: { venueMacDinh?: string; salesMacDinh?: string; dongBatDau: number; ghi: boolean; phatHanhLuon?: boolean }
-): Promise<KetQuaNhap> {
-  await batBuocQuyen(["ADMIN"]);
-  if (rows.length > 3000) {
-    return { ok: false, thongBao: "Mỗi lần nhập tối đa 3.000 dòng.", ghi: false, dong: [], tongHop: tongHopRong() };
+  tuyChon: {
+    venueMacDinh?: string;
+    salesMacDinh?: string;
+    dongBatDau: number;
+    ghi: boolean;
+    trangThaiDich?: "NHAP" | "CHO_DUYET" | "DA_PHAT_HANH";
   }
+): Promise<KetQuaNhap> {
+  const u = await batBuocQuyen(["ADMIN", "SALES"]);
+  // Sales chi nhap khach cho chinh minh, vao Nhap hoac Cho duyet
+  const laSales = u.vaiTro === "SALES";
+  const toiDa = laSales ? 500 : 3000;
+  if (rows.length > toiDa) {
+    return { ok: false, thongBao: `Mỗi lần nhập tối đa ${toiDa.toLocaleString("vi-VN")} dòng.`, ghi: false, dong: [], tongHop: tongHopRong() };
+  }
+  let dich: string = tuyChon.trangThaiDich || TRANG_THAI.CHO_DUYET;
+  if (laSales && dich === TRANG_THAI.DA_PHAT_HANH) dich = TRANG_THAI.NHAP;
 
   const [venues, salesAcc, daCo] = await Promise.all([
     prisma.venue.findMany(),
@@ -166,10 +178,10 @@ export async function nhapDanhSach(
     const canhBao: string[] = [];
     if (khopVenue && !khopVenue.chinhXac) canhBao.push(`Venue ghi "${r.venue.trim()}", đã hiểu là ${venue.ten}`);
 
-    const salesKhop = timSales(r.sales);
-    const salesOwner = salesKhop || String(r.sales || "").trim() || tuyChon.salesMacDinh?.trim() || "BTC";
+    const salesKhop = laSales ? u.hoTen : timSales(r.sales);
+    const salesOwner = laSales ? u.hoTen : salesKhop || String(r.sales || "").trim() || tuyChon.salesMacDinh?.trim() || "BTC";
     kq.salesOwner = salesOwner;
-    if (r.sales?.trim() && !salesKhop) canhBao.push("Sales chưa có tài khoản, sales đó sẽ không thấy khách này");
+    if (!laSales && r.sales?.trim() && !salesKhop) canhBao.push("Sales chưa có tài khoản, sales đó sẽ không thấy khách này");
 
     const soNguoiGoc = parseInt(String(r.soNguoiMoi ?? "").trim() || "1", 10);
     const soNguoi = Math.min(10, Math.max(1, Number.isFinite(soNguoiGoc) ? soNguoiGoc : 1));
@@ -183,8 +195,9 @@ export async function nhapDanhSach(
     if (vip) ds.push("VIP");
     if (venue.quota > 0 && (dangChiem[venue.id] || 0) >= venue.quota) ds.push("HET_QUOTA");
     const trung = ds[0] === "TRUNG_SDT" || ds[0] === "TRUNG_TEN";
-    const trangThai: string = tuyChon.phatHanhLuon && !trung ? TRANG_THAI.DA_PHAT_HANH : TRANG_THAI.CHO_DUYET;
-    const lyDo = trangThai === TRANG_THAI.CHO_DUYET && ds.length ? ds.join(",") : null;
+    // Phat hanh ve thang chi khi khong trung; khach trung vao Cho duyet
+    const trangThai: string = dich === TRANG_THAI.DA_PHAT_HANH && trung ? TRANG_THAI.CHO_DUYET : dich;
+    const lyDo = trangThai !== TRANG_THAI.DA_PHAT_HANH && ds.length ? ds.join(",") : null;
 
     const soThuTu = capSo(venue.id);
     if (soThuTu === null) {
@@ -199,12 +212,13 @@ export async function nhapDanhSach(
     kq.trangThai = trangThai;
     kq.soThuTu = soThuTu;
     if (ds.includes("HET_QUOTA")) canhBao.unshift(`${venue.ten} đã hết quota`);
-    if (ds[0] === "TRUNG_SDT") canhBao.unshift("Trùng SĐT với khách đã có, chờ BTC duyệt");
-    if (ds[0] === "TRUNG_TEN") canhBao.unshift("Trùng tên và công ty với khách đã có, chờ BTC duyệt");
+    if (ds[0] === "TRUNG_SDT") canhBao.unshift("Trùng SĐT với khách đã có, BTC sẽ xem khi duyệt");
+    if (ds[0] === "TRUNG_TEN") canhBao.unshift("Trùng tên và công ty với khách đã có, BTC sẽ xem khi duyệt");
     if (canhBao.length) kq.canhBao = canhBao.join(". ");
     tongHop.hopLe++;
     if (!sdt) tongHop.khongSdt++;
-    if (trangThai === TRANG_THAI.CHO_DUYET) tongHop.choDuyet++;
+    if (trangThai === TRANG_THAI.NHAP) tongHop.nhap++;
+    else if (trangThai === TRANG_THAI.CHO_DUYET) tongHop.choDuyet++;
     else tongHop.phatHanh++;
     if (ds.length) tongHop.canhBao++;
 

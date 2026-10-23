@@ -5,8 +5,9 @@ import Link from "next/link";
 import { StatusBadge } from "./StatusBadge";
 import { DUOC_XAC_NHAN, NHAN_CANH_BAO, NHAN_TRANG_THAI, TRANG_THAI } from "@/lib/constants";
 import { che4SoCuoi, boDau, dinhDangGio } from "@/lib/format";
-import { taoKhach, suaKhach, datThiepGiay, xacNhanKhach, guiDuyet, danhDauDaMoi, huyKhach, duyetKhach, xoaKhach } from "@/lib/actions";
-import { DANH_XUNG, NHAN_TRUONG, TRUONG_CHU, tenGoi, type ThongTinThem, type TruongChu } from "@/lib/khach";
+import { taoKhach, datThiepGiay, xacNhanKhach, guiDuyet, danhDauDaMoi, huyKhach, duyetKhach, xoaKhach } from "@/lib/actions";
+import { NHAN_TRUONG, TRUONG_CHU, tenGoi, type ThongTinThem } from "@/lib/khach";
+import { FormKhach, OThongTin, docThem } from "./FormKhach";
 
 export interface GuestRow {
   id: string;
@@ -177,7 +178,7 @@ export function GuestManager({
             </thead>
             <tbody>
               {locKq.slice(0, soHien).map((g) => (
-                <Dong key={g.id} g={g} salesTeam={salesTeam} />
+                <Dong key={g.id} g={g} salesTeam={salesTeam} venues={venues} />
               ))}
               {locKq.length === 0 && (
                 <tr>
@@ -201,7 +202,7 @@ export function GuestManager({
   );
 }
 
-function Dong({ g, salesTeam }: { g: GuestRow; salesTeam: string[] }) {
+function Dong({ g, salesTeam, venues }: { g: GuestRow; salesTeam: string[]; venues: VenueOpt[] }) {
   const [pending, start] = useTransition();
   const [mo, setMo] = useState(false);
   const [sua, setSua] = useState(false);
@@ -354,7 +355,7 @@ function Dong({ g, salesTeam }: { g: GuestRow; salesTeam: string[] }) {
               </span>
             </div>
             {tb && <div className="mt-3 rounded-xl bg-white px-4 py-2 text-sm text-ink-soft">{tb}</div>}
-            {sua && <FormKhach g={g} salesTeam={salesTeam} onXong={() => setSua(false)} />}
+            {sua && <FormKhach g={g} venues={venues} salesTeam={salesTeam} onXong={() => setSua(false)} />}
           </td>
         </tr>
       )}
@@ -391,105 +392,6 @@ function ChiTiet({ g, canhBao }: { g: GuestRow; canhBao: string[] }) {
         </div>
       ))}
     </dl>
-  );
-}
-
-// Cac o thong tin doanh nghiep dung chung cho them va sua
-function OThongTin({ them }: { them?: ThongTinThem }) {
-  const o = (k: TruongChu, placeholder = "") => (
-    <div key={k}>
-      <label className="label">{NHAN_TRUONG[k]}</label>
-      <input name={k} className="input" defaultValue={them?.[k] || ""} placeholder={placeholder} />
-    </div>
-  );
-  return (
-    <>
-      <div>
-        <label className="label">Danh xưng</label>
-        <select name="danhXung" className="input" defaultValue={them?.danhXung || ""}>
-          <option value="">Không ghi</option>
-          {DANH_XUNG.map((d) => (
-            <option key={d} value={d}>
-              {d}
-            </option>
-          ))}
-        </select>
-      </div>
-      {o("chucVu", "Giám đốc")}
-      {o("congTy", "CÔNG TY TNHH ...")}
-      {o("maCorp", "COR0001234")}
-      {o("nhomKhachMoi", "Khách Corporate")}
-      {o("nhomKhach", "Khách end-user")}
-      {o("linhVuc")}
-      {o("nguonKhach", "Netsuite / Contact mới")}
-      {o("donViKinhDoanh")}
-      {o("doanhThuDuKien")}
-      {o("phongBan", "Phòng kinh doanh")}
-    </>
-  );
-}
-
-function docThem(fd: FormData): ThongTinThem {
-  return Object.fromEntries(TRUONG_CHU.map((k) => [k, String(fd.get(k) ?? "")])) as ThongTinThem;
-}
-
-function FormKhach({ g, salesTeam, onXong }: { g: GuestRow; salesTeam: string[]; onXong: () => void }) {
-  const [pending, start] = useTransition();
-  const [kq, setKq] = useState<{ ok: boolean; msg: string } | null>(null);
-  const gui = (fd: FormData) =>
-    start(async () => {
-      const r = await suaKhach(g.id, {
-        hoTen: String(fd.get("hoTen") || ""),
-        sdt: String(fd.get("sdt") || ""),
-        soNguoiMoi: parseInt(String(fd.get("soNguoiMoi") || "1"), 10),
-        isVip: fd.get("isVip") === "on",
-        ghiChu: String(fd.get("ghiChu") || ""),
-        salesOwner: String(fd.get("salesOwner") || ""),
-        them: docThem(fd),
-      });
-      setKq({ ok: r.ok, msg: r.thongBao });
-      if (r.ok && !r.thongBao.includes("Lưu ý")) onXong();
-    });
-  return (
-    <form action={gui} className="mt-3 space-y-4 rounded-xl border border-ivory-deep bg-white p-4">
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <div>
-          <label className="label">Tên khách mời</label>
-          <input name="hoTen" className="input" defaultValue={g.hoTen} required />
-        </div>
-        <div>
-          <label className="label">Số điện thoại</label>
-          <input name="sdt" className="input" defaultValue={g.sdt || ""} inputMode="tel" placeholder="Không bắt buộc" />
-        </div>
-        <div>
-          <label className="label">Số người mời</label>
-          <input name="soNguoiMoi" type="number" min={1} max={10} className="input" defaultValue={g.soNguoiMoi} />
-        </div>
-        <div>
-          <label className="label">Người phụ trách</label>
-          <select name="salesOwner" className="input" defaultValue={g.salesOwner}>
-            {[...new Set(["BTC", g.salesOwner, ...salesTeam])].map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        </div>
-        <OThongTin them={g.them} />
-        <div className="sm:col-span-2">
-          <label className="label">Ghi chú</label>
-          <input name="ghiChu" className="input" defaultValue={g.ghiChu || ""} />
-        </div>
-        <label className="flex items-end gap-2 pb-2.5 text-sm text-ink-soft">
-          <input name="isVip" type="checkbox" defaultChecked={g.isVip} className="h-4 w-4 accent-brand" />
-          Khách VIP
-        </label>
-      </div>
-      {kq && <div className={`rounded-xl px-4 py-2 text-sm ${kq.ok ? "bg-sage/10 text-sage" : "bg-wine/10 text-wine"}`}>{kq.msg}</div>}
-      <button type="submit" className="btn-brand btn-sm" disabled={pending}>
-        {pending ? "Đang lưu..." : "Lưu thay đổi"}
-      </button>
-    </form>
   );
 }
 

@@ -55,7 +55,8 @@ const HUONG_DAN: VaiTro[] = [
       {
         tieuDe: "Lập khách",
         buoc: [
-          ["Thêm khách", "Tab Thêm khách, ghi cả doanh thu dự kiến. Khách mới lưu ở trạng thái Nháp."],
+          ["Thêm khách", "Khách của tôi > Thêm khách, ghi cả doanh thu dự kiến. Khách mới lưu ở trạng thái Nháp."],
+          ["Nhập từ Excel", "Nhập danh sách > Tải file mẫu > điền > chọn file > Kiểm tra trước > Nhập. Mọi khách trong file do bạn phụ trách."],
           ["Gửi duyệt", "Kiểm tra lại rồi bấm Gửi duyệt trên từng khách, hoặc Gửi duyệt tất cả. Nháp sai thì bấm Xóa nháp."],
           ["Chờ BTC", "BTC duyệt xong khách chuyển sang Đã phát hành vé, lúc đó mới gửi thiệp được."],
         ],
@@ -66,6 +67,14 @@ const HUONG_DAN: VaiTro[] = [
           ["Gửi thiệp online", "Bấm Chép lời mời > dán vào Zalo gửi khách > bấm Đã gửi."],
           ["Gửi thiệp giấy", "Bấm Tải QR (hoặc In QR ở đầu danh sách) > dán QR lên thiệp giấy > gửi khách > bấm Đã gửi."],
           ["Xác nhận thay khách", "Sau khi hỏi khách: Xác nhận thay khách > chọn số người > Tham dự hoặc Không tham dự. Khách đổi ý thì Đổi xác nhận hoặc Bỏ xác nhận."],
+        ],
+      },
+      {
+        tieuDe: "Theo dõi và chỉnh sửa",
+        buoc: [
+          ["Tổng quan", "Số khách, công ty, doanh thu dự kiến, người xác nhận, check in của riêng bạn, kèm danh sách việc cần làm."],
+          ["Sửa thông tin", "Mở khách > Sửa thông tin. Vé đã phát hành vẫn giữ nguyên số thứ tự, mã QR và venue; số người mời và VIP thì nhờ BTC đổi."],
+          ["Trên máy tính", "Khách của tôi hiện dạng bảng, bấm vào dòng để xem chi tiết và thao tác."],
         ],
       },
     ],

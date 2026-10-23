@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "./db";
-import { CHIEM_QUOTA, DUOC_XAC_NHAN, NHAN_CANH_BAO, TRANG_THAI } from "./constants";
+import { CHIEM_QUOTA, CHUA_PHAT_HANH, DUOC_XAC_NHAN, NHAN_CANH_BAO, TRANG_THAI } from "./constants";
 import { capSoThuTu, sinhMaBiMatDuyNhat } from "./codes";
 import { chuanHoaSdt, sdtHopLe } from "./format";
 import { khoaTen, lamSach, type ThongTinThem } from "./khach";
@@ -125,7 +125,8 @@ export async function taoKhach(input: {
   let note = "Đã lưu nháp. Kiểm tra lại rồi bấm Gửi duyệt.";
   if (lyDo) {
     note += ` Cảnh báo: ${moTaCanhBao(lyDo)}`;
-    if (trung) note += ` (khách số ${trung.g.soThuTu}, ${trung.g.hoTen})`;
+    // Sales khong xem duoc ten khach cua nguoi khac
+    if (trung && u.vaiTro === "ADMIN") note += ` (khách số ${trung.g.soThuTu}, ${trung.g.hoTen})`;
     note += ".";
   }
   return { ok: true, thongBao: note, trangThai: TRANG_THAI.NHAP, soThuTu, maBiMat };
@@ -212,41 +213,79 @@ export async function danhDauDaMoi(id: string) {
   lamTuoi();
 }
 
-// BTC sua thong tin khach (khong doi so thu tu, ma thiep)
+// Sua thong tin khach: BTC, hoac sales cho khach cua minh. Khong doi so thu tu, ma thiep, trang thai.
+// Ve da phat hanh: khong doi venue; sales khong doi so nguoi moi va VIP (BTC da duyet).
 export async function suaKhach(
   id: string,
-  input: { hoTen: string; sdt?: string; soNguoiMoi: number; isVip: boolean; ghiChu?: string; salesOwner?: string; them?: ThongTinThem }
+  input: {
+    hoTen: string;
+    sdt?: string;
+    soNguoiMoi: number;
+    isVip: boolean;
+    ghiChu?: string;
+    salesOwner?: string;
+    venueId?: string;
+    them?: ThongTinThem;
+  }
 ): Promise<KetQua> {
-  await batBuocQuyen(["ADMIN"]);
+  const u = await batBuocQuyen(["ADMIN", "SALES"]);
+  const laSales = u.vaiTro === "SALES";
+  const cu = await prisma.guest.findUnique({ where: { id } });
+  if (!cu) return { ok: false, thongBao: "Không tìm thấy khách." };
+  if (laSales && cu.salesOwner !== u.hoTen) return { ok: false, thongBao: "Khách này không do bạn phụ trách." };
+  if (laSales && cu.trangThai === TRANG_THAI.DA_HUY) return { ok: false, thongBao: "Thiệp đã hủy, liên hệ BTC nếu cần mời lại." };
   const hoTen = input.hoTen?.trim().replace(/\s+/g, " ");
   if (!hoTen) return { ok: false, thongBao: "Thiếu họ tên." };
   const sdt = chuanHoaSdt(input.sdt) || null;
   if (sdt && !sdtHopLe(sdt)) return { ok: false, thongBao: "Số điện thoại chưa đúng." };
   const them = lamSach(input.them || {});
-  const cu = await prisma.guest.findUnique({ where: { id } });
-  if (!cu) return { ok: false, thongBao: "Không tìm thấy khách." };
-  const { lyDo, trung } = await tinhCanhBao(
-    { sdt, hoTen, maCorp: them.maCorp, congTy: them.congTy, isVip: input.isVip, venueId: cu.venueId },
-    id
-  );
+
+  const chuaPhatHanh = CHUA_PHAT_HANH.includes(cu.trangThai);
+  const khoaDuyet = laSales && !chuaPhatHanh;
+  const soNguoiMoi = khoaDuyet ? cu.soNguoiMoi : Math.min(10, Math.max(1, input.soNguoiMoi || 1));
+  const isVip = khoaDuyet ? cu.isVip : input.isVip;
+
+  // Doi venue chi khi chua phat hanh ve: cap so thu tu moi theo dai cua venue moi
+  let venueId = cu.venueId;
+  let soThuTu = cu.soThuTu;
+  if (input.venueId && input.venueId !== cu.venueId) {
+    if (!chuaPhatHanh) return { ok: false, thongBao: "Vé đã phát hành, không đổi venue được. Liên hệ BTC." };
+    if (!(await prisma.venue.findUnique({ where: { id: input.venueId } }))) return { ok: false, thongBao: "Venue không hợp lệ." };
+    try {
+      soThuTu = await capSoThuTu(input.venueId);
+    } catch (e: any) {
+      return { ok: false, thongBao: e?.message || "Không cấp được số thứ tự." };
+    }
+    venueId = input.venueId;
+  }
+
+  const { lyDo, trung } = await tinhCanhBao({ sdt, hoTen, maCorp: them.maCorp, congTy: them.congTy, isVip, venueId }, id);
   await prisma.guest.update({
     where: { id },
     data: {
       ...them,
-      // Chua phat hanh ve thi cap nhat lai canh bao cho BTC
-      ...([TRANG_THAI.NHAP, TRANG_THAI.CHO_DUYET].includes(cu.trangThai as any) ? { lyDoChoDuyet: lyDo } : {}),
       hoTen,
       sdt,
-      soNguoiMoi: Math.min(10, Math.max(1, input.soNguoiMoi || 1)),
-      isVip: input.isVip,
+      soNguoiMoi,
+      isVip,
+      venueId,
+      soThuTu,
       ghiChu: input.ghiChu?.trim() || null,
-      ...(input.salesOwner !== undefined ? { salesOwner: input.salesOwner.trim() || "BTC" } : {}),
+      // Chua phat hanh ve thi cap nhat lai canh bao cho BTC
+      ...(chuaPhatHanh ? { lyDoChoDuyet: lyDo } : {}),
+      ...(!laSales && input.salesOwner !== undefined ? { salesOwner: input.salesOwner.trim() || "BTC" } : {}),
     },
   });
   lamTuoi();
+  const doiSo = soThuTu !== cu.soThuTu ? ` Số thứ tự mới: ${soThuTu}.` : "";
   return trung
-    ? { ok: true, thongBao: `Đã lưu. Lưu ý: trùng với khách số ${trung.g.soThuTu} (${trung.g.hoTen}).` }
-    : { ok: true, thongBao: "Đã lưu thông tin khách." };
+    ? {
+        ok: true,
+        thongBao: laSales
+          ? `Đã lưu.${doiSo} Lưu ý: trùng với một khách đã có, BTC sẽ xem khi duyệt.`
+          : `Đã lưu.${doiSo} Lưu ý: trùng với khách số ${trung.g.soThuTu} (${trung.g.hoTen}).`,
+      }
+    : { ok: true, thongBao: `Đã lưu thông tin khách.${doiSo}` };
 }
 
 // Sales (hoac BTC) xac nhan thay khach sau khi da hoi khach
