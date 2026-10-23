@@ -14,18 +14,18 @@ const TRUONG: { key: Truong; nhan: string; batBuoc?: boolean; phu?: boolean; don
   { key: "venue", nhan: "Đơn vị (venue)", dongNghia: ["don vi", "venue", "chi nhanh", "nha hang", "dia diem", "co so", "sanh", "trung tam"] },
   { key: "soNguoiMoi", nhan: "Số lượng người tham dự", dongNghia: ["so luong nguoi tham du", "so nguoi moi", "so nguoi duoc moi", "so nguoi tham du", "so nguoi", "so khach", "so luong", "sl"] },
   { key: "sales", nhan: "Người phụ trách tiếp khách", dongNghia: ["ho va ten nguoi phu trach tiep khach", "nguoi phu trach tiep khach", "sales phu trach", "nguoi phu trach", "sales", "sale", "nhan vien phu trach", "phu trach", "nhan vien", "nv"] },
+  { key: "diCungTen", nhan: "Tên khách thứ 2", dongNghia: ["ten khach thu 2", "khach thu 2", "ten nguoi di cung", "nguoi di cung", "khach di cung"] },
+  { key: "diCungChucVu", nhan: "Chức vụ khách thứ 2", dongNghia: ["chuc vu khach thu 2", "chuc vu nguoi di cung", "chuc vu khach di cung"] },
   { key: "vip", nhan: "Phân loại khách VIP", dongNghia: ["phan loai khach vip", "khach vip", "vip", "hang khach"] },
   { key: "danhXung", nhan: "Danh xưng", phu: true, dongNghia: ["danh xung", "xung ho", "gioi tinh"] },
   { key: "chucVu", nhan: "Chức vụ", phu: true, dongNghia: ["chuc vu", "chuc danh", "position", "title"] },
   { key: "congTy", nhan: "Company Name", phu: true, dongNghia: ["company name", "ten cong ty", "cong ty", "company", "doanh nghiep"] },
   { key: "maCorp", nhan: "Mã CORP Netsuite", phu: true, dongNghia: ["ma corp netsuite", "ma corp", "ma netsuite", "ma khach hang"] },
   { key: "nhomKhachMoi", nhan: "Nhóm khách mời", phu: true, dongNghia: ["nhom khach moi"] },
-  { key: "donViKinhDoanh", nhan: "Thuộc đơn vị kinh doanh", phu: true, dongNghia: ["thuoc don vi kinh doanh", "don vi kinh doanh"] },
   { key: "nhomKhach", nhan: "Nhóm khách", phu: true, dongNghia: ["nhom khach"] },
   { key: "linhVuc", nhan: "Lĩnh vực", phu: true, dongNghia: ["linh vuc", "nganh nghe", "nganh"] },
   { key: "nguonKhach", nhan: "Phân loại khách", phu: true, dongNghia: ["phan loai khach", "nguon khach"] },
   { key: "doanhThuDuKien", nhan: "Doanh thu dự kiến", phu: true, dongNghia: ["doanh thu du kien", "doanh thu"] },
-  { key: "phongBan", nhan: "Phòng ban", phu: true, dongNghia: ["phong ban", "bo phan"] },
   { key: "thiepGiay", nhan: "Round 2: Đã gửi thiệp giấy", phu: true, dongNghia: ["round 2 da gui thiep giay", "da gui thiep giay", "thiep giay"] },
   { key: "ghiChu", nhan: "Ghi chú", phu: true, dongNghia: ["ghi chu", "note", "notes", "chu thich"] },
 ];
@@ -89,14 +89,15 @@ function doanCot(tieuDe: string[]): Record<Truong, number> {
 
 function taiFileMau() {
   const tieuDe = [
-    "STT", "Đơn vị", "Nhóm khách mời", "Thuộc đơn vị kinh doanh", "Mã CORP Netsuite", "Company Name", "Nhóm khách",
-    "Lĩnh vực", "Danh xưng", "Tên khách mời", "Chức vụ", "Số điện thoại", "Số lượng người tham dự", "Phân loại khách",
-    "Phân loại khách VIP", "Doanh thu dự kiến", "Round 2: Đã gửi thiệp giấy", "Số ghế cho khách VIP",
-    "Họ và tên người phụ trách tiếp khách", "Phòng ban", "Ghi chú",
+    "STT", "Đơn vị", "Nhóm khách mời", "Mã CORP Netsuite", "Company Name", "Nhóm khách",
+    "Lĩnh vực", "Danh xưng", "Tên khách mời", "Chức vụ", "Số điện thoại", "Số lượng người tham dự",
+    "Tên khách thứ 2", "Chức vụ khách thứ 2", "Phân loại khách",
+    "Phân loại khách VIP", "Doanh thu dự kiến", "Round 2: Đã gửi thiệp giấy",
+    "Họ và tên người phụ trách tiếp khách", "Ghi chú",
   ];
   const mau = [
-    ["1", "Gallery Hall", "Khách Corporate", "Capella Gallery Hall", "COR0000001", "CÔNG TY TNHH MẪU A", "Khách end-user", "Công nghệ", "Ông", "Nguyễn Văn An", "Giám đốc", "0901234567", "1", "Netsuite", "VIP", "", "", "10.01", "Thu Hà", "Phòng kinh doanh", ""],
-    ["2", "Riverside Palace", "Đối tác Capella", "Riverside Palace", "COR0000002", "CÔNG TY CP MẪU B", "Agency/báo chí/truyền thông", "Sự kiện", "Bà", "Trần Thị Bình", "Trưởng phòng", "", "2", "Contact mới", "THƯỜNG", "", "", "", "Minh Quân", "Marketing", "Không có SĐT vẫn nhập được"],
+    ["1", "Gallery Hall", "Khách Corporate", "COR0000001", "CÔNG TY TNHH MẪU A", "Khách end-user", "Công Nghệ", "Ông", "Nguyễn Văn An", "Giám đốc", "0901234567", "1", "", "", "Khách cũ", "VIP", "120.000.000 đ", "", "Thu Hà", ""],
+    ["2", "Riverside Palace", "Đối tác Capella", "COR0000002", "CÔNG TY CP MẪU B", "Agency/báo chí/truyền thông", "Giải Trí/Tổ Chức Sự Kiện", "Bà", "Trần Thị Bình", "Trưởng phòng", "", "2", "Lê Văn Cường", "Phó phòng", "Khách tiềm năng", "THƯỜNG", "80.000.000 đ", "", "Minh Quân", "Mời 2 người thì điền tên và chức vụ khách thứ 2"],
   ];
   const csv = "﻿" + [tieuDe, ...mau].map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(",")).join("\r\n");
   const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
@@ -477,6 +478,8 @@ export function ImportManager({
           <li>Chống trùng: có SĐT thì theo SĐT (chuẩn hóa +84, dấu cách, mất số 0 do Excel). Không có SĐT thì theo tên khách cùng mã CORP, hoặc cùng công ty. Trùng thì luôn vào Chờ duyệt.</li>
           <li>Cột VIP ghi VIP, x, có hoặc 1 là khách VIP (THƯỜNG là khách thường). Khách VIP và venue hết quota được gắn cảnh báo để BTC xem khi duyệt.</li>
           <li>Venue ghi tên ngắn như “Riverside”, “Claris” vẫn nhận được.</li>
+          <li>Phân loại khách chỉ có Khách cũ và Khách tiềm năng (file cũ ghi Netsuite, Contact mới vẫn tự đổi). Lĩnh vực theo danh sách cố định của app.</li>
+          <li>Mời 2 người thì điền Tên khách thứ 2 và Chức vụ khách thứ 2. Thiếu thì vẫn nhập được nhưng phải bổ sung trên app trước khi gửi duyệt.</li>
           {laSales ? (
             <li>Cột người phụ trách trong file được bỏ qua: mọi khách nhập vào đều do bạn phụ trách. Mỗi lần tối đa 500 dòng.</li>
           ) : (

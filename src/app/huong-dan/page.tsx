@@ -55,7 +55,7 @@ const HUONG_DAN: VaiTro[] = [
       {
         tieuDe: "Lập khách",
         buoc: [
-          ["Thêm khách", "Khách của tôi > Thêm khách, ghi cả doanh thu dự kiến. Khách mới lưu ở trạng thái Nháp."],
+          ["Thêm khách", "Khách của tôi > Thêm khách. Bắt buộc tên và chức vụ; mời 2 người thì điền cả tên và chức vụ khách thứ 2. Chọn lĩnh vực, phân loại khách (Khách cũ hoặc Khách tiềm năng), ghi doanh thu dự kiến. Khách mới lưu ở trạng thái Nháp."],
           ["Nhập từ Excel", "Nhập danh sách > Tải file mẫu > điền > chọn file > Kiểm tra trước > Nhập. Mọi khách trong file do bạn phụ trách."],
           ["Gửi duyệt", "Kiểm tra lại rồi bấm Gửi duyệt trên từng khách, hoặc Gửi duyệt tất cả. Nháp sai thì bấm Xóa nháp."],
           ["Chờ BTC", "BTC duyệt xong khách chuyển sang Đã phát hành vé, lúc đó mới gửi thiệp được."],

@@ -5,7 +5,7 @@ import { prisma } from "./db";
 import { CHIEM_QUOTA, CHUA_PHAT_HANH, DUOC_XAC_NHAN, NHAN_CANH_BAO, TRANG_THAI } from "./constants";
 import { capSoThuTu, sinhMaBiMatDuyNhat } from "./codes";
 import { chuanHoaSdt, sdtHopLe } from "./format";
-import { khoaTen, lamSach, type ThongTinThem } from "./khach";
+import { ghiDiCung, khoaTen, lamSach, lamSachDiCung, thieuThongTinMoi, type NguoiDiCung, type ThongTinThem } from "./khach";
 import { batBuocQuanTri, batBuocQuyen, bamMatKhau } from "./auth";
 import { gieoDuLieu } from "./seedData";
 
@@ -79,6 +79,7 @@ export async function taoKhach(input: {
   isVip?: boolean;
   ghiChu?: string;
   them?: ThongTinThem;
+  diCung?: NguoiDiCung[];
 }): Promise<KetQuaTao> {
   const u = await batBuocQuyen(["ADMIN", "SALES"]);
   const hoTen = input.hoTen?.trim().replace(/\s+/g, " ");
@@ -88,6 +89,11 @@ export async function taoKhach(input: {
   }
   if (sdt && !sdtHopLe(sdt)) return { ok: false, thongBao: "Số điện thoại chưa đúng (cần 10 hoặc 11 số, bắt đầu bằng 0). Không có thì để trống." };
   const them = lamSach(input.them || {});
+  const soNguoiMoi = Math.min(10, Math.max(1, input.soNguoiMoi || 1));
+  const khachDiCung = ghiDiCung(lamSachDiCung(input.diCung, soNguoiMoi));
+  // Moi khach deu phai co ten va chuc vu, ke ca nguoi thu 2 tro di
+  const thieu = thieuThongTinMoi({ chucVu: them.chucVu, soNguoiMoi, khachDiCung });
+  if (thieu) return { ok: false, thongBao: `${thieu}.` };
 
   const venue = await prisma.venue.findUnique({ where: { id: input.venueId } });
   if (!venue) return { ok: false, thongBao: "Venue không hợp lệ." };
@@ -112,7 +118,8 @@ export async function taoKhach(input: {
       hoTen,
       sdt,
       venueId: input.venueId,
-      soNguoiMoi: Math.min(10, Math.max(1, input.soNguoiMoi || 1)),
+      soNguoiMoi,
+      khachDiCung,
       salesOwner: u.vaiTro === "SALES" ? u.hoTen : input.salesOwner?.trim() || u.hoTen,
       isVip: !!input.isVip,
       ghiChu: input.ghiChu?.trim() || null,
@@ -138,14 +145,24 @@ export async function guiDuyet(ids: string[]): Promise<KetQua> {
   const ds = await prisma.guest.findMany({
     where: { id: { in: ids }, trangThai: TRANG_THAI.NHAP, ...(u.vaiTro === "SALES" ? { salesOwner: u.hoTen } : {}) },
   });
-  for (const g of ds) {
+  // Thieu ten / chuc vu (ke ca khach thu 2) thi chua gui duoc
+  const du = ds.filter((g) => !thieuThongTinMoi(g));
+  const thieu = ds.filter((g) => thieuThongTinMoi(g));
+  for (const g of du) {
     const { lyDo } = await tinhCanhBao(g, g.id);
     await prisma.guest.update({ where: { id: g.id }, data: { trangThai: TRANG_THAI.CHO_DUYET, lyDoChoDuyet: lyDo } });
   }
   lamTuoi();
-  return ds.length
-    ? { ok: true, thongBao: `Đã gửi duyệt ${ds.length} khách.` }
-    : { ok: false, thongBao: "Không có khách nháp nào để gửi duyệt." };
+  if (!ds.length) return { ok: false, thongBao: "Không có khách nháp nào để gửi duyệt." };
+  if (thieu.length === 1 && ds.length === 1) {
+    return { ok: false, thongBao: `${thieuThongTinMoi(thieu[0])}. Bấm Sửa thông tin để bổ sung rồi gửi lại.` };
+  }
+  return {
+    ok: du.length > 0,
+    thongBao:
+      `Đã gửi duyệt ${du.length} khách.` +
+      (thieu.length ? ` ${thieu.length} khách chưa gửi vì thiếu tên hoặc chức vụ (kể cả khách thứ 2), bổ sung rồi gửi lại.` : ""),
+  };
 }
 
 // Xoa nhap: sales xoa nhap cua minh, BTC xoa nhap bat ky
@@ -226,6 +243,7 @@ export async function suaKhach(
     salesOwner?: string;
     venueId?: string;
     them?: ThongTinThem;
+    diCung?: NguoiDiCung[];
   }
 ): Promise<KetQua> {
   const u = await batBuocQuyen(["ADMIN", "SALES"]);
@@ -244,6 +262,10 @@ export async function suaKhach(
   const khoaDuyet = laSales && !chuaPhatHanh;
   const soNguoiMoi = khoaDuyet ? cu.soNguoiMoi : Math.min(10, Math.max(1, input.soNguoiMoi || 1));
   const isVip = khoaDuyet ? cu.isVip : input.isVip;
+  const khachDiCung = ghiDiCung(lamSachDiCung(input.diCung, soNguoiMoi));
+  // Sales: moi khach tren thiep deu phai co ten va chuc vu
+  const thieu = thieuThongTinMoi({ chucVu: them.chucVu, soNguoiMoi, khachDiCung });
+  if (laSales && thieu) return { ok: false, thongBao: `${thieu}.` };
 
   // Doi venue chi khi chua phat hanh ve: cap so thu tu moi theo dai cua venue moi
   let venueId = cu.venueId;
@@ -267,6 +289,7 @@ export async function suaKhach(
       hoTen,
       sdt,
       soNguoiMoi,
+      khachDiCung,
       isVip,
       venueId,
       soThuTu,

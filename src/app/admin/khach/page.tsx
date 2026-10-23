@@ -22,6 +22,7 @@ export default async function KhachPage() {
     venueTen: g.venue.ten,
     venueMau: g.venue.mauSac,
     soNguoiMoi: g.soNguoiMoi,
+    khachDiCung: g.khachDiCung,
     soNguoiXacNhan: g.soNguoiXacNhan,
     trangThai: g.trangThai,
     isVip: g.isVip,

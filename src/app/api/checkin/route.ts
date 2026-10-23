@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { docMaTuQR } from "@/lib/codes";
 import { TRANG_THAI, KET_QUA_CHECKIN } from "@/lib/constants";
 import { yeuCauQuyen } from "@/lib/auth";
+import { moTaDiCung } from "@/lib/khach";
 
 // Thuc hien check in. Moi ma chi check in mot lan.
 export async function POST(req: NextRequest) {
@@ -98,7 +99,7 @@ function gon(g: any) {
     soNguoiMoi: g.soNguoiMoi,
     soNguoiXacNhan: g.soNguoiXacNhan,
     isVip: g.isVip,
-    ban: g.ban,
+    diCung: moTaDiCung(g.khachDiCung),
     trangThai: g.trangThai,
     checkinLuc: g.checkinLuc,
   };

@@ -6,8 +6,8 @@ import { StatusBadge } from "./StatusBadge";
 import { DUOC_XAC_NHAN, NHAN_CANH_BAO, NHAN_TRANG_THAI, TRANG_THAI } from "@/lib/constants";
 import { che4SoCuoi, boDau, dinhDangGio } from "@/lib/format";
 import { taoKhach, datThiepGiay, xacNhanKhach, guiDuyet, danhDauDaMoi, huyKhach, duyetKhach, xoaKhach } from "@/lib/actions";
-import { NHAN_TRUONG, TRUONG_CHU, tenGoi, type ThongTinThem } from "@/lib/khach";
-import { FormKhach, OThongTin, docThem } from "./FormKhach";
+import { NHAN_TRUONG, TRUONG_CHU, moTaDiCung, tenGoi, thieuThongTinMoi, type ThongTinThem } from "@/lib/khach";
+import { FormKhach, OThongTin, SoNguoiDiCung, docDiCungForm, docThem } from "./FormKhach";
 
 export interface GuestRow {
   id: string;
@@ -19,6 +19,7 @@ export interface GuestRow {
   venueTen: string;
   venueMau: string;
   soNguoiMoi: number;
+  khachDiCung: string | null;
   soNguoiXacNhan: number | null;
   trangThai: string;
   isVip: boolean;
@@ -268,6 +269,9 @@ function Dong({ g, salesTeam, venues }: { g: GuestRow; salesTeam: string[]; venu
           {chuaPhatHanh && canhBao.length > 0 && (
             <div className="mt-1 text-[11px] text-wine">{canhBao.map((c) => NHAN_CANH_BAO[c] || c).join(", ")}</div>
           )}
+          {chuaPhatHanh && thieuThongTinMoi({ chucVu: g.them.chucVu, soNguoiMoi: g.soNguoiMoi, khachDiCung: g.khachDiCung }) && (
+            <div className="mt-1 text-[11px] text-wine">{thieuThongTinMoi({ chucVu: g.them.chucVu, soNguoiMoi: g.soNguoiMoi, khachDiCung: g.khachDiCung })}</div>
+          )}
         </td>
       </tr>
       {mo && (
@@ -374,6 +378,7 @@ function ChiTiet({ g, canhBao }: { g: GuestRow; canhBao: string[] }) {
     ),
     ["Người phụ trách", g.salesOwner],
     ["Số người mời", g.soNguoiMoi],
+    ["Khách đi cùng", moTaDiCung(g.khachDiCung) || null],
     ["Số người xác nhận", g.soNguoiXacNhan],
     ["Xác nhận bởi", g.xacNhanBoi ? `${g.xacNhanBoi}${g.xacNhanLuc ? `, ${gio(g.xacNhanLuc)}` : ""}` : null],
     ["Phát hành vé", gio(g.phatHanhLuc)],
@@ -410,6 +415,7 @@ function FormTao({ venues, salesTeam, onXong }: { venues: VenueOpt[]; salesTeam:
         isVip: fd.get("isVip") === "on",
         ghiChu: String(fd.get("ghiChu") || ""),
         them: docThem(fd),
+        diCung: docDiCungForm(fd),
       });
       setKq({ ok: r.ok, msg: r.thongBao + (r.soThuTu ? ` (số ${r.soThuTu})` : "") });
     });
@@ -448,10 +454,6 @@ function FormTao({ venues, salesTeam, onXong }: { venues: VenueOpt[]; salesTeam:
             ))}
           </select>
         </div>
-        <div>
-          <label className="label">Số người được mời</label>
-          <input name="soNguoiMoi" type="number" min={1} max={10} defaultValue={1} className="input" />
-        </div>
         <div className="flex items-end">
           <label className="flex items-center gap-2 pb-2.5 text-sm text-ink-soft">
             <input name="isVip" type="checkbox" className="h-4 w-4 accent-brand" />
@@ -459,6 +461,7 @@ function FormTao({ venues, salesTeam, onXong }: { venues: VenueOpt[]; salesTeam:
           </label>
         </div>
         <OThongTin />
+        <SoNguoiDiCung />
       </div>
       <div>
         <label className="label">Ghi chú</label>

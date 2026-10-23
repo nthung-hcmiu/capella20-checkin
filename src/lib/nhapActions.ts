@@ -5,7 +5,7 @@ import { prisma } from "./db";
 import { CHIEM_QUOTA, TRANG_THAI } from "./constants";
 import { boDau, chuanHoaSdt, sdtHopLe } from "./format";
 import { batBuocQuyen } from "./auth";
-import { TRUONG_CHU, khoaTen, lamSach, type ThongTinThem } from "./khach";
+import { LINH_VUC, PHAN_LOAI_KHACH, TRUONG_CHU, ghiDiCung, khoaTen, lamSach, thieuThongTinMoi, type ThongTinThem } from "./khach";
 
 export interface DongNhap extends ThongTinThem {
   hoTen: string;
@@ -16,6 +16,8 @@ export interface DongNhap extends ThongTinThem {
   vip: string;
   ghiChu: string;
   thiepGiay?: string;
+  diCungTen?: string;
+  diCungChucVu?: string;
 }
 
 export interface KetQuaDong {
@@ -187,6 +189,14 @@ export async function nhapDanhSach(
     const soNguoi = Math.min(10, Math.max(1, Number.isFinite(soNguoiGoc) ? soNguoiGoc : 1));
     if (soNguoiGoc === 0) canhBao.push("Số người ghi 0, đã tính là 1");
     const vip = laVip(String(r.vip || ""));
+    // Khach thu 2: file chi co mot cap cot ten / chuc vu
+    const khachDiCung =
+      soNguoi >= 2 ? ghiDiCung([{ hoTen: String(r.diCungTen || "").trim(), chucVu: String(r.diCungChucVu || "").trim() }]) : null;
+    const thieu = thieuThongTinMoi({ chucVu: them.chucVu, soNguoiMoi: soNguoi, khachDiCung });
+    if (thieu) canhBao.push(`${thieu}, bổ sung trên app trước khi gửi duyệt`);
+    if (soNguoi > 2) canhBao.push("File chỉ nhập được khách thứ 2, người thứ 3 trở đi bổ sung trên app");
+    if (them.linhVuc && !LINH_VUC.includes(them.linhVuc)) canhBao.push(`Lĩnh vực "${them.linhVuc}" ngoài danh sách`);
+    if (them.nguonKhach && !PHAN_LOAI_KHACH.includes(them.nguonKhach)) canhBao.push(`Phân loại khách "${them.nguonKhach}" không phải Khách cũ / Khách tiềm năng`);
 
     // Canh bao cho BTC. Khach trung luon vao Cho duyet; con lai theo lua chon nhap.
     const ds: string[] = [];
@@ -224,7 +234,7 @@ export async function nhapDanhSach(
 
     duLieuGhi.push({
       ...them,
-      soThuTu, maBiMat: sinhMa(), hoTen, sdt: sdt || null, venueId: venue.id, soNguoiMoi: soNguoi,
+      soThuTu, maBiMat: sinhMa(), hoTen, sdt: sdt || null, venueId: venue.id, soNguoiMoi: soNguoi, khachDiCung,
       salesOwner, isVip: vip, ghiChu: String(r.ghiChu || "").trim() || null, trangThai, lyDoChoDuyet: lyDo,
       phatHanhLuc: trangThai === TRANG_THAI.DA_PHAT_HANH ? new Date() : null,
       daGuiThiepGiay: laCo(String(r.thiepGiay || "")),

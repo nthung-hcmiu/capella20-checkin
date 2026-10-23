@@ -11,6 +11,7 @@ interface KhachGon {
   hoTen: string;
   danhXung?: string | null;
   chucVu?: string | null;
+  diCung?: string;
   congTy?: string | null;
   soNguoiDen?: number | null;
   venue?: string;
@@ -355,6 +356,7 @@ function KetQuaCard({ kq, onDong }: { kq: KetQua; onDong: () => void }) {
             {(kq.guest.chucVu || kq.guest.congTy) && (
               <div className="mt-0.5 text-sm text-ink-soft">{[kq.guest.chucVu, kq.guest.congTy].filter(Boolean).join(" · ")}</div>
             )}
+            {kq.guest.diCung && <div className="mt-0.5 text-sm text-ink-soft">Cùng: {kq.guest.diCung}</div>}
             <div className="mt-1 text-sm text-ink-muted">
               <span className="font-mono">{kq.guest.soThuTu}</span> · {kq.guest.venue}
             </div>

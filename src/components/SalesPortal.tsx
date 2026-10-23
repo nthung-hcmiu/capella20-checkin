@@ -3,10 +3,10 @@
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { StatusBadge } from "./StatusBadge";
-import { FormKhach, OThongTin, docThem } from "./FormKhach";
+import { FormKhach, OThongTin, SoNguoiDiCung, docDiCungForm, docThem } from "./FormKhach";
 import { che4SoCuoi, boDau, dinhDangGio } from "@/lib/format";
 import { taoKhach, danhDauDaMoi, datThiepGiay, xacNhanKhach, guiDuyet, xoaNhap } from "@/lib/actions";
-import { DANH_XUNG, NHAN_TRUONG, tenGoi, type ThongTinThem } from "@/lib/khach";
+import { DANH_XUNG, LINH_VUC, NHAN_TRUONG, PHAN_LOAI_KHACH, moTaDiCung, tenGoi, thieuThongTinMoi, type ThongTinThem } from "@/lib/khach";
 import { CHUA_PHAT_HANH, DUOC_XAC_NHAN, NHAN_CANH_BAO, SU_KIEN, TRANG_THAI } from "@/lib/constants";
 
 export interface SalesGuest {
@@ -24,6 +24,7 @@ export interface SalesGuest {
   venueTen: string;
   venueMau: string;
   soNguoiMoi: number;
+  khachDiCung: string | null;
   soNguoiXacNhan: number | null;
   soNguoiDen: number | null;
   trangThai: string;
@@ -162,6 +163,10 @@ function DienThoai({ guests, ds, venues, venuesSua, loc }: ViewProps) {
                     {g.trangThai === TRANG_THAI.THAM_DU && g.soNguoiXacNhan != null ? ` · tham dự ${g.soNguoiXacNhan}` : ""}
                     {g.them.doanhThuDuKien ? ` · ${g.them.doanhThuDuKien}` : ""}
                   </div>
+                  {g.khachDiCung && <div className="mt-0.5 text-xs text-ink-soft">Cùng: {moTaDiCung(g.khachDiCung)}</div>}
+                  {CHUA_PHAT_HANH.includes(g.trangThai) && thieuThongTinMoi({ ...g, chucVu: g.chucVu }) && (
+                    <div className="mt-1 text-xs text-wine">{thieuThongTinMoi({ ...g, chucVu: g.chucVu })}</div>
+                  )}
                 </div>
                 <StatusBadge trangThai={g.trangThai} />
               </div>
@@ -266,6 +271,7 @@ function DongMayTinh({ g, venuesSua }: { g: SalesGuest; venuesSua: { id: string;
           <div className="font-medium text-ink">{tenGoi(g)}</div>
           {(g.chucVu || g.congTy) && <div className="text-xs text-ink-soft">{[g.chucVu, g.congTy].filter(Boolean).join(" · ")}</div>}
           <div className="text-xs text-ink-muted">{che4SoCuoi(g.sdt)}</div>
+          {g.khachDiCung && <div className="text-xs text-ink-soft">Cùng: {moTaDiCung(g.khachDiCung)}</div>}
         </td>
         <td className="px-3 py-3">
           <span className="inline-flex items-center gap-1.5 text-xs text-ink-soft">
@@ -298,6 +304,7 @@ function DongMayTinh({ g, venuesSua }: { g: SalesGuest; venuesSua: { id: string;
           {!daPhatHanh && canhBao.length > 0 && (
             <div className="mt-1 text-[11px] text-wine">{canhBao.map((c) => NHAN_CANH_BAO[c] || c).join(", ")}</div>
           )}
+          {!daPhatHanh && thieuThongTinMoi(g) && <div className="mt-1 text-[11px] text-wine">{thieuThongTinMoi(g)}</div>}
         </td>
       </tr>
       {mo && (
@@ -323,7 +330,7 @@ function ChiTiet({ g }: { g: SalesGuest }) {
     [NHAN_TRUONG.nhomKhach, g.them.nhomKhach],
     [NHAN_TRUONG.linhVuc, g.them.linhVuc],
     [NHAN_TRUONG.nguonKhach, g.them.nguonKhach],
-    [NHAN_TRUONG.phongBan, g.them.phongBan],
+    ["Khách đi cùng", moTaDiCung(g.khachDiCung) || null],
     ["Phát hành vé", gio(g.phatHanhLuc)],
     ["Xác nhận lúc", gio(g.xacNhanLuc)],
     ["Check in", g.checkinLuc ? `${gio(g.checkinLuc)}${g.soNguoiDen ? `, ${g.soNguoiDen} người` : ""}` : null],
@@ -549,6 +556,7 @@ function ThemKhach({ venues, onXong, rong }: { venues: SalesVenue[]; onXong: () 
         isVip: fd.get("isVip") === "on",
         ghiChu: String(fd.get("ghiChu") || ""),
         them: docThem(fd),
+        diCung: docDiCungForm(fd),
       });
       setKq({ ok: r.ok, msg: r.thongBao + (r.soThuTu ? ` (số ${r.soThuTu})` : "") });
     });
@@ -586,11 +594,8 @@ function ThemKhach({ venues, onXong, rong }: { venues: SalesVenue[]; onXong: () 
             <input name="sdt" inputMode="tel" className="input" placeholder="Không bắt buộc" />
           </div>
           {oVenue}
-          <div>
-            <label className="label">Số người mời</label>
-            <input name="soNguoiMoi" type="number" min={1} max={10} defaultValue={1} className="input" />
-          </div>
           <OThongTin />
+          <SoNguoiDiCung />
           <div className="sm:col-span-2">
             <label className="label">Ghi chú</label>
             <input name="ghiChu" className="input" />
@@ -633,8 +638,10 @@ function ThemKhach({ venues, onXong, rong }: { venues: SalesVenue[]; onXong: () 
           </select>
         </div>
         <div>
-          <label className="label">Chức vụ</label>
-          <input name="chucVu" className="input" placeholder="Giám đốc" />
+          <label className="label">
+            Chức vụ <span className="text-wine">*</span>
+          </label>
+          <input name="chucVu" className="input" placeholder="Giám đốc" required />
         </div>
       </div>
       <div>
@@ -655,12 +662,33 @@ function ThemKhach({ venues, onXong, rong }: { venues: SalesVenue[]; onXong: () 
         <label className="label">Doanh thu dự kiến</label>
         <input name="doanhThuDuKien" className="input" placeholder="95.000.000 đ" />
       </div>
-      {oVenue}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="label">Số người mời</label>
-          <input name="soNguoiMoi" type="number" min={1} max={10} defaultValue={1} className="input" />
+          <label className="label">Lĩnh vực</label>
+          <select name="linhVuc" className="input" defaultValue="">
+            <option value="">Chọn</option>
+            {LINH_VUC.map((x) => (
+              <option key={x} value={x}>
+                {x}
+              </option>
+            ))}
+          </select>
         </div>
+        <div>
+          <label className="label">Phân loại khách</label>
+          <select name="nguonKhach" className="input" defaultValue="">
+            <option value="">Chọn</option>
+            {PHAN_LOAI_KHACH.map((x) => (
+              <option key={x} value={x}>
+                {x}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+      {oVenue}
+      <div className="grid grid-cols-2 gap-3">
+        <SoNguoiDiCung nhoGon />
         <label className="flex items-end gap-2 pb-2.5 text-sm text-ink-soft">
           <input name="isVip" type="checkbox" className="h-4 w-4 accent-brand" />
           Khách VIP

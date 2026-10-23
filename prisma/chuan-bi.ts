@@ -5,6 +5,7 @@ import { PrismaClient } from "@prisma/client";
 import { dongBoVenue, gieoDuLieu } from "../src/lib/seedData";
 import { damBaoMaKhoiTao, docCaiDat, ghiCaiDat } from "../src/lib/caiDat";
 import { PHIEN_BAN_KPI } from "../src/lib/constants";
+import { chuanLinhVuc, chuanPhanLoai } from "../src/lib/khach";
 
 const PHIEN_BAN_MAU = "2";
 // Tai khoan cua ban demo dau tien (khong dau, mat khau ghi trong README cu)
@@ -54,6 +55,22 @@ async function main() {
   if (doi1.count + doi2.count > 0) {
     console.log(`[capella] Chuyen trang thai cu: ${doi1.count} Danh sach cho, ${doi2.count} Chua phan hoi.`);
   }
+
+  // Phan loai khach chi con Khach cu / Khach tiem nang; linh vuc gop theo danh sach co dinh
+  const canChuan = await prisma.guest.findMany({
+    where: { OR: [{ nguonKhach: { not: null } }, { linhVuc: { not: null } }] },
+    select: { id: true, nguonKhach: true, linhVuc: true },
+  });
+  let soChuan = 0;
+  for (const g of canChuan) {
+    const nguonKhach = g.nguonKhach ? chuanPhanLoai(g.nguonKhach) : null;
+    const linhVuc = g.linhVuc ? chuanLinhVuc(g.linhVuc) : null;
+    if (nguonKhach !== g.nguonKhach || linhVuc !== g.linhVuc) {
+      await prisma.guest.update({ where: { id: g.id }, data: { nguonKhach, linhVuc } });
+      soChuan++;
+    }
+  }
+  if (soChuan) console.log(`[capella] Chuan hoa phan loai khach / linh vuc: ${soChuan} khach.`);
 
   // Dam bao co mot tai khoan Quan tri: uu tien nthung, khong thi tai khoan BTC tao som nhat
   const coQuanTri = await prisma.staffUser.count({ where: { vaiTro: "ADMIN", quanTri: true } });

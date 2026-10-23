@@ -15,6 +15,8 @@ export interface ChoDuyetItem {
   sdt: string | null;
   venueTen: string;
   soNguoiMoi: number;
+  diCung: string;
+  thieu: string | null;
   salesOwner: string;
   canhBao: string[];
   doanhThuDuKien: string | null;
@@ -98,6 +100,8 @@ function The({ it }: { it: ChoDuyetItem }) {
           </div>
           <div className="mt-2 font-display text-lg text-ink">{it.hoTen}</div>
           {it.moTa && <div className="text-sm text-ink-soft">{it.moTa}</div>}
+          {it.diCung && <div className="text-sm text-ink-soft">Cùng: {it.diCung}</div>}
+          {it.thieu && <div className="text-sm text-wine">{it.thieu}</div>}
           <div className="text-sm text-ink-muted">
             {che4SoCuoi(it.sdt)} · {it.venueTen} · mời {it.soNguoiMoi} người · sales {it.salesOwner}
             {it.doanhThuDuKien ? ` · doanh thu dự kiến ${it.doanhThuDuKien}` : ""}

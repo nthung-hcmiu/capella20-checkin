@@ -59,6 +59,7 @@ model Guest {
   venueId        String
   venue          Venue     @relation(fields: [venueId], references: [id])
   soNguoiMoi     Int       @default(1) // so nguoi duoc moi
+  khachDiCung    String? // JSON [{hoTen, chucVu}] nguoi thu 2 tro di tren cung thiep
   soNguoiXacNhan Int? // so nguoi xac nhan tham du
   trangThai      String    @default("NHAP")
   isVip          Boolean   @default(false)

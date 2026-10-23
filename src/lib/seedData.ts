@@ -3,6 +3,7 @@
 import type { PrismaClient } from "@prisma/client";
 import { DAI_VENUE, TRANG_THAI } from "./constants";
 import { boDau } from "./format";
+import { LINH_VUC, PHAN_LOAI_KHACH } from "./khach";
 
 const BANG_MA = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 
@@ -18,7 +19,6 @@ const CONG_TY_MAU = [
   "CÔNG TY TNHH THỜI TRANG LAM PHƯƠNG", "CÔNG TY CP THỰC PHẨM XANH VIỆT", "NGÂN HÀNG MẪU TMCP ĐÔNG Á",
   "CÔNG TY TNHH GIÁO DỤC TRÍ TUỆ", "CÔNG TY CP LOGISTICS HOÀNG HÀ", "CÔNG TY TNHH QUẢNG CÁO NHẬT MINH",
 ];
-const LINH_VUC = ["Giải Trí/Tổ Chức Sự Kiện", "Công Nghệ", "Dược Phẩm", "Du Lịch", "Bất Động Sản", "Thời Trang", "Thực Phẩm", "Tài Chính", "Giáo Dục", "Vận Tải"];
 const CHUC_VU = ["Giám Đốc", "Phó Giám Đốc", "Trưởng Phòng Nhân Sự", "Account Manager", "Event Executive", "Đại Diện Công Ty", "Trưởng Phòng Marketing", "Kế Toán Trưởng"];
 const NHOM_MOI = ["Khách Corporate", "Khách Corporate", "Khách Corporate", "Khách Corporate", "Đối tác Capella", "Taskforce tiếp khách"];
 
@@ -137,11 +137,10 @@ export async function gieoDuLieu(
           congTy: CONG_TY_MAU[ct],
           maCorp: `COR${String(9000000 + ct * 137).padStart(7, "0")}`,
           nhomKhachMoi: nhomMoi,
-          donViKinhDoanh: nhomMoi === "Đối tác Capella" ? `Đối tác MKT ${venue.ten}` : `Capella ${venue.ten}`,
           nhomKhach: chon(["Agency/báo chí/truyền thông", "Khách end-user"]),
           linhVuc: LINH_VUC[ct % LINH_VUC.length],
-          nguonKhach: chon(["Netsuite", "Netsuite", "Netsuite", "Contact mới"]),
-          phongBan: nhomMoi === "Đối tác Capella" ? "Marketing" : "Phòng kinh doanh",
+          nguonKhach: chon([PHAN_LOAI_KHACH[0], PHAN_LOAI_KHACH[0], PHAN_LOAI_KHACH[0], PHAN_LOAI_KHACH[1]]),
+          khachDiCung: soNguoiMoi === 2 ? JSON.stringify([{ hoTen: tenNgauNhien(), chucVu: chon(CHUC_VU) }]) : null,
           doanhThuDuKien: Math.random() < 0.75 ? `${(10 + Math.floor(Math.random() * 190)) * 1000000}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " đ" : null,
           daGuiThiepGiay: daPhatHanh && Math.random() < 0.5,
           soThuTu, maBiMat: sinhMa(), hoTen, sdt: i > 0 && Math.random() < 0.3 ? null : sdt, venueId: venue.id,
@@ -171,6 +170,7 @@ export async function gieoDuLieu(
       data: {
         soThuTu: bod.rangeStart + i, maBiMat: sinhMa(), hoTen: tenNgauNhien(), sdt: sdtNgauNhien(),
         danhXung: i % 2 ? "Bà" : "Ông", chucVu: "Tổng Giám Đốc", congTy: CONG_TY_MAU[i + 4], nhomKhachMoi: "Đối tác Capella",
+        khachDiCung: JSON.stringify([{ hoTen: tenNgauNhien(), chucVu: "Phó Tổng Giám Đốc" }]),
         venueId: bod.id, soNguoiMoi: 2, trangThai: i < 2 ? TRANG_THAI.CHO_DUYET : TRANG_THAI.DA_PHAT_HANH,
         isVip: true, salesOwner: salesTeam[i % salesTeam.length], lyDoChoDuyet: i < 2 ? "VIP" : null,
       },

@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { yeuCauTrang } from "@/lib/auth";
 import { TRANG_THAI } from "@/lib/constants";
 import { ApproveQueue, ChoDuyetItem } from "@/components/ApproveQueue";
-import { khoaTen, tenGoi } from "@/lib/khach";
+import { khoaTen, moTaDiCung, tenGoi, thieuThongTinMoi } from "@/lib/khach";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +38,8 @@ export default async function DuyetPage() {
       sdt: g.sdt,
       venueTen: g.venue.ten,
       soNguoiMoi: g.soNguoiMoi,
+      diCung: moTaDiCung(g.khachDiCung),
+      thieu: thieuThongTinMoi(g),
       salesOwner: g.salesOwner,
       canhBao,
       doanhThuDuKien: g.doanhThuDuKien,
