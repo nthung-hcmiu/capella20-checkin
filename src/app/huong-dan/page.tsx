@@ -42,7 +42,7 @@ const HUONG_DAN: VaiTro[] = [
       },
     ],
     luuY: [
-      "Tạo tài khoản sales: Tài khoản > Tạo nhiều tài khoản > dán danh sách họ tên > chọn venue. Tên đăng nhập theo công thức tên chính + chữ cái đầu họ và tên đệm, mật khẩu tạm ngẫu nhiên chỉ hiện một lần.",
+      "Tạo tài khoản sales: Tài khoản > Tạo nhiều tài khoản > dán danh sách họ tên > chọn venue. Tên đăng nhập theo công thức chữ cái đầu họ và tên đệm + tên chính (Phạm Lê Minh Thư thành plmthu), mật khẩu tạm ngẫu nhiên chỉ hiện một lần.",
       "Chỉ tài khoản Quản trị được tạo tài khoản, đặt mật khẩu cho người khác, xuất CSV và vào tab Dữ liệu. Tài khoản BTC khác chỉ xem danh sách tài khoản.",
       "Xóa toàn bộ danh sách không hoàn tác được. Luôn tải CSV sao lưu trước.",
       "BTC cũng xác nhận thay khách và sửa thông tin được ngay trong dòng khách đã mở.",

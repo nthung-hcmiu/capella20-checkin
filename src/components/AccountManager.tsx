@@ -274,11 +274,11 @@ function FormThem({ venues, onKq, onXong }: { venues: VenueOpt[]; onKq: (k: KetQ
             className="input font-mono"
             required
             autoCapitalize="none"
-            placeholder="thuplm"
+            placeholder="plmthu"
             value={username}
             onChange={(e) => { setUsername(e.target.value); setSua(true); }}
           />
-          <p className="mt-1 text-xs text-ink-muted">Tự đặt theo công thức: tên chính + chữ cái đầu của họ và tên đệm.</p>
+          <p className="mt-1 text-xs text-ink-muted">Tự đặt theo công thức: chữ cái đầu của họ và tên đệm + tên chính.</p>
         </div>
         <div>
           <label className="label">Vai trò</label>
@@ -363,7 +363,7 @@ function FormNhieu({ venues }: { venues: VenueOpt[] }) {
       <div>
         <h2 className="font-display text-lg text-ink">Tạo nhiều tài khoản</h2>
         <p className="mt-1 text-sm text-ink-muted">
-          Mỗi dòng một họ tên. Tên đăng nhập theo công thức tên chính + chữ cái đầu của họ và tên đệm (Phạm Lê Minh Thư thành thuplm).
+          Mỗi dòng một họ tên. Tên đăng nhập theo công thức chữ cái đầu của họ và tên đệm + tên chính (Phạm Lê Minh Thư thành plmthu).
           Mật khẩu tạm sinh ngẫu nhiên, người dùng phải đổi ở lần đăng nhập đầu.
         </p>
       </div>

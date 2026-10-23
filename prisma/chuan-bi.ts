@@ -6,6 +6,7 @@ import { dongBoVenue, gieoDuLieu } from "../src/lib/seedData";
 import { damBaoMaKhoiTao, docCaiDat, ghiCaiDat } from "../src/lib/caiDat";
 import { PHIEN_BAN_KPI } from "../src/lib/constants";
 import { chuanLinhVuc, chuanPhanLoai } from "../src/lib/khach";
+import { tenDangNhapCu, tenDangNhapGoiY } from "../src/lib/taiKhoan";
 
 const PHIEN_BAN_MAU = "2";
 // Tai khoan cua ban demo dau tien (khong dau, mat khau ghi trong README cu)
@@ -71,6 +72,22 @@ async function main() {
     }
   }
   if (soChuan) console.log(`[capella] Chuan hoa phan loai khach / linh vuc: ${soChuan} khach.`);
+
+  // Doi ten dang nhap tao theo cong thuc cu (thuplm) sang cong thuc moi (plmthu), mot lan
+  if (!(await docCaiDat(prisma, "doiTenDangNhap1"))) {
+    const tk = await prisma.staffUser.findMany({ where: { vaiTro: { in: ["SALES", "LE_TAN"] } } });
+    for (const t of tk) {
+      const cu = tenDangNhapCu(t.hoTen);
+      const moi = tenDangNhapGoiY(t.hoTen);
+      const m = t.username.match(/^(.*?)(\d*)$/);
+      if (!cu || cu === moi || !m || m[1] !== cu) continue;
+      const username = moi + m[2];
+      if (await prisma.staffUser.findUnique({ where: { username } })) continue;
+      await prisma.staffUser.update({ where: { id: t.id }, data: { username } });
+      console.log(`[capella] Doi ten dang nhap ${t.username} thanh ${username}`);
+    }
+    await ghiCaiDat(prisma, "doiTenDangNhap1", "1");
+  }
 
   // Dam bao co mot tai khoan Quan tri: uu tien nthung, khong thi tai khoan BTC tao som nhat
   const coQuanTri = await prisma.staffUser.count({ where: { vaiTro: "ADMIN", quanTri: true } });
