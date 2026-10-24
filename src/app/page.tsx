@@ -95,7 +95,7 @@ export default async function Home({ searchParams }: { searchParams: { khongQuye
         <section className="mx-auto -mt-8 max-w-5xl px-5">
           <div className="card grid grid-cols-2 gap-px overflow-hidden bg-ivory-deep sm:grid-cols-4">
             <SoDemo nhan="Ngưỡng xác nhận" so={CHISO.nguongXacNhan} chu="người mục tiêu" />
-            <SoDemo nhan="Thiệp phát hành" so={CHISO.soThiepPhatHanh} chu="dự kiến" />
+            <SoDemo nhan="Khách mục tiêu" so={CHISO.tongKhachMucTieu} chu={`${CHISO.tongCongTyMucTieu} công ty`} />
             <SoDemo nhan="Đã xác nhận" so={xacNhan} chu={`/ ${tong} khách trong hệ thống`} />
             <SoDemo nhan="Đã check in" so={checkin} chu="trên hệ thống" />
           </div>
@@ -150,7 +150,7 @@ export default async function Home({ searchParams }: { searchParams: { khongQuye
             </div>
             <p className="mt-4 text-xs text-ink-muted">
               Sales lưu nháp và bấm Gửi duyệt, BTC duyệt thì phát hành vé. Hủy được ở mọi bước trước sự kiện, mã thiệp mất hiệu lực.
-              Quota và mục tiêu venue lấy theo bảng KPI.
+              Quota (số khách) và mục tiêu venue lấy theo bảng KPI.
             </p>
           </div>
         </section>

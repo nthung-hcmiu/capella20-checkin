@@ -14,9 +14,9 @@ export interface KhachKpi {
 }
 
 export interface SoLieuVenue {
-  thiep: number; // dang chiem quota
+  thiep: number; // so thiep con hieu luc (chiem quota)
   soCongTy: number;
-  soKhach: number; // so nguoi duoc moi
+  soKhach: number; // so nguoi duoc moi con hieu luc, dung de so voi quota
   doanhThu: number;
   xacNhan: number; // so nguoi tham du da xac nhan
   checkin: number; // so nguoi da den
@@ -40,8 +40,10 @@ export function tongHopTheoVenue(guests: KhachKpi[]): Map<string, SoLieuVenue> {
   for (const g of guests) {
     if (g.trangThai === TRANG_THAI.DA_HUY) continue;
     const r = kq.get(g.venueId) || rong();
-    if (CHIEM_QUOTA.includes(g.trangThai)) r.thiep++;
-    r.soKhach += g.soNguoiMoi;
+    if (CHIEM_QUOTA.includes(g.trangThai)) {
+      r.thiep++;
+      r.soKhach += g.soNguoiMoi;
+    }
     if (g.trangThai === TRANG_THAI.THAM_DU || g.trangThai === TRANG_THAI.DA_CHECKIN) r.xacNhan += g.soNguoiXacNhan ?? g.soNguoiMoi;
     if (g.trangThai === TRANG_THAI.DA_CHECKIN) r.checkin += g.soNguoiDen ?? g.soNguoiXacNhan ?? g.soNguoiMoi;
     const tien = docTien(g.doanhThuDuKien);

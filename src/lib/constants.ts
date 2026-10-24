@@ -100,45 +100,33 @@ export interface DaiVenue {
   rangeEnd: number;
   mauSac: string;
   thuTu: number;
-  // KPI de xuat (do luong 12/11/2026 den 31/03/2027)
-  quota: number; // target gui thu moi
-  mucTieuCongTy: number; // muc tieu cong ty check in
-  mucTieuKhach: number;
-  doanhThuCamKet: number; // VND
-  soHopDongDuKien: number;
-  giaTriTiecTB: number; // VND
+  // KPI venue: quota = so khach muc tieu (dem theo nguoi), cong ty, doanh thu cam ket (VND)
+  quota: number;
+  mucTieuCongTy: number;
+  doanhThuCamKet: number;
 }
 
 export const DAI_VENUE: DaiVenue[] = [
-  { code: "RIVERSIDE", ten: "Riverside Palace", rangeStart: 1000, rangeEnd: 1999, mauSac: "#b5303a", thuTu: 1,
-    quota: 630, mucTieuCongTy: 252, mucTieuKhach: 504, doanhThuCamKet: 20_000_000_000, soHopDongDuKien: 133, giaTriTiecTB: 150_000_000 },
-  { code: "GALLERY", ten: "Gallery Hall", rangeStart: 2000, rangeEnd: 2999, mauSac: "#c2853d", thuTu: 2,
-    quota: 88, mucTieuCongTy: 44, mucTieuKhach: 88, doanhThuCamKet: 3_000_000_000, soHopDongDuKien: 25, giaTriTiecTB: 120_000_000 },
-  { code: "PARKVIEW", ten: "Parkview", rangeStart: 3000, rangeEnd: 3999, mauSac: "#5c6b4f", thuTu: 3,
-    quota: 88, mucTieuCongTy: 44, mucTieuKhach: 88, doanhThuCamKet: 6_000_000_000, soHopDongDuKien: 60, giaTriTiecTB: 100_000_000 },
-  { code: "CLARIS", ten: "Claris Palace", rangeStart: 4000, rangeEnd: 4999, mauSac: "#3a5a6b", thuTu: 4,
-    quota: 16, mucTieuCongTy: 8, mucTieuKhach: 16, doanhThuCamKet: 625_000_000, soHopDongDuKien: 8, giaTriTiecTB: 80_000_000 },
-  { code: "CHLOE", ten: "Chloe Gallery", rangeStart: 5000, rangeEnd: 5999, mauSac: "#7b5a8c", thuTu: 5,
-    quota: 24, mucTieuCongTy: 12, mucTieuKhach: 24, doanhThuCamKet: 1_500_000_000, soHopDongDuKien: 11, giaTriTiecTB: 140_000_000 },
-  { code: "CHILL", ten: "Chill", rangeStart: 6000, rangeEnd: 6999, mauSac: "#4f7a74", thuTu: 6,
-    quota: 16, mucTieuCongTy: 8, mucTieuKhach: 16, doanhThuCamKet: 300_000_000, soHopDongDuKien: 3, giaTriTiecTB: 100_000_000 },
-  { code: "MARKETING", ten: "Marketing", rangeStart: 7000, rangeEnd: 7999, mauSac: "#a0566b", thuTu: 7,
-    quota: 32, mucTieuCongTy: 16, mucTieuKhach: 32, doanhThuCamKet: 0, soHopDongDuKien: 0, giaTriTiecTB: 0 },
-  { code: "BOD", ten: "BGĐ Capella + Holdings", rangeStart: 9000, rangeEnd: 9999, mauSac: "#1a1613", thuTu: 8,
-    quota: 36, mucTieuCongTy: 16, mucTieuKhach: 32, doanhThuCamKet: 0, soHopDongDuKien: 0, giaTriTiecTB: 0 },
-  { code: "TAICUA", ten: "Khách bổ sung tại cửa", rangeStart: 8000, rangeEnd: 8999, mauSac: "#6b6255", thuTu: 9,
-    quota: 0, mucTieuCongTy: 0, mucTieuKhach: 0, doanhThuCamKet: 0, soHopDongDuKien: 0, giaTriTiecTB: 0 },
+  { code: "BOD", ten: "Holdings", rangeStart: 9000, rangeEnd: 9999, mauSac: "#1a1613", thuTu: 0, quota: 64, mucTieuCongTy: 32, doanhThuCamKet: 0 },
+  { code: "RIVERSIDE", ten: "Riverside Palace", rangeStart: 1000, rangeEnd: 1999, mauSac: "#b5303a", thuTu: 1, quota: 500, mucTieuCongTy: 250, doanhThuCamKet: 20_000_000_000 },
+  { code: "GALLERY", ten: "Gallery Hall", rangeStart: 2000, rangeEnd: 2999, mauSac: "#c2853d", thuTu: 2, quota: 100, mucTieuCongTy: 50, doanhThuCamKet: 3_000_000_000 },
+  { code: "PARKVIEW", ten: "Parkview", rangeStart: 3000, rangeEnd: 3999, mauSac: "#5c6b4f", thuTu: 3, quota: 60, mucTieuCongTy: 30, doanhThuCamKet: 6_000_000_000 },
+  { code: "CLARIS", ten: "Claris Palace", rangeStart: 4000, rangeEnd: 4999, mauSac: "#3a5a6b", thuTu: 4, quota: 20, mucTieuCongTy: 10, doanhThuCamKet: 625_000_000 },
+  { code: "CHLOE", ten: "Chloe Gallery", rangeStart: 5000, rangeEnd: 5999, mauSac: "#7b5a8c", thuTu: 5, quota: 20, mucTieuCongTy: 10, doanhThuCamKet: 2_000_000_000 },
+  { code: "CHILL", ten: "Chill", rangeStart: 6000, rangeEnd: 6999, mauSac: "#4f7a74", thuTu: 6, quota: 20, mucTieuCongTy: 10, doanhThuCamKet: 300_000_000 },
+  { code: "TAICUA", ten: "Khách bổ sung tại cửa", rangeStart: 8000, rangeEnd: 8999, mauSac: "#6b6255", thuTu: 9, quota: 0, mucTieuCongTy: 0, doanhThuCamKet: 0 },
 ];
+// Venue da bo, gop vao venue khac khi dong bo (khach va tai khoan chuyen sang, so thu tu giu nguyen)
+export const VENUE_GOP: Record<string, string> = { MARKETING: "BOD", DUPHONG: "BOD" };
 // Tang khi doi KPI tren de ghi de quota va muc tieu trong CSDL o lan build ke tiep
-export const PHIEN_BAN_KPI = "2026-10-kpi-1";
+export const PHIEN_BAN_KPI = "2026-10-kpi-2";
 
 // ===== Con so mac dinh (gia dinh, BTC chinh sau) =====
 export const CHISO = {
   tongKhachMucTieu: 800,
-  tongCongTyMucTieu: 400, // muc tieu cong ty check in
+  tongCongTyMucTieu: 400,
   tyLeVang: 0.1,
   nguongXacNhan: 889, // 800 cong vang 10%
-  soThiepPhatHanh: 930, // tong target gui thu moi theo KPI
   soLanQuet: 4,
   soLeTan: 12,
 };

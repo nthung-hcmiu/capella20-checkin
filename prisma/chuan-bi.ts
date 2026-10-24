@@ -44,7 +44,7 @@ async function main() {
   await dongBoVenue(prisma, !kpiDaApDung);
   if (!kpiDaApDung) {
     await ghiCaiDat(prisma, "phienBanKpi", PHIEN_BAN_KPI);
-    console.log(`[capella] Ap dung KPI venue ${PHIEN_BAN_KPI}: quota theo target gui thu moi.`);
+    console.log(`[capella] Ap dung KPI venue ${PHIEN_BAN_KPI}: quota theo so khach muc tieu.`);
   }
 
   // Trang thai cu da bo: Danh sach cho thanh Cho duyet, Chua phan hoi thanh Da moi

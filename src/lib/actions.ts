@@ -49,7 +49,7 @@ async function timKhachTrung(
 // Tinh canh bao cho BTC khi duyet: trung SDT, trung ten cung cong ty, VIP, venue het quota.
 // Luu trong lyDoChoDuyet, ngan cach dau phay. Canh bao khong chan, chi de BTC xem.
 async function tinhCanhBao(
-  k: { sdt: string | null; hoTen: string; maCorp?: string | null; congTy?: string | null; isVip: boolean; venueId: string },
+  k: { sdt: string | null; hoTen: string; maCorp?: string | null; congTy?: string | null; isVip: boolean; venueId: string; soNguoiMoi: number },
   boQuaId?: string
 ) {
   const ds: string[] = [];
@@ -58,10 +58,12 @@ async function tinhCanhBao(
   if (k.isVip) ds.push("VIP");
   const venue = await prisma.venue.findUnique({ where: { id: k.venueId } });
   if (venue && venue.quota > 0) {
-    const dangChiem = await prisma.guest.count({
+    // Quota dem theo nguoi: tong so nguoi moi dang hieu luc cong khach nay vuot quota thi canh bao
+    const dangChiem = await prisma.guest.aggregate({
       where: { venueId: k.venueId, trangThai: { in: CHIEM_QUOTA }, ...(boQuaId ? { id: { not: boQuaId } } : {}) },
+      _sum: { soNguoiMoi: true },
     });
-    if (dangChiem >= venue.quota) ds.push("HET_QUOTA");
+    if ((dangChiem._sum.soNguoiMoi || 0) + k.soNguoiMoi > venue.quota) ds.push("HET_QUOTA");
   }
   return { lyDo: ds.length ? ds.join(",") : null, trung };
 }
@@ -103,7 +105,7 @@ export async function taoKhach(input: {
   if (!venue) return { ok: false, thongBao: "Venue không hợp lệ." };
 
   const { lyDo, trung } = await tinhCanhBao({
-    sdt, hoTen, maCorp: them.maCorp, congTy: them.congTy, isVip: !!input.isVip, venueId: input.venueId,
+    sdt, hoTen, maCorp: them.maCorp, congTy: them.congTy, isVip: !!input.isVip, venueId: input.venueId, soNguoiMoi,
   });
 
   let soThuTu: number, maBiMat: string;
@@ -288,7 +290,7 @@ export async function suaKhach(
     venueId = input.venueId;
   }
 
-  const { lyDo, trung } = await tinhCanhBao({ sdt, hoTen, maCorp: them.maCorp, congTy: them.congTy, isVip, venueId }, id);
+  const { lyDo, trung } = await tinhCanhBao({ sdt, hoTen, maCorp: them.maCorp, congTy: them.congTy, isVip, venueId, soNguoiMoi }, id);
   await prisma.guest.update({
     where: { id },
     data: {

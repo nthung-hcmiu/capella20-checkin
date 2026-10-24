@@ -20,16 +20,13 @@ datasource db {
 // 5 venue chinh + cac dai so du phong / tai cua / BOD
 model Venue {
   id         String  @id @default(cuid())
-  code       String  @unique // RIVERSIDE, GALLERY, PARKVIEW, CLARIS, CHLOE, CHILL, MARKETING, TAICUA, BOD
+  code       String  @unique // BOD (Holdings), RIVERSIDE, GALLERY, PARKVIEW, CLARIS, CHLOE, CHILL, TAICUA
   ten        String
   rangeStart Int // dau dai so thu tu, vi du 1000
   rangeEnd   Int // cuoi dai so thu tu, vi du 1999
-  quota      Int     @default(0) // so thiep duoc cap (target gui thu moi)
-  mucTieuCongTy   Int   @default(0) // muc tieu cong ty check in
-  mucTieuKhach    Int   @default(0)
+  quota      Int     @default(0) // so khach muc tieu, dem theo nguoi
+  mucTieuCongTy   Int   @default(0)
   doanhThuCamKet  Float @default(0) // VND
-  soHopDongDuKien Int   @default(0)
-  giaTriTiecTB    Float @default(0) // VND
   mauSac     String  @default("#b08d42")
   thuTu      Int     @default(0)
   guests     Guest[]

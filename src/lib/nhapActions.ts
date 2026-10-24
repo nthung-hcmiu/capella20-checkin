@@ -87,7 +87,7 @@ export async function nhapDanhSach(
   const [venues, salesAcc, daCo] = await Promise.all([
     prisma.venue.findMany(),
     prisma.staffUser.findMany({ where: { vaiTro: "SALES" }, select: { hoTen: true } }),
-    prisma.guest.findMany({ select: { sdt: true, hoTen: true, maCorp: true, congTy: true, trangThai: true, soThuTu: true, venueId: true, maBiMat: true } }),
+    prisma.guest.findMany({ select: { sdt: true, hoTen: true, maCorp: true, congTy: true, trangThai: true, soThuTu: true, venueId: true, maBiMat: true, soNguoiMoi: true } }),
   ]);
 
   // Tim venue theo ten hoac ma, khong phan biet dau; "Riverside" khop "Riverside Palace"
@@ -117,7 +117,8 @@ export async function nhapDanhSach(
   const soDaDung = new Set(daCo.map((g) => g.soThuTu));
   const maDaDung = new Set(daCo.map((g) => g.maBiMat));
   const dangChiem: Record<string, number> = {};
-  for (const g of daCo) if (CHIEM_QUOTA.includes(g.trangThai)) dangChiem[g.venueId] = (dangChiem[g.venueId] || 0) + 1;
+  // Quota dem theo nguoi
+  for (const g of daCo) if (CHIEM_QUOTA.includes(g.trangThai)) dangChiem[g.venueId] = (dangChiem[g.venueId] || 0) + g.soNguoiMoi;
   const conTro: Record<string, number> = {};
 
   const capSo = (venueId: string): number | null => {
@@ -207,7 +208,7 @@ export async function nhapDanhSach(
     if (sdt && sdtDaCo.has(sdt)) ds.push("TRUNG_SDT");
     else if (khoa && tenDaCo.has(khoa)) ds.push("TRUNG_TEN");
     if (vip) ds.push("VIP");
-    if (venue.quota > 0 && (dangChiem[venue.id] || 0) >= venue.quota) ds.push("HET_QUOTA");
+    if (venue.quota > 0 && (dangChiem[venue.id] || 0) + soNguoi > venue.quota) ds.push("HET_QUOTA");
     const trung = ds[0] === "TRUNG_SDT" || ds[0] === "TRUNG_TEN";
     // Phat hanh ve thang chi khi khong trung; khach trung vao Cho duyet
     const trangThai: string = dich === TRANG_THAI.DA_PHAT_HANH && trung ? TRANG_THAI.CHO_DUYET : dich;
@@ -222,7 +223,7 @@ export async function nhapDanhSach(
 
     if (sdt) sdtDaCo.add(sdt);
     if (khoa) tenDaCo.add(khoa);
-    if (CHIEM_QUOTA.includes(trangThai)) dangChiem[venue.id] = (dangChiem[venue.id] || 0) + 1;
+    if (CHIEM_QUOTA.includes(trangThai)) dangChiem[venue.id] = (dangChiem[venue.id] || 0) + soNguoi;
     kq.trangThai = trangThai;
     kq.soThuTu = soThuTu;
     if (ds.includes("HET_QUOTA")) canhBao.unshift(`${venue.ten} đã hết quota`);

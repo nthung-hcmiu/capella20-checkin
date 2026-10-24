@@ -574,7 +574,7 @@ function ThemKhach({ venues, onXong, rong }: { venues: SalesVenue[]; onXong: () 
       </select>
       {conLai != null && (
         <p className={`mt-1.5 text-xs ${conLai <= 0 ? "text-wine" : "text-ink-muted"}`}>
-          {conLai > 0 ? `Venue còn ${conLai} thiệp trong quota` : "Venue đã đủ quota, vẫn thêm được nhưng BTC sẽ thấy cảnh báo khi duyệt"}
+          {conLai > 0 ? `Venue còn ${conLai} khách trong quota` : "Venue đã đủ quota, vẫn thêm được nhưng BTC sẽ thấy cảnh báo khi duyệt"}
         </p>
       )}
     </div>

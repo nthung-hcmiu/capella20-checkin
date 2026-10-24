@@ -17,7 +17,7 @@ export default async function SalesPage({ searchParams }: { searchParams: { nhom
       orderBy: { soThuTu: "asc" },
     }),
     prisma.venue.findMany({ orderBy: { thuTu: "asc" } }),
-    prisma.guest.groupBy({ by: ["venueId"], where: { trangThai: { in: CHIEM_QUOTA } }, _count: { _all: true } }),
+    prisma.guest.groupBy({ by: ["venueId"], where: { trangThai: { in: CHIEM_QUOTA } }, _sum: { soNguoiMoi: true } }),
   ]);
   // Sales thuoc venue chi thay venue cua minh
   const duocMoi = (v: { id: string; quota: number }) => (u.venueId ? v.id === u.venueId : v.quota > 0);
@@ -59,7 +59,7 @@ export default async function SalesPage({ searchParams }: { searchParams: { nhom
         id: v.id,
         ten: v.ten,
         quota: v.quota,
-        dangDung: dem.find((d) => d.venueId === v.id)?._count._all || 0,
+        dangDung: dem.find((d) => d.venueId === v.id)?._sum.soNguoiMoi || 0,
       }))}
       venuesSua={venuesSua}
     />

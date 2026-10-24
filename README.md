@@ -78,9 +78,9 @@ Huong dan su dung cho tung vai tro nam ngay trong app: `/huong-dan`.
 | 4xxx | Claris Palace |
 | 5xxx | Chloe Gallery |
 | 6xxx | Chill |
-| 7xxx | Marketing |
+| 7xxx | Du phong (Marketing cu, da gop vao Holdings) |
 | 8xxx | Khach bo sung tai cua |
-| 9xxx | BGD Capella + Holdings |
+| 9xxx | Holdings |
 
 Sua o `src/lib/constants.ts` (DAI_VENUE) va seed lai.
 
@@ -92,8 +92,8 @@ Huy duoc o moi buoc truoc su kien, ma vo hieu.
 
 ## Con so mac dinh (gia dinh, BTC chinh sau)
 
-Quota va KPI tung venue (target gui thu moi, muc tieu cong ty, so khach, doanh thu cam ket) nam o `src/lib/constants.ts` (DAI_VENUE).
-Doi so roi tang PHIEN_BAN_KPI thi lan build ke tiep ghi de vao CSDL. Tong: 930 thiep, 400 cong ty, 800 khach, 31,425 ty.
+Quota (so khach, dem theo nguoi), muc tieu cong ty, doanh thu cam ket tung venue nam o `src/lib/constants.ts` (DAI_VENUE).
+Doi so roi tang PHIEN_BAN_KPI thi lan build ke tiep ghi de vao CSDL. Tong: 800 khach, 400 cong ty, 31,925 ty.
 
 ## Deploy production
 

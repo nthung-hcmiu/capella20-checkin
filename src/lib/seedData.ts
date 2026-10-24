@@ -1,7 +1,7 @@
 // Logic gieo du lieu mau, dung chung cho CLI, buoc build tren Vercel va nut "Nap du lieu mau" cua BTC
 
 import type { PrismaClient } from "@prisma/client";
-import { DAI_VENUE, TRANG_THAI } from "./constants";
+import { DAI_VENUE, TRANG_THAI, VENUE_GOP } from "./constants";
 import { boDau } from "./format";
 import { LINH_VUC, PHAN_LOAI_KHACH } from "./khach";
 
@@ -28,19 +28,23 @@ export function tenDangNhapTu(hoTen: string): string {
 
 // Dong bo venue theo DAI_VENUE. capNhatKpi: ghi de quota va muc tieu (chi khi KPI doi phien ban).
 export async function dongBoVenue(prisma: PrismaClient, capNhatKpi = false) {
-  // Dai 6xxx, 7xxx truoc day la Du phong, nay la Chill va Marketing
-  const duPhong = await prisma.venue.findUnique({ where: { code: "DUPHONG" }, include: { _count: { select: { guests: true } } } });
-  if (duPhong && duPhong._count.guests === 0) await prisma.venue.delete({ where: { id: duPhong.id } });
   for (const v of DAI_VENUE) {
-    const kpi = {
-      quota: v.quota, mucTieuCongTy: v.mucTieuCongTy, mucTieuKhach: v.mucTieuKhach,
-      doanhThuCamKet: v.doanhThuCamKet, soHopDongDuKien: v.soHopDongDuKien, giaTriTiecTB: v.giaTriTiecTB,
-    };
+    const kpi = { quota: v.quota, mucTieuCongTy: v.mucTieuCongTy, doanhThuCamKet: v.doanhThuCamKet };
     await prisma.venue.upsert({
       where: { code: v.code },
       update: { ten: v.ten, rangeStart: v.rangeStart, rangeEnd: v.rangeEnd, mauSac: v.mauSac, thuTu: v.thuTu, ...(capNhatKpi ? kpi : {}) },
       create: { code: v.code, ten: v.ten, rangeStart: v.rangeStart, rangeEnd: v.rangeEnd, mauSac: v.mauSac, thuTu: v.thuTu, ...kpi },
     });
+  }
+  // Venue da bo (Marketing, Du phong): chuyen khach va tai khoan sang venue gop, giu so thu tu va ma QR
+  for (const [cu, moi] of Object.entries(VENUE_GOP)) {
+    const v = await prisma.venue.findUnique({ where: { code: cu } });
+    const dich = await prisma.venue.findUnique({ where: { code: moi } });
+    if (!v || !dich) continue;
+    const g = await prisma.guest.updateMany({ where: { venueId: v.id }, data: { venueId: dich.id } });
+    await prisma.staffUser.updateMany({ where: { venueId: v.id }, data: { venueId: dich.id } });
+    await prisma.venue.delete({ where: { id: v.id } });
+    console.log(`[capella] Gop venue ${v.ten} vao ${dich.ten}: ${g.count} khach`);
   }
 }
 
@@ -94,7 +98,7 @@ export async function gieoDuLieu(
   const venues = await prisma.venue.findMany();
   const theoCode = (c: string) => venues.find((v) => v.code === c)!;
 
-  const phanBo: Record<string, number> = { RIVERSIDE: 18, GALLERY: 12, PARKVIEW: 10, CLARIS: 7, CHLOE: 7, CHILL: 5, MARKETING: 4 };
+  const phanBo: Record<string, number> = { RIVERSIDE: 20, GALLERY: 12, PARKVIEW: 10, CLARIS: 7, CHLOE: 7, CHILL: 6 };
   const trangThaiPool = [
     TRANG_THAI.DA_CHECKIN, TRANG_THAI.DA_CHECKIN,
     TRANG_THAI.THAM_DU, TRANG_THAI.THAM_DU, TRANG_THAI.THAM_DU,

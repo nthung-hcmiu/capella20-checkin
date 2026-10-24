@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { yeuCauTrang } from "@/lib/auth";
-import { CHISO, DA_PHAT_HANH_VE, TRANG_THAI, NHAN_TRANG_THAI, MAU_TRANG_THAI } from "@/lib/constants";
+import { CHIEM_QUOTA, CHISO, DA_PHAT_HANH_VE, TRANG_THAI, NHAN_TRANG_THAI, MAU_TRANG_THAI } from "@/lib/constants";
 import { dinhDangTien } from "@/lib/format";
 import { cong, rong, tongHopTheoVenue } from "@/lib/kpi";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -23,6 +23,10 @@ export default async function Dashboard({ searchParams }: { searchParams: { khon
   for (const g of guests) demTrangThai[g.trangThai] = (demTrangThai[g.trangThai] || 0) + 1;
 
   const daPhatHanh = guests.filter((g) => PIPELINE.includes(g.trangThai)).length;
+  // Nguoi da co ve con hieu luc (khong tinh khong tham du, vang mat)
+  const nguoiPhatHanh = guests
+    .filter((g) => PIPELINE.includes(g.trangThai) && CHIEM_QUOTA.includes(g.trangThai))
+    .reduce((s, g) => s + g.soNguoiMoi, 0);
   const daXacNhanKhach = guests.filter((g) =>
     [TRANG_THAI.THAM_DU, TRANG_THAI.DA_CHECKIN].includes(g.trangThai as any)
   );
@@ -81,7 +85,12 @@ export default async function Dashboard({ searchParams }: { searchParams: { khon
           tiLe={tiLeXacNhan}
           noiBat
         />
-        <Kpi nhan="Thiệp đã phát hành" so={daPhatHanh} phu={`dự kiến ${CHISO.soThiepPhatHanh}`} />
+        <Kpi
+          nhan="Khách đã phát hành vé"
+          so={nguoiPhatHanh}
+          phu={`mục tiêu ${CHISO.tongKhachMucTieu} khách · ${daPhatHanh} thiệp`}
+          tiLe={Math.min(100, Math.round((nguoiPhatHanh / CHISO.tongKhachMucTieu) * 100))}
+        />
         <Kpi nhan="Người đã check in" so={nguoiCheckin} phu={`${daCheckin.length} thiệp đã đến`} />
         <Kpi nhan="Chờ BTC duyệt" so={soCho} phu="sales đã gửi, BTC chưa duyệt" canhBao={soCho > 0} />
         <Kpi
@@ -172,7 +181,7 @@ export default async function Dashboard({ searchParams }: { searchParams: { khon
                 <th className="px-3 py-3 text-right font-medium">Số khách</th>
                 <th className="px-3 py-3 text-right font-medium">Xác nhận</th>
                 <th className="px-3 py-3 text-right font-medium">Check in</th>
-                <th className="px-6 py-3 text-right font-medium">Thiệp / quota</th>
+                <th className="px-6 py-3 text-right font-medium">Thiệp</th>
               </tr>
             </thead>
             <tbody>
@@ -187,12 +196,11 @@ export default async function Dashboard({ searchParams }: { searchParams: { khon
                   </td>
                   <OSoSanh thucTe={r.doanhThu} mucTieu={v.doanhThuCamKet} tien />
                   <OSoSanh thucTe={r.soCongTy} mucTieu={v.mucTieuCongTy} />
-                  <OSoSanh thucTe={r.soKhach} mucTieu={v.mucTieuKhach} />
+                  <OSoSanh thucTe={r.soKhach} mucTieu={v.quota} />
                   <td className="px-3 py-3 text-right">{r.xacNhan}</td>
                   <td className="px-3 py-3 text-right">{r.checkin}</td>
                   <td className="px-6 py-3 text-right">
                     {r.thiep}
-                    <span className="text-ink-muted"> / {v.quota || "-"}</span>
                   </td>
                 </tr>
               ))}
@@ -200,12 +208,11 @@ export default async function Dashboard({ searchParams }: { searchParams: { khon
                 <td className="px-6 py-3 text-ink">Tổng</td>
                 <OSoSanh thucTe={tongVenue.doanhThu} mucTieu={venues.reduce((s, v) => s + v.doanhThuCamKet, 0)} tien />
                 <OSoSanh thucTe={tongVenue.soCongTy} mucTieu={venues.reduce((s, v) => s + v.mucTieuCongTy, 0)} />
-                <OSoSanh thucTe={tongVenue.soKhach} mucTieu={venues.reduce((s, v) => s + v.mucTieuKhach, 0)} />
+                <OSoSanh thucTe={tongVenue.soKhach} mucTieu={venues.reduce((s, v) => s + v.quota, 0)} />
                 <td className="px-3 py-3 text-right">{tongVenue.xacNhan}</td>
                 <td className="px-3 py-3 text-right">{tongVenue.checkin}</td>
                 <td className="px-6 py-3 text-right">
                   {tongVenue.thiep}
-                  <span className="text-ink-muted"> / {venues.reduce((s, v) => s + v.quota, 0)}</span>
                 </td>
               </tr>
             </tbody>
