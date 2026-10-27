@@ -107,10 +107,10 @@ export interface DaiVenue {
 }
 
 export const DAI_VENUE: DaiVenue[] = [
-  { code: "BOD", ten: "Holdings", rangeStart: 9000, rangeEnd: 9999, mauSac: "#1a1613", thuTu: 0, quota: 64, mucTieuCongTy: 32, doanhThuCamKet: 0 },
+  { code: "BOD", ten: "Holdings", rangeStart: 9000, rangeEnd: 9999, mauSac: "#1a1613", thuTu: 0, quota: 80, mucTieuCongTy: 40, doanhThuCamKet: 0 },
   { code: "RIVERSIDE", ten: "Riverside Palace", rangeStart: 1000, rangeEnd: 1999, mauSac: "#b5303a", thuTu: 1, quota: 500, mucTieuCongTy: 250, doanhThuCamKet: 20_000_000_000 },
   { code: "GALLERY", ten: "Gallery Hall", rangeStart: 2000, rangeEnd: 2999, mauSac: "#c2853d", thuTu: 2, quota: 100, mucTieuCongTy: 50, doanhThuCamKet: 3_000_000_000 },
-  { code: "PARKVIEW", ten: "Parkview", rangeStart: 3000, rangeEnd: 3999, mauSac: "#5c6b4f", thuTu: 3, quota: 60, mucTieuCongTy: 30, doanhThuCamKet: 6_000_000_000 },
+  { code: "PARKVIEW", ten: "Parkview", rangeStart: 3000, rangeEnd: 3999, mauSac: "#5c6b4f", thuTu: 3, quota: 60, mucTieuCongTy: 30, doanhThuCamKet: 2_500_000_000 },
   { code: "CLARIS", ten: "Claris Palace", rangeStart: 4000, rangeEnd: 4999, mauSac: "#3a5a6b", thuTu: 4, quota: 20, mucTieuCongTy: 10, doanhThuCamKet: 625_000_000 },
   { code: "CHLOE", ten: "Chloe Gallery", rangeStart: 5000, rangeEnd: 5999, mauSac: "#7b5a8c", thuTu: 5, quota: 20, mucTieuCongTy: 10, doanhThuCamKet: 2_000_000_000 },
   { code: "CHILL", ten: "Chill", rangeStart: 6000, rangeEnd: 6999, mauSac: "#4f7a74", thuTu: 6, quota: 20, mucTieuCongTy: 10, doanhThuCamKet: 300_000_000 },
@@ -119,7 +119,7 @@ export const DAI_VENUE: DaiVenue[] = [
 // Venue da bo, gop vao venue khac khi dong bo (khach va tai khoan chuyen sang, so thu tu giu nguyen)
 export const VENUE_GOP: Record<string, string> = { MARKETING: "BOD", DUPHONG: "BOD" };
 // Tang khi doi KPI tren de ghi de quota va muc tieu trong CSDL o lan build ke tiep
-export const PHIEN_BAN_KPI = "2026-10-kpi-2";
+export const PHIEN_BAN_KPI = "2026-10-kpi-3";
 
 // ===== Con so mac dinh (gia dinh, BTC chinh sau) =====
 export const CHISO = {

@@ -93,7 +93,7 @@ Huy duoc o moi buoc truoc su kien, ma vo hieu.
 ## Con so mac dinh (gia dinh, BTC chinh sau)
 
 Quota (so khach, dem theo nguoi), muc tieu cong ty, doanh thu cam ket tung venue nam o `src/lib/constants.ts` (DAI_VENUE).
-Doi so roi tang PHIEN_BAN_KPI thi lan build ke tiep ghi de vao CSDL. Tong: 800 khach, 400 cong ty, 31,925 ty.
+Doi so roi tang PHIEN_BAN_KPI thi lan build ke tiep ghi de vao CSDL. Tong: 800 khach, 400 cong ty, 28,425 ty.
 
 ## Deploy production
 
