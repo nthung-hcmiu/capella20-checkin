@@ -224,6 +224,7 @@ function Dong({ g, salesTeam, venues }: { g: GuestRow; salesTeam: string[]; venu
   };
   const canhBao = (g.lyDoChoDuyet || "").split(",").filter(Boolean);
   const chuaPhatHanh = g.trangThai === TRANG_THAI.NHAP || g.trangThai === TRANG_THAI.CHO_DUYET;
+  const thieu = thieuThongTinMoi({ sdt: g.sdt, diaChi: g.them.diaChi, chucVu: g.them.chucVu, soNguoiMoi: g.soNguoiMoi, khachDiCung: g.khachDiCung });
 
   return (
     <>
@@ -269,9 +270,7 @@ function Dong({ g, salesTeam, venues }: { g: GuestRow; salesTeam: string[]; venu
           {chuaPhatHanh && canhBao.length > 0 && (
             <div className="mt-1 text-[11px] text-wine">{canhBao.map((c) => NHAN_CANH_BAO[c] || c).join(", ")}</div>
           )}
-          {chuaPhatHanh && thieuThongTinMoi({ chucVu: g.them.chucVu, soNguoiMoi: g.soNguoiMoi, khachDiCung: g.khachDiCung }) && (
-            <div className="mt-1 text-[11px] text-wine">{thieuThongTinMoi({ chucVu: g.them.chucVu, soNguoiMoi: g.soNguoiMoi, khachDiCung: g.khachDiCung })}</div>
-          )}
+          {chuaPhatHanh && thieu && <div className="mt-1 text-[11px] text-wine">{thieu}</div>}
         </td>
       </tr>
       {mo && (
@@ -430,8 +429,10 @@ function FormTao({ venues, salesTeam, onXong }: { venues: VenueOpt[]; salesTeam:
           <input name="hoTen" required className="input" placeholder="Nguyễn Văn An" />
         </div>
         <div>
-          <label className="label">Số điện thoại</label>
-          <input name="sdt" inputMode="tel" className="input" placeholder="Không bắt buộc" />
+          <label className="label">
+            Số điện thoại <span className="text-wine">*</span>
+          </label>
+          <input name="sdt" inputMode="tel" className="input" placeholder="0901234567" required />
         </div>
         <div>
           <label className="label">Venue</label>

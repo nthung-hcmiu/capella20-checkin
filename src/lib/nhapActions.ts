@@ -197,7 +197,7 @@ export async function nhapDanhSach(
     // Khach thu 2: file chi co mot cap cot ten / chuc vu
     const khachDiCung =
       soNguoi >= 2 ? ghiDiCung([{ hoTen: String(r.diCungTen || "").trim(), chucVu: String(r.diCungChucVu || "").trim() }]) : null;
-    const thieu = thieuThongTinMoi({ chucVu: them.chucVu, soNguoiMoi: soNguoi, khachDiCung });
+    const thieu = thieuThongTinMoi({ sdt, diaChi: them.diaChi, chucVu: them.chucVu, soNguoiMoi: soNguoi, khachDiCung });
     if (thieu) canhBao.push(`${thieu}, bổ sung trên app trước khi gửi duyệt`);
     if (soNguoi > 2) canhBao.push("File chỉ nhập được khách thứ 2, người thứ 3 trở đi bổ sung trên app");
     if (them.linhVuc && !LINH_VUC.includes(them.linhVuc)) canhBao.push(`Lĩnh vực "${them.linhVuc}" ngoài danh sách`);

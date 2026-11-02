@@ -11,6 +11,7 @@ type Truong = keyof DongNhap;
 const TRUONG: { key: Truong; nhan: string; batBuoc?: boolean; phu?: boolean; dongNghia: string[] }[] = [
   { key: "hoTen", nhan: "Tên khách mời", batBuoc: true, dongNghia: ["ten khach moi", "ho ten", "ho va ten", "ten khach", "ten khach hang", "khach hang", "khach moi", "ten", "full name", "name"] },
   { key: "sdt", nhan: "Số điện thoại", dongNghia: ["sdt", "so dien thoai", "dien thoai", "so dt", "dt", "phone", "mobile", "di dong"] },
+  { key: "diaChi", nhan: "Địa chỉ", dongNghia: ["dia chi", "dia chi gui thiep", "dia chi cong ty", "address"] },
   { key: "venue", nhan: "Đơn vị (venue)", dongNghia: ["don vi", "venue", "chi nhanh", "nha hang", "dia diem", "co so", "sanh", "trung tam"] },
   { key: "soNguoiMoi", nhan: "Số lượng người tham dự", dongNghia: ["so luong nguoi tham du", "so nguoi moi", "so nguoi duoc moi", "so nguoi tham du", "so nguoi", "so khach", "so luong", "sl"] },
   { key: "sales", nhan: "Người phụ trách tiếp khách", dongNghia: ["ho va ten nguoi phu trach tiep khach", "nguoi phu trach tiep khach", "sales phu trach", "nguoi phu trach", "sales", "sale", "nhan vien phu trach", "phu trach", "nhan vien", "nv"] },
@@ -90,14 +91,14 @@ function doanCot(tieuDe: string[]): Record<Truong, number> {
 function taiFileMau() {
   const tieuDe = [
     "STT", "Đơn vị", "Nhóm khách mời", "Mã CORP Netsuite", "Company Name", "Nhóm khách",
-    "Lĩnh vực", "Danh xưng", "Tên khách mời", "Chức vụ", "Số điện thoại", "Số lượng người tham dự",
+    "Lĩnh vực", "Danh xưng", "Tên khách mời", "Chức vụ", "Số điện thoại", "Địa chỉ", "Số lượng người tham dự",
     "Tên khách thứ 2", "Chức vụ khách thứ 2", "Phân loại khách",
     "Phân loại khách VIP", "Doanh thu dự kiến", "Round 2: Đã gửi thiệp giấy",
     "Họ và tên người phụ trách tiếp khách", "Ghi chú",
   ];
   const mau = [
-    ["1", "Gallery Hall", "Khách Corporate", "COR0000001", "CÔNG TY TNHH MẪU A", "Khách end-user", "Công Nghệ", "Ông", "Nguyễn Văn An", "Giám đốc", "0901234567", "1", "", "", "Khách cũ", "VIP", "120.000.000 đ", "", "Thu Hà", ""],
-    ["2", "Riverside Palace", "Đối tác Capella", "COR0000002", "CÔNG TY CP MẪU B", "Agency/báo chí/truyền thông", "Giải Trí/Tổ Chức Sự Kiện", "Bà", "Trần Thị Bình", "Trưởng phòng", "", "2", "Lê Văn Cường", "Phó phòng", "Khách tiềm năng", "THƯỜNG", "80.000.000 đ", "", "Minh Quân", "Mời 2 người thì điền tên và chức vụ khách thứ 2"],
+    ["1", "Gallery Hall", "Khách Corporate", "COR0000001", "CÔNG TY TNHH MẪU A", "Khách end-user", "Công Nghệ", "Ông", "Nguyễn Văn An", "Giám đốc", "0901234567", "12 Nguyễn Huệ, P. Bến Nghé, Q.1, TP.HCM", "1", "", "", "Khách cũ", "VIP", "120.000.000 đ", "", "Thu Hà", ""],
+    ["2", "Riverside Palace", "Đối tác Capella", "COR0000002", "CÔNG TY CP MẪU B", "Agency/báo chí/truyền thông", "Giải Trí/Tổ Chức Sự Kiện", "Bà", "Trần Thị Bình", "Trưởng phòng", "0912345678", "45 Lê Lợi, P. Bến Thành, Q.1, TP.HCM", "2", "Lê Văn Cường", "Phó phòng", "Khách tiềm năng", "THƯỜNG", "80.000.000 đ", "", "Minh Quân", "Mời 2 người thì điền tên và chức vụ khách thứ 2"],
   ];
   const csv = "﻿" + [tieuDe, ...mau].map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(",")).join("\r\n");
   const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
@@ -411,7 +412,7 @@ export function ImportManager({
           </div>
           {ketQua.tongHop.khongSdt > 0 && (
             <p className="mt-3 text-xs text-ink-muted">
-              {ketQua.tongHop.khongSdt.toLocaleString("vi-VN")} khách không có SĐT: chống trùng theo tên và mã CORP / công ty, khách xác nhận trên trang thiệp chỉ cần số thứ tự.
+              {ketQua.tongHop.khongSdt.toLocaleString("vi-VN")} khách chưa có SĐT: vẫn nhập được nhưng phải bổ sung SĐT trên app trước khi gửi duyệt.
             </p>
           )}
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
@@ -485,7 +486,7 @@ export function ImportManager({
       <div className="card p-5 text-sm text-ink-soft">
         <div className="font-medium text-ink">Quy tắc khi nhập</div>
         <ul className="mt-2 list-disc space-y-1 pl-5">
-          <li>Dùng được thẳng file danh sách mẫu các năm trước (sheet đầu tiên). Cột SĐT không bắt buộc.</li>
+          <li>Dùng được thẳng file danh sách mẫu các năm trước (sheet đầu tiên). Dòng thiếu SĐT hoặc địa chỉ vẫn nhập được nhưng có cảnh báo, phải bổ sung trên app trước khi gửi duyệt.</li>
           <li>Chống trùng: có SĐT thì theo SĐT (chuẩn hóa +84, dấu cách, mất số 0 do Excel). Không có SĐT thì theo tên khách cùng mã CORP, hoặc cùng công ty. Trùng thì luôn vào Chờ duyệt.</li>
           <li>Cột VIP ghi VIP, x, có hoặc 1 là khách VIP (THƯỜNG là khách thường). Khách VIP và venue hết quota được gắn cảnh báo để BTC xem khi duyệt.</li>
           <li>Venue ghi tên ngắn như “Riverside”, “Claris” vẫn nhận được.</li>

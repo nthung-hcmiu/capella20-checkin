@@ -39,7 +39,7 @@ export default async function DuyetPage() {
       venueTen: g.venue.ten,
       soNguoiMoi: g.soNguoiMoi,
       diCung: moTaDiCung(g.khachDiCung),
-      thieu: thieuThongTinMoi(g),
+      thieu: thieuThongTinMoi({ sdt: g.sdt, diaChi: g.diaChi, chucVu: g.chucVu, soNguoiMoi: g.soNguoiMoi, khachDiCung: g.khachDiCung }),
       salesOwner: g.salesOwner,
       canhBao,
       doanhThuDuKien: g.doanhThuDuKien,

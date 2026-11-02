@@ -23,7 +23,7 @@ export async function GET() {
   // Thu tu cot theo mau danh sach cac nam truoc, roi den cac cot cua he thong
   const tieuDe = [
     "STT", "Đơn vị", "Nhóm khách mời", "Mã CORP Netsuite", "Company Name", "Nhóm khách",
-    "Lĩnh vực", "Danh xưng", "Tên khách mời", "Chức vụ", "Số điện thoại", "Số lượng người tham dự",
+    "Lĩnh vực", "Danh xưng", "Tên khách mời", "Chức vụ", "Số điện thoại", "Địa chỉ", "Số lượng người tham dự",
     "Tên khách thứ 2", "Chức vụ khách thứ 2", "Phân loại khách",
     "Phân loại khách VIP", "Doanh thu dự kiến", "Round 1: Khách đã nhận thiệp online", "Round 2: Đã gửi thiệp giấy",
     "Họ và tên người phụ trách tiếp khách", "Ghi chú",
@@ -35,7 +35,7 @@ export async function GET() {
     const dc = docDiCung(g.khachDiCung);
     return [
       o(i + 1), o(g.venue.ten), o(g.nhomKhachMoi), o(g.maCorp), o(g.congTy), o(g.nhomKhach),
-      o(g.linhVuc), o(g.danhXung), o(g.hoTen), o(g.chucVu), g.sdt ? `="${g.sdt}"` : o(""), o(g.soNguoiMoi),
+      o(g.linhVuc), o(g.danhXung), o(g.hoTen), o(g.chucVu), g.sdt ? `="${g.sdt}"` : o(""), o(g.diaChi), o(g.soNguoiMoi),
       o(dc.map((x) => x.hoTen).join("; ")), o(dc.map((x) => x.chucVu).join("; ")), o(g.nguonKhach),
       o(g.isVip ? "VIP" : "THƯỜNG"), o(g.doanhThuDuKien), o(daNhanOnline.includes(g.trangThai) ? "ĐÃ NHẬN" : ""),
       o(g.daGuiThiepGiay ? "ĐÃ GỬI" : ""), o(g.salesOwner), o(g.ghiChu),

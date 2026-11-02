@@ -43,6 +43,9 @@ export interface SalesVenue {
   dangDung: number;
 }
 
+const thieuCua = (g: SalesGuest) =>
+  thieuThongTinMoi({ sdt: g.sdt, diaChi: g.them.diaChi, chucVu: g.chucVu, soNguoiMoi: g.soNguoiMoi, khachDiCung: g.khachDiCung });
+
 const NHOM = [
   { key: "tatCa", nhan: "Tất cả", tt: null as string[] | null },
   { key: "nhap", nhan: "Nháp", tt: [TRANG_THAI.NHAP] as string[] },
@@ -164,9 +167,7 @@ function DienThoai({ guests, ds, venues, venuesSua, loc }: ViewProps) {
                     {g.them.doanhThuDuKien ? ` · ${g.them.doanhThuDuKien}` : ""}
                   </div>
                   {g.khachDiCung && <div className="mt-0.5 text-xs text-ink-soft">Cùng: {moTaDiCung(g.khachDiCung)}</div>}
-                  {CHUA_PHAT_HANH.includes(g.trangThai) && thieuThongTinMoi({ ...g, chucVu: g.chucVu }) && (
-                    <div className="mt-1 text-xs text-wine">{thieuThongTinMoi({ ...g, chucVu: g.chucVu })}</div>
-                  )}
+                  {CHUA_PHAT_HANH.includes(g.trangThai) && thieuCua(g) && <div className="mt-1 text-xs text-wine">{thieuCua(g)}</div>}
                 </div>
                 <StatusBadge trangThai={g.trangThai} />
               </div>
@@ -304,7 +305,7 @@ function DongMayTinh({ g, venuesSua }: { g: SalesGuest; venuesSua: { id: string;
           {!daPhatHanh && canhBao.length > 0 && (
             <div className="mt-1 text-[11px] text-wine">{canhBao.map((c) => NHAN_CANH_BAO[c] || c).join(", ")}</div>
           )}
-          {!daPhatHanh && thieuThongTinMoi(g) && <div className="mt-1 text-[11px] text-wine">{thieuThongTinMoi(g)}</div>}
+          {!daPhatHanh && thieuCua(g) && <div className="mt-1 text-[11px] text-wine">{thieuCua(g)}</div>}
         </td>
       </tr>
       {mo && (
@@ -325,6 +326,7 @@ function ChiTiet({ g }: { g: SalesGuest }) {
   const gio = (d: string | null) => (d ? dinhDangGio(d) : null);
   const o: [string, React.ReactNode][] = [
     ["Số điện thoại", g.sdt],
+    [NHAN_TRUONG.diaChi, g.them.diaChi],
     [NHAN_TRUONG.maCorp, g.them.maCorp],
     [NHAN_TRUONG.nhomKhachMoi, g.them.nhomKhachMoi],
     [NHAN_TRUONG.nhomKhach, g.them.nhomKhach],
@@ -590,8 +592,10 @@ function ThemKhach({ venues, onXong, rong }: { venues: SalesVenue[]; onXong: () 
             <input name="hoTen" required className="input" placeholder="Nguyễn Văn An" />
           </div>
           <div>
-            <label className="label">Số điện thoại</label>
-            <input name="sdt" inputMode="tel" className="input" placeholder="Không bắt buộc" />
+            <label className="label">
+              Số điện thoại <span className="text-wine">*</span>
+            </label>
+            <input name="sdt" inputMode="tel" className="input" placeholder="0901234567" required />
           </div>
           {oVenue}
           <OThongTin />
@@ -648,14 +652,22 @@ function ThemKhach({ venues, onXong, rong }: { venues: SalesVenue[]; onXong: () 
         <label className="label">Công ty</label>
         <input name="congTy" className="input" placeholder="CÔNG TY TNHH ..." />
       </div>
+      <div>
+        <label className="label">
+          Địa chỉ <span className="text-wine">*</span>
+        </label>
+        <input name="diaChi" className="input" placeholder="Số nhà, đường, phường, quận, thành phố" required />
+      </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="label">Mã CORP Netsuite</label>
           <input name="maCorp" className="input" placeholder="COR0001234" />
         </div>
         <div>
-          <label className="label">Số điện thoại</label>
-          <input name="sdt" inputMode="tel" className="input" placeholder="Không bắt buộc" />
+          <label className="label">
+            SĐT <span className="text-wine">*</span>
+          </label>
+          <input name="sdt" inputMode="tel" className="input" placeholder="0901234567" required />
         </div>
       </div>
       <div>

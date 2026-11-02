@@ -53,6 +53,12 @@ export function OThongTin({ them, coDanhXung = true, coChucVu = true }: { them?:
       )}
       {coChucVu && o("chucVu", "Giám đốc", true)}
       {o("congTy", "CÔNG TY TNHH ...")}
+      <div className="sm:col-span-2">
+        <label className="label">
+          {NHAN_TRUONG.diaChi} <span className="text-wine">*</span>
+        </label>
+        <input name="diaChi" className="input" defaultValue={them?.diaChi || ""} placeholder="Số nhà, đường, phường, quận, thành phố" required />
+      </div>
       {o("maCorp", "COR0001234")}
       {o("doanhThuDuKien", "95.000.000 đ")}
       <OChon ten="linhVuc" nhan={NHAN_TRUONG.linhVuc} ds={LINH_VUC} gt={them?.linhVuc} />
@@ -196,8 +202,10 @@ export function FormKhach({
           <input name="hoTen" className="input" defaultValue={g.hoTen} required />
         </div>
         <div>
-          <label className="label">Số điện thoại</label>
-          <input name="sdt" className="input" defaultValue={g.sdt || ""} inputMode="tel" placeholder="Không bắt buộc" />
+          <label className="label">
+            Số điện thoại <span className="text-wine">*</span>
+          </label>
+          <input name="sdt" className="input" defaultValue={g.sdt || ""} inputMode="tel" placeholder="0901234567" required />
         </div>
         <div>
           <label className="label">Venue</label>

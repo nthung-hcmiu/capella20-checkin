@@ -93,12 +93,12 @@ export async function taoKhach(input: {
   if (!hoTen || !input.venueId) {
     return { ok: false, thongBao: "Thiếu họ tên hoặc venue." };
   }
-  if (sdt && !sdtHopLe(sdt)) return { ok: false, thongBao: "Số điện thoại chưa đúng (cần 10 hoặc 11 số, bắt đầu bằng 0). Không có thì để trống." };
+  if (sdt && !sdtHopLe(sdt)) return { ok: false, thongBao: "Số điện thoại chưa đúng (cần 10 hoặc 11 số, bắt đầu bằng 0)." };
   const them = lamSach(input.them || {});
   const soNguoiMoi = Math.min(10, Math.max(1, input.soNguoiMoi || 1));
   const khachDiCung = ghiDiCung(lamSachDiCung(input.diCung, soNguoiMoi));
   // Moi khach deu phai co ten va chuc vu, ke ca nguoi thu 2 tro di
-  const thieu = thieuThongTinMoi({ chucVu: them.chucVu, soNguoiMoi, khachDiCung });
+  const thieu = thieuThongTinMoi({ sdt, diaChi: them.diaChi, chucVu: them.chucVu, soNguoiMoi, khachDiCung });
   if (thieu) return { ok: false, thongBao: `${thieu}.` };
 
   const venue = await prisma.venue.findUnique({ where: { id: input.venueId } });
@@ -167,7 +167,7 @@ export async function guiDuyet(ids: string[]): Promise<KetQua> {
     ok: du.length > 0,
     thongBao:
       `Đã gửi duyệt ${du.length} khách.` +
-      (thieu.length ? ` ${thieu.length} khách chưa gửi vì thiếu tên hoặc chức vụ (kể cả khách thứ 2), bổ sung rồi gửi lại.` : ""),
+      (thieu.length ? ` ${thieu.length} khách chưa gửi vì thiếu SĐT, địa chỉ, chức vụ hoặc thông tin khách thứ 2, bổ sung rồi gửi lại.` : ""),
   };
 }
 
@@ -270,7 +270,7 @@ export async function suaKhach(
   const isVip = khoaDuyet ? cu.isVip : input.isVip;
   const khachDiCung = ghiDiCung(lamSachDiCung(input.diCung, soNguoiMoi));
   // Sales: moi khach tren thiep deu phai co ten va chuc vu
-  const thieu = thieuThongTinMoi({ chucVu: them.chucVu, soNguoiMoi, khachDiCung });
+  const thieu = thieuThongTinMoi({ sdt, diaChi: them.diaChi, chucVu: them.chucVu, soNguoiMoi, khachDiCung });
   if (laSales && thieu) return { ok: false, thongBao: `${thieu}.` };
 
   // Doi venue chi khi chua phat hanh ve: cap so thu tu moi theo dai cua venue moi

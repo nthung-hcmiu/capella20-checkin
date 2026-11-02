@@ -4,7 +4,7 @@ import { boDau } from "./format";
 
 // Cac truong chu ngoai ho ten, SDT. Da bo "Thuoc don vi kinh doanh" va "Phong ban" (cot CSDL van giu).
 export const TRUONG_CHU = [
-  "danhXung", "chucVu", "congTy", "maCorp", "nhomKhachMoi",
+  "danhXung", "chucVu", "congTy", "diaChi", "maCorp", "nhomKhachMoi",
   "nhomKhach", "linhVuc", "nguonKhach", "doanhThuDuKien",
 ] as const;
 export type TruongChu = (typeof TRUONG_CHU)[number];
@@ -14,6 +14,7 @@ export const NHAN_TRUONG: Record<TruongChu, string> = {
   danhXung: "Danh xưng",
   chucVu: "Chức vụ",
   congTy: "Công ty",
+  diaChi: "Địa chỉ",
   maCorp: "Mã CORP Netsuite",
   nhomKhachMoi: "Nhóm khách mời",
   nhomKhach: "Nhóm khách",
@@ -78,8 +79,16 @@ export function ghiDiCung(ds: NguoiDiCung[]): string | null {
   const co = ds.filter((x) => x.hoTen || x.chucVu);
   return co.length ? JSON.stringify(co) : null;
 }
-// Thieu ten hoac chuc vu cua nguoi chinh hay nguoi di cung
-export function thieuThongTinMoi(g: { chucVu?: string | null; soNguoiMoi: number; khachDiCung?: string | null }): string | null {
+// Thong tin bat buoc truoc khi gui duyet: SDT, dia chi, chuc vu, ten va chuc vu nguoi di cung
+export function thieuThongTinMoi(g: {
+  sdt: string | null | undefined;
+  diaChi: string | null | undefined;
+  chucVu: string | null | undefined;
+  soNguoiMoi: number;
+  khachDiCung: string | null | undefined;
+}): string | null {
+  if (!g.sdt?.trim()) return "Thiếu số điện thoại của khách";
+  if (!g.diaChi?.trim()) return "Thiếu địa chỉ của khách";
   if (!g.chucVu?.trim()) return "Thiếu chức vụ của khách";
   const ds = docDiCung(g.khachDiCung);
   for (let i = 0; i < g.soNguoiMoi - 1; i++) {
