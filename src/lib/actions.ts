@@ -588,3 +588,95 @@ export async function xoaLichSu(nam: number): Promise<KetQua> {
   lamTuoi();
   return { ok: true, thongBao: `Đã xóa ${r.count} khách năm ${nam}.` };
 }
+
+// ===== Thao tac hang loat =====
+
+export type LoaiHangLoat =
+  | "DUYET" | "GUI_DUYET" | "DA_GUI_ONLINE" | "DA_GUI_GIAY" | "THAM_DU" | "KHONG_THAM_DU"
+  | "DOI_SALES" | "HUY" | "XOA" | "XOA_NHAP";
+
+const CHI_BTC: LoaiHangLoat[] = ["DUYET", "DOI_SALES", "HUY", "XOA"];
+
+// Ap dung mot thao tac cho nhieu khach. Khach khong phu hop (sai trang thai, khong thuoc sales) duoc bo qua.
+export async function thaoTacHangLoat(ids: string[], loai: LoaiHangLoat, giaTri?: string): Promise<KetQua> {
+  const u = await batBuocQuyen(["ADMIN", "SALES"]);
+  const laSales = u.vaiTro === "SALES";
+  if (laSales && CHI_BTC.includes(loai)) return { ok: false, thongBao: "Thao tác này chỉ BTC được làm." };
+  if (!ids.length) return { ok: false, thongBao: "Chưa chọn khách nào." };
+  if (ids.length > 2000) return { ok: false, thongBao: "Mỗi lần tối đa 2.000 khách." };
+  if (loai === "GUI_DUYET") return guiDuyet(ids);
+
+  const pham = { id: { in: ids }, ...(laSales ? { salesOwner: u.hoTen } : {}) };
+  const daPhatHanh = { notIn: [TRANG_THAI.NHAP, TRANG_THAI.CHO_DUYET, TRANG_THAI.DA_HUY] };
+  let n = 0;
+  let viec = "";
+  switch (loai) {
+    case "DUYET":
+      n = (await prisma.guest.updateMany({
+        where: { ...pham, trangThai: { in: CHUA_PHAT_HANH } },
+        data: { trangThai: TRANG_THAI.DA_PHAT_HANH, lyDoChoDuyet: null, phatHanhLuc: new Date() },
+      })).count;
+      viec = "duyệt, phát hành vé";
+      break;
+    case "DA_GUI_ONLINE":
+      n = (await prisma.guest.updateMany({ where: { ...pham, trangThai: TRANG_THAI.DA_PHAT_HANH }, data: { trangThai: TRANG_THAI.DA_MOI } })).count;
+      viec = "đánh dấu đã gửi thiệp online";
+      break;
+    case "DA_GUI_GIAY":
+      n = (await prisma.guest.updateMany({ where: { ...pham, trangThai: daPhatHanh }, data: { daGuiThiepGiay: true } })).count;
+      viec = "đánh dấu đã gửi thiệp giấy";
+      break;
+    case "THAM_DU": {
+      // Xac nhan du so nguoi moi cua tung khach
+      const ds = await prisma.guest.findMany({ where: { ...pham, trangThai: { in: DUOC_XAC_NHAN } }, select: { id: true, soNguoiMoi: true } });
+      await prisma.$transaction(
+        ds.map((g) =>
+          prisma.guest.update({
+            where: { id: g.id },
+            data: { trangThai: TRANG_THAI.THAM_DU, soNguoiXacNhan: g.soNguoiMoi, xacNhanLuc: new Date(), xacNhanBoi: u.hoTen },
+          })
+        )
+      );
+      n = ds.length;
+      viec = "xác nhận tham dự (đủ số người mời)";
+      break;
+    }
+    case "KHONG_THAM_DU":
+      n = (await prisma.guest.updateMany({
+        where: { ...pham, trangThai: { in: DUOC_XAC_NHAN } },
+        data: { trangThai: TRANG_THAI.KHONG_THAM_DU, soNguoiXacNhan: 0, xacNhanLuc: new Date(), xacNhanBoi: u.hoTen },
+      })).count;
+      viec = "ghi nhận không tham dự";
+      break;
+    case "DOI_SALES": {
+      const ten = (giaTri || "").trim();
+      if (!ten) return { ok: false, thongBao: "Chọn người phụ trách mới." };
+      n = (await prisma.guest.updateMany({ where: pham, data: { salesOwner: ten } })).count;
+      viec = `chuyển cho ${ten} phụ trách`;
+      break;
+    }
+    case "HUY":
+      n = (await prisma.guest.updateMany({
+        where: { ...pham, trangThai: { notIn: [TRANG_THAI.DA_CHECKIN, TRANG_THAI.DA_HUY] } },
+        data: { trangThai: TRANG_THAI.DA_HUY },
+      })).count;
+      viec = "hủy thiệp";
+      break;
+    case "XOA":
+      n = (await prisma.guest.deleteMany({ where: pham })).count;
+      viec = "xóa";
+      break;
+    case "XOA_NHAP":
+      n = (await prisma.guest.deleteMany({ where: { ...pham, trangThai: TRANG_THAI.NHAP } })).count;
+      viec = "xóa nháp";
+      break;
+  }
+  lamTuoi();
+  const boQua = ids.length - n;
+  return {
+    ok: n > 0,
+    thongBao: n > 0
+      ? `Đã ${viec} ${n} khách.${boQua ? ` Bỏ qua ${boQua} khách không phù hợp trạng thái.` : ""}`
+      : `Không có khách nào phù hợp để ${viec}.`,
+  };
+}

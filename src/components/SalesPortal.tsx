@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { StatusBadge } from "./StatusBadge";
 import { ChipLichSu } from "./ChipLichSu";
+import { HopChon, HopChonTatCa, ThanhHangLoat } from "./ThanhHangLoat";
 import type { LichSu } from "@/lib/lichSu";
 import { FormKhach, OThongTin, SoNguoiDiCung, docDiCungForm, docThem } from "./FormKhach";
 import { che4SoCuoi, boDau, dinhDangGio } from "@/lib/format";
@@ -187,6 +188,16 @@ function DienThoai({ guests, ds, venues, venuesSua, loc }: ViewProps) {
 // ===== May tinh: bang khach, bam dong mo chi tiet =====
 function MayTinh({ guests, ds, venues, venuesSua, loc }: ViewProps) {
   const [moThem, setMoThem] = useState(false);
+  // Tick chon khach de thao tac hang loat; doi bo loc thi bo chon
+  const [chon, setChon] = useState<Set<string>>(new Set());
+  useEffect(() => setChon(new Set()), [loc.q, loc.nhom]);
+  const doiChon = (id: string) =>
+    setChon((s) => {
+      const m = new Set(s);
+      if (m.has(id)) m.delete(id);
+      else m.add(id);
+      return m;
+    });
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -223,10 +234,15 @@ function MayTinh({ guests, ds, venues, venuesSua, loc }: ViewProps) {
         <ChipNhom guests={guests} loc={loc} />
       </div>
 
+      <ThanhHangLoat ids={[...chon]} laSales onXong={() => setChon(new Set())} />
+
       <div className="card overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-xs uppercase tracking-wider text-ink-muted">
+              <th className="w-10 pl-4 pr-1 py-3">
+                <HopChonTatCa tong={ds.length} daChon={chon.size} onDoi={(het) => setChon(het ? new Set(ds.map((g) => g.id)) : new Set())} />
+              </th>
               <th className="px-4 py-3 font-medium">Số</th>
               <th className="px-3 py-3 font-medium">Khách</th>
               <th className="px-3 py-3 font-medium">Venue</th>
@@ -238,11 +254,11 @@ function MayTinh({ guests, ds, venues, venuesSua, loc }: ViewProps) {
           </thead>
           <tbody>
             {ds.map((g) => (
-              <DongMayTinh key={g.id} g={g} venuesSua={venuesSua} />
+              <DongMayTinh key={g.id} g={g} venuesSua={venuesSua} chon={chon.has(g.id)} onChon={() => doiChon(g.id)} />
             ))}
             {ds.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-10 text-center text-sm text-ink-muted">
+                <td colSpan={8} className="px-4 py-10 text-center text-sm text-ink-muted">
                   {guests.length === 0 ? "Chưa có khách nào. Bấm + Thêm khách hoặc Nhập từ Excel." : "Không có khách khớp bộ lọc."}
                 </td>
               </tr>
@@ -254,7 +270,9 @@ function MayTinh({ guests, ds, venues, venuesSua, loc }: ViewProps) {
   );
 }
 
-function DongMayTinh({ g, venuesSua }: { g: SalesGuest; venuesSua: { id: string; ten: string }[] }) {
+function DongMayTinh({
+  g, venuesSua, chon, onChon,
+}: { g: SalesGuest; venuesSua: { id: string; ten: string }[]; chon: boolean; onChon: () => void }) {
   const [mo, setMo] = useState(false);
   const canhBao = (g.lyDoChoDuyet || "").split(",").filter(Boolean);
   const daPhatHanh = !CHUA_PHAT_HANH.includes(g.trangThai);
@@ -262,12 +280,13 @@ function DongMayTinh({ g, venuesSua }: { g: SalesGuest; venuesSua: { id: string;
   return (
     <>
       <tr
-        className={`cursor-pointer border-t border-ivory-deep ${mo ? "bg-ivory/60" : "hover:bg-ivory/50"}`}
+        className={`cursor-pointer border-t border-ivory-deep ${chon ? "bg-brand/5" : mo ? "bg-ivory/60" : "hover:bg-ivory/50"}`}
         onClick={() => setMo((v) => !v)}
         tabIndex={0}
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setMo((v) => !v); } }}
         aria-expanded={mo}
       >
+        <HopChon chon={chon} onDoi={onChon} />
         <td className="px-4 py-3">
           <span className="font-mono text-ink">{g.soThuTu}</span>
           {g.isVip && <span className="ml-1.5 chip bg-brand/15 text-brand-deep">VIP</span>}
@@ -317,7 +336,7 @@ function DongMayTinh({ g, venuesSua }: { g: SalesGuest; venuesSua: { id: string;
       </tr>
       {mo && (
         <tr className="border-t border-ivory-deep bg-ivory/40">
-          <td colSpan={7} className="px-4 py-4">
+          <td colSpan={8} className="px-4 py-4">
             <ChiTiet g={g} />
             <div className="mt-2 max-w-3xl">
               <HanhDong g={g} venuesSua={venuesSua} />

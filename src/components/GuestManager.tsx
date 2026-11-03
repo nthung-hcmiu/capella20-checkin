@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { StatusBadge } from "./StatusBadge";
 import { DUOC_XAC_NHAN, NHAN_CANH_BAO, NHAN_TRANG_THAI, TRANG_THAI } from "@/lib/constants";
@@ -8,6 +8,7 @@ import { che4SoCuoi, boDau, dinhDangGio } from "@/lib/format";
 import { taoKhach, datThiepGiay, xacNhanKhach, guiDuyet, danhDauDaMoi, huyKhach, duyetKhach, xoaKhach } from "@/lib/actions";
 import { NHAN_TRUONG, TRUONG_CHU, moTaDiCung, tenGoi, thieuThongTinMoi, type ThongTinThem } from "@/lib/khach";
 import { ChipLichSu } from "./ChipLichSu";
+import { HopChon, HopChonTatCa, ThanhHangLoat } from "./ThanhHangLoat";
 import type { LichSu } from "@/lib/lichSu";
 import { FormKhach, OThongTin, SoNguoiDiCung, docDiCungForm, docThem } from "./FormKhach";
 
@@ -92,6 +93,17 @@ export function GuestManager({
   const dsNhom = useMemo(() => [...new Set(guests.map((g) => g.them.nhomKhachMoi).filter(Boolean) as string[])].sort(), [guests]);
   const coLoc = q || tt || vn || sl || nh || ls;
   const coLichSu = guests.some((g) => g.lichSu);
+
+  // Tick chon khach de thao tac hang loat; doi bo loc thi bo chon cho khoi nham
+  const [chon, setChon] = useState<Set<string>>(new Set());
+  useEffect(() => setChon(new Set()), [q, tt, vn, sl, nh, ls]);
+  const doiChon = (id: string) =>
+    setChon((s) => {
+      const m = new Set(s);
+      if (m.has(id)) m.delete(id);
+      else m.add(id);
+      return m;
+    });
 
   return (
     <div className="space-y-5">
@@ -179,11 +191,20 @@ export function GuestManager({
         )}
       </div>
 
+      <ThanhHangLoat ids={[...chon]} laSales={false} salesTeam={salesTeam} onXong={() => setChon(new Set())} />
+
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-xs uppercase tracking-wider text-ink-muted">
+                <th className="w-10 pl-4 pr-1 py-3">
+                  <HopChonTatCa
+                    tong={locKq.length}
+                    daChon={chon.size}
+                    onDoi={(het) => setChon(het ? new Set(locKq.map((g) => g.id)) : new Set())}
+                  />
+                </th>
                 <th className="px-4 py-3 font-medium">Số</th>
                 <th className="px-3 py-3 font-medium">Khách</th>
                 <th className="px-3 py-3 font-medium">Venue</th>
@@ -194,11 +215,11 @@ export function GuestManager({
             </thead>
             <tbody>
               {locKq.slice(0, soHien).map((g) => (
-                <Dong key={g.id} g={g} salesTeam={salesTeam} venues={venues} />
+                <Dong key={g.id} g={g} salesTeam={salesTeam} venues={venues} chon={chon.has(g.id)} onChon={() => doiChon(g.id)} />
               ))}
               {locKq.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center text-sm text-ink-muted">
+                  <td colSpan={7} className="px-4 py-10 text-center text-sm text-ink-muted">
                     {guests.length === 0 ? "Chưa có khách nào. Thêm khách hoặc nhập từ Excel." : "Không có khách khớp bộ lọc."}
                   </td>
                 </tr>
@@ -218,7 +239,9 @@ export function GuestManager({
   );
 }
 
-function Dong({ g, salesTeam, venues }: { g: GuestRow; salesTeam: string[]; venues: VenueOpt[] }) {
+function Dong({
+  g, salesTeam, venues, chon, onChon,
+}: { g: GuestRow; salesTeam: string[]; venues: VenueOpt[]; chon: boolean; onChon: () => void }) {
   const [pending, start] = useTransition();
   const [mo, setMo] = useState(false);
   const [sua, setSua] = useState(false);
@@ -244,12 +267,13 @@ function Dong({ g, salesTeam, venues }: { g: GuestRow; salesTeam: string[]; venu
   return (
     <>
       <tr
-        className={`cursor-pointer border-t border-ivory-deep ${mo ? "bg-ivory/60" : "hover:bg-ivory/50"}`}
+        className={`cursor-pointer border-t border-ivory-deep ${chon ? "bg-brand/5" : mo ? "bg-ivory/60" : "hover:bg-ivory/50"}`}
         onClick={batTat}
         tabIndex={0}
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); batTat(); } }}
         aria-expanded={mo}
       >
+        <HopChon chon={chon} onDoi={onChon} />
         <td className="px-4 py-3">
           <span className="font-mono text-ink">{g.soThuTu}</span>
           {g.isVip && <span className="ml-1.5 chip bg-brand/15 text-brand-deep">VIP</span>}
@@ -293,7 +317,7 @@ function Dong({ g, salesTeam, venues }: { g: GuestRow; salesTeam: string[]; venu
       </tr>
       {mo && (
         <tr className="border-t border-ivory-deep bg-ivory/40">
-          <td colSpan={6} className="px-4 py-4">
+          <td colSpan={7} className="px-4 py-4">
             <ChiTiet g={g} canhBao={canhBao} />
 
             <div className="mt-4 flex flex-wrap items-center gap-2">
