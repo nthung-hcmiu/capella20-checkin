@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useState } from "react";
 import { che4SoCuoi } from "@/lib/format";
 import { NHAN_CANH_BAO } from "@/lib/constants";
+import { ChipLichSu } from "./ChipLichSu";
+import type { LichSu } from "@/lib/lichSu";
 import { duyetKhach, duyetKhongCanhBao, huyKhach, type KetQua } from "@/lib/actions";
 
 export interface ChoDuyetItem {
@@ -16,6 +18,7 @@ export interface ChoDuyetItem {
   venueTen: string;
   soNguoiMoi: number;
   diCung: string;
+  lichSu: LichSu | null;
   thieu: string | null;
   salesOwner: string;
   canhBao: string[];
@@ -101,6 +104,12 @@ function The({ it }: { it: ChoDuyetItem }) {
           <div className="mt-2 font-display text-lg text-ink">{it.hoTen}</div>
           {it.moTa && <div className="text-sm text-ink-soft">{it.moTa}</div>}
           {it.diCung && <div className="text-sm text-ink-soft">Cùng: {it.diCung}</div>}
+          {it.lichSu && (
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-ink-soft">
+              <ChipLichSu ls={it.lichSu} />
+              <span>{it.lichSu.chiTiet}</span>
+            </div>
+          )}
           {it.thieu && <div className="text-sm text-wine">{it.thieu}</div>}
           <div className="text-sm text-ink-muted">
             {che4SoCuoi(it.sdt)} · {it.venueTen} · mời {it.soNguoiMoi} người · sales {it.salesOwner}

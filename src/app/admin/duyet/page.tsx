@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { yeuCauTrang } from "@/lib/auth";
 import { TRANG_THAI } from "@/lib/constants";
 import { ApproveQueue, ChoDuyetItem } from "@/components/ApproveQueue";
+import { taiBoKhop } from "@/lib/lichSu";
 import { khoaTen, moTaDiCung, tenGoi, thieuThongTinMoi } from "@/lib/khach";
 
 export const dynamic = "force-dynamic";
@@ -21,6 +22,7 @@ export default async function DuyetPage() {
     orderBy: { createdAt: "asc" },
   });
 
+  const boKhop = await taiBoKhop(prisma);
   const items: ChoDuyetItem[] = ds.map((g) => {
     const khoa = khoaTen(g.hoTen, g.maCorp, g.congTy);
     const canhBao = (g.lyDoChoDuyet || "").split(",").filter(Boolean);
@@ -39,6 +41,7 @@ export default async function DuyetPage() {
       venueTen: g.venue.ten,
       soNguoiMoi: g.soNguoiMoi,
       diCung: moTaDiCung(g.khachDiCung),
+      lichSu: boKhop.coDuLieu ? boKhop.khop(g) : null,
       thieu: thieuThongTinMoi({ sdt: g.sdt, diaChi: g.diaChi, chucVu: g.chucVu, soNguoiMoi: g.soNguoiMoi, khachDiCung: g.khachDiCung }),
       salesOwner: g.salesOwner,
       canhBao,

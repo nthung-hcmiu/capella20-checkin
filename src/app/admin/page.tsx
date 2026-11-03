@@ -4,6 +4,7 @@ import { yeuCauTrang } from "@/lib/auth";
 import { CHIEM_QUOTA, CHISO, DA_PHAT_HANH_VE, TRANG_THAI, NHAN_TRANG_THAI, MAU_TRANG_THAI } from "@/lib/constants";
 import { dinhDangTien } from "@/lib/format";
 import { cong, rong, tongHopTheoVenue } from "@/lib/kpi";
+import { taiBoKhop } from "@/lib/lichSu";
 import { StatusBadge } from "@/components/StatusBadge";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +18,12 @@ function soNguoi(g: { soNguoiXacNhan: number | null; soNguoiMoi: number }) {
 export default async function Dashboard({ searchParams }: { searchParams: { khongQuyen?: string } }) {
   await yeuCauTrang(["ADMIN"], "/admin");
   const guests = await prisma.guest.findMany({ include: { venue: true } });
+  // Doi chieu khach nam truoc: bao nhieu khach cu duoc moi lai, bao nhieu khach da den nam truoc chua duoc moi lai
+  const boKhop = await taiBoKhop(prisma);
+  const conHieuLuc = guests.filter((g) => g.trangThai !== TRANG_THAI.DA_HUY);
+  const tkNamTruoc = boKhop.coDuLieu ? boKhop.thongKe(conHieuLuc) : null;
+  const demLs: Record<string, number> = {};
+  if (boKhop.coDuLieu) for (const g of conHieuLuc) { const l = boKhop.khop(g)!.loai; demLs[l] = (demLs[l] || 0) + 1; }
   const venues = await prisma.venue.findMany({ orderBy: { thuTu: "asc" } });
 
   const demTrangThai: Record<string, number> = {};
@@ -110,6 +117,30 @@ export default async function Dashboard({ searchParams }: { searchParams: { khon
           })()}
         />
       </div>
+
+      {/* Khach nam truoc */}
+      {tkNamTruoc && (
+        <div className="card p-6">
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <div>
+              <h2 className="font-display text-lg text-ink">So với khách năm {boKhop.nam}</h2>
+              <p className="text-xs text-ink-muted">
+                Năm {boKhop.nam} có {tkNamTruoc.tongNamTruoc} khách được mời, {tkNamTruoc.namTruocDaDen} khách đã đến.
+              </p>
+            </div>
+            <Link href="/admin/khach" className="text-xs font-medium text-brand hover:underline">
+              Lọc trong danh sách khách →
+            </Link>
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-5">
+            <OSo nhan="Năm trước đã đến, mời lại" so={demLs.den || 0} />
+            <OSo nhan="Năm trước mời, không đến" so={demLs.khongDen || 0} />
+            <OSo nhan="Mới, cùng công ty năm trước" so={demLs.congTy || 0} />
+            <OSo nhan="Khách mới hoàn toàn" so={demLs.moi || 0} />
+            <OSo nhan={`Đã đến ${boKhop.nam}, chưa mời lại`} so={tkNamTruoc.denNhungChuaMoiLai} noiBat />
+          </div>
+        </div>
+      )}
 
       {/* Doi soat */}
       <div className="card overflow-hidden">
@@ -236,6 +267,15 @@ function OSoSanh({ thucTe, mucTieu, tien }: { thucTe: number; mucTieu: number; t
         </div>
       )}
     </td>
+  );
+}
+
+function OSo({ nhan, so, noiBat }: { nhan: string; so: number; noiBat?: boolean }) {
+  return (
+    <div className={`rounded-xl px-4 py-3 ${noiBat ? "bg-brand/10" : "bg-ivory/70"}`}>
+      <div className="text-[11px] uppercase tracking-wider text-ink-muted">{nhan}</div>
+      <div className={`mt-0.5 font-display text-2xl ${noiBat ? "text-brand" : "text-ink"}`}>{so.toLocaleString("vi-VN")}</div>
+    </div>
   );
 }
 

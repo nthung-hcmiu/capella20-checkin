@@ -4,6 +4,7 @@ import { yeuCauQuyen } from "@/lib/auth";
 import { NHAN_TRANG_THAI } from "@/lib/constants";
 import { urlQR } from "@/lib/codes";
 import { docDiCung } from "@/lib/khach";
+import { taiBoKhop } from "@/lib/lichSu";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,7 @@ export async function GET() {
   if (!u) return NextResponse.json({ loi: "Chỉ Quản trị được xuất danh sách" }, { status: 401 });
   if (!u.quanTri) return NextResponse.json({ loi: "Chỉ Quản trị được xuất danh sách" }, { status: 403 });
   const ds = await prisma.guest.findMany({ include: { venue: true }, orderBy: { soThuTu: "asc" } });
+  const boKhop = await taiBoKhop(prisma);
   // Thu tu cot theo mau danh sach cac nam truoc, roi den cac cot cua he thong
   const tieuDe = [
     "STT", "Đơn vị", "Nhóm khách mời", "Mã CORP Netsuite", "Company Name", "Nhóm khách",
@@ -27,7 +29,7 @@ export async function GET() {
     "Tên khách thứ 2", "Chức vụ khách thứ 2", "Phân loại khách",
     "Phân loại khách VIP", "Doanh thu dự kiến", "Round 1: Khách đã nhận thiệp online", "Round 2: Đã gửi thiệp giấy",
     "Họ và tên người phụ trách tiếp khách", "Ghi chú",
-    "Số thứ tự thiệp", "Trạng thái", "Số người xác nhận", "Số người thực tế đến", "Giờ check in", "Mã thiệp", "Link thiệp",
+    "Năm trước", "Số thứ tự thiệp", "Trạng thái", "Số người xác nhận", "Số người thực tế đến", "Giờ check in", "Mã thiệp", "Link thiệp",
   ];
   const daNhanOnline = ["DA_MOI", "THAM_DU", "KHONG_THAM_DU", "DA_CHECKIN", "VANG_MAT"];
   const dong = ds.map((g, i) => {
@@ -39,7 +41,7 @@ export async function GET() {
       o(dc.map((x) => x.hoTen).join("; ")), o(dc.map((x) => x.chucVu).join("; ")), o(g.nguonKhach),
       o(g.isVip ? "VIP" : "THƯỜNG"), o(g.doanhThuDuKien), o(daNhanOnline.includes(g.trangThai) ? "ĐÃ NHẬN" : ""),
       o(g.daGuiThiepGiay ? "ĐÃ GỬI" : ""), o(g.salesOwner), o(g.ghiChu),
-      o(g.soThuTu), o(NHAN_TRANG_THAI[g.trangThai] || g.trangThai), o(g.soNguoiXacNhan ?? ""),
+      o(boKhop.coDuLieu ? boKhop.khop(g)!.chiTiet : ""), o(g.soThuTu), o(NHAN_TRANG_THAI[g.trangThai] || g.trangThai), o(g.soNguoiXacNhan ?? ""),
       o(g.soNguoiDen ?? ""),
       o(g.checkinLuc ? g.checkinLuc.toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }) : ""),
       o(g.maBiMat), o(urlQR(g.maBiMat)),

@@ -128,3 +128,21 @@ model CaiDat {
   khoa   String @id
   giaTri String
 }
+
+// Danh sach khach su kien nam truoc (Quan tri tai len tu file check in), dung de nhac sales va BTC
+model KhachNamTruoc {
+  id           String  @id @default(cuid())
+  nam          Int
+  hoTen        String
+  chucVu       String?
+  congTy       String?
+  maCorp       String?
+  sdt          String?
+  donVi        String?
+  nhomKhachMoi String?
+  phuTrach     String?
+  soDangKy     Int     @default(0)
+  soDen        Int     @default(0)
+
+  @@index([nam])
+}

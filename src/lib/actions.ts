@@ -9,6 +9,7 @@ import { ghiDiCung, khoaTen, lamSach, lamSachDiCung, thieuThongTinMoi, type Nguo
 import { batBuocQuanTri, batBuocQuyen, bamMatKhau } from "./auth";
 import { gieoDuLieu } from "./seedData";
 import { chuanHoTen, tenDangNhapGoiY } from "./taiKhoan";
+import { taiBoKhop } from "./lichSu";
 import crypto from "crypto";
 
 function lamTuoi() {
@@ -142,6 +143,9 @@ export async function taoKhach(input: {
     if (trung && u.vaiTro === "ADMIN") note += ` (khách số ${trung.g.soThuTu}, ${trung.g.hoTen})`;
     note += ".";
   }
+  // Nhac sales lich su nam truoc cua khach nay
+  const boKhop = await taiBoKhop(prisma);
+  if (boKhop.coDuLieu) note += ` ${boKhop.khop({ hoTen, sdt, maCorp: them.maCorp, congTy: them.congTy })!.chiTiet}`;
   return { ok: true, thongBao: note, trangThai: TRANG_THAI.NHAP, soThuTu, maBiMat };
 }
 
@@ -532,4 +536,55 @@ export async function datVenueTaiKhoan(id: string, venueId: string | null): Prom
   await prisma.staffUser.update({ where: { id }, data: { venueId: venueId || null } });
   lamTuoi();
   return { ok: true, thongBao: `Đã cập nhật venue cho ${t.hoTen}.` };
+}
+
+// ===== Danh sach khach nam truoc =====
+
+export interface DongNamTruoc {
+  hoTen: string;
+  chucVu?: string;
+  congTy?: string;
+  maCorp?: string;
+  sdt?: string;
+  donVi?: string;
+  nhomKhachMoi?: string;
+  phuTrach?: string;
+  soDangKy?: number;
+  soDen?: number;
+}
+
+// Thay toan bo danh sach cua mot nam bang file moi
+export async function napLichSu(nam: number, rows: DongNamTruoc[]): Promise<KetQua> {
+  await batBuocQuanTri();
+  if (!Number.isInteger(nam) || nam < 2000 || nam > 2100) return { ok: false, thongBao: "Năm không hợp lệ." };
+  const lam = (s?: string) => (s ?? "").toString().trim().replace(/\s+/g, " ") || null;
+  const so = (n?: number) => (Number.isFinite(n) ? Math.max(0, Math.min(20, Math.round(n as number))) : 0);
+  const data = rows
+    .filter((r) => lam(r.hoTen))
+    .slice(0, 5000)
+    .map((r) => ({
+      nam,
+      hoTen: lam(r.hoTen)!,
+      chucVu: lam(r.chucVu),
+      congTy: lam(r.congTy),
+      maCorp: lam(r.maCorp),
+      sdt: chuanHoaSdt(r.sdt) || null,
+      donVi: lam(r.donVi),
+      nhomKhachMoi: lam(r.nhomKhachMoi),
+      phuTrach: lam(r.phuTrach),
+      soDangKy: so(r.soDangKy),
+      soDen: so(r.soDen),
+    }));
+  if (data.length === 0) return { ok: false, thongBao: "File không có dòng khách nào." };
+  await prisma.$transaction([prisma.khachNamTruoc.deleteMany({ where: { nam } }), prisma.khachNamTruoc.createMany({ data })]);
+  lamTuoi();
+  const den = data.filter((d) => d.soDen > 0).length;
+  return { ok: true, thongBao: `Đã lưu ${data.length} khách năm ${nam}, trong đó ${den} khách đã đến.` };
+}
+
+export async function xoaLichSu(nam: number): Promise<KetQua> {
+  await batBuocQuanTri();
+  const r = await prisma.khachNamTruoc.deleteMany({ where: { nam } });
+  lamTuoi();
+  return { ok: true, thongBao: `Đã xóa ${r.count} khách năm ${nam}.` };
 }

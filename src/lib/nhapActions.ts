@@ -5,6 +5,7 @@ import { prisma } from "./db";
 import { CHIEM_QUOTA, TRANG_THAI } from "./constants";
 import { boDau, chuanHoaSdt, sdtHopLe } from "./format";
 import { batBuocQuyen } from "./auth";
+import { taiBoKhop, type LichSu } from "./lichSu";
 import { LINH_VUC, PHAN_LOAI_KHACH, TRUONG_CHU, ghiDiCung, khoaTen, lamSach, thieuThongTinMoi, type ThongTinThem } from "./khach";
 
 export interface DongNhap extends ThongTinThem {
@@ -31,6 +32,7 @@ export interface KetQuaDong {
   soThuTu?: number;
   loi?: string;
   canhBao?: string;
+  lichSu?: LichSu | null;
 }
 
 export interface TongHopNhap {
@@ -41,6 +43,7 @@ export interface TongHopNhap {
   phatHanh: number;
   canhBao: number;
   khongSdt: number;
+  namTruoc: number; // khach da duoc moi nam truoc
 }
 
 export interface KetQuaNhap {
@@ -61,7 +64,7 @@ function laCo(s: string): boolean {
 }
 
 function tongHopRong(): TongHopNhap {
-  return { hopLe: 0, loi: 0, nhap: 0, choDuyet: 0, phatHanh: 0, canhBao: 0, khongSdt: 0 };
+  return { hopLe: 0, loi: 0, nhap: 0, choDuyet: 0, phatHanh: 0, canhBao: 0, khongSdt: 0, namTruoc: 0 };
 }
 
 export async function nhapDanhSach(
@@ -109,6 +112,7 @@ export async function nhapDanhSach(
     return salesAcc.find((s) => boDau(s.hoTen) === t)?.hoTen ?? null;
   };
 
+  const boKhop = await taiBoKhop(prisma);
   const venueMacDinh = tuyChon.venueMacDinh ? venues.find((v) => v.id === tuyChon.venueMacDinh) : undefined;
   const venueSales = laSales && u.venueId ? venues.find((v) => v.id === u.venueId) : undefined;
   const conHieuLuc = daCo.filter((g) => g.trangThai !== TRANG_THAI.DA_HUY);
@@ -231,6 +235,10 @@ export async function nhapDanhSach(
     if (ds[0] === "TRUNG_TEN") canhBao.unshift("Trùng tên và công ty với khách đã có, BTC sẽ xem khi duyệt");
     if (canhBao.length) kq.canhBao = canhBao.join(". ");
     tongHop.hopLe++;
+    if (boKhop.coDuLieu) {
+      kq.lichSu = boKhop.khop({ hoTen, sdt, maCorp: them.maCorp, congTy: them.congTy });
+      if (kq.lichSu?.loai === "den" || kq.lichSu?.loai === "khongDen") tongHop.namTruoc++;
+    }
     if (!sdt) tongHop.khongSdt++;
     if (trangThai === TRANG_THAI.NHAP) tongHop.nhap++;
     else if (trangThai === TRANG_THAI.CHO_DUYET) tongHop.choDuyet++;

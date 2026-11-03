@@ -7,6 +7,8 @@ import { DUOC_XAC_NHAN, NHAN_CANH_BAO, NHAN_TRANG_THAI, TRANG_THAI } from "@/lib
 import { che4SoCuoi, boDau, dinhDangGio } from "@/lib/format";
 import { taoKhach, datThiepGiay, xacNhanKhach, guiDuyet, danhDauDaMoi, huyKhach, duyetKhach, xoaKhach } from "@/lib/actions";
 import { NHAN_TRUONG, TRUONG_CHU, moTaDiCung, tenGoi, thieuThongTinMoi, type ThongTinThem } from "@/lib/khach";
+import { ChipLichSu } from "./ChipLichSu";
+import type { LichSu } from "@/lib/lichSu";
 import { FormKhach, OThongTin, SoNguoiDiCung, docDiCungForm, docThem } from "./FormKhach";
 
 export interface GuestRow {
@@ -34,6 +36,7 @@ export interface GuestRow {
   ghiChu: string | null;
   daGuiThiepGiay: boolean;
   them: ThongTinThem;
+  lichSu: LichSu | null;
 }
 export interface VenueOpt {
   id: string;
@@ -59,6 +62,7 @@ export function GuestManager({
   const [vn, setVn] = useState("");
   const [sl, setSl] = useState("");
   const [nh, setNh] = useState("");
+  const [ls, setLs] = useState("");
   const [moForm, setMoForm] = useState(false);
   const [soHien, setSoHien] = useState(MOI_TRANG);
 
@@ -69,6 +73,7 @@ export function GuestManager({
       if (vn && g.venueId !== vn) return false;
       if (sl && g.salesOwner !== sl) return false;
       if (nh && (g.them.nhomKhachMoi || "") !== nh) return false;
+      if (ls && g.lichSu?.loai !== ls) return false;
       if (s) {
         return (
           boDau(g.hoTen).includes(s) ||
@@ -81,11 +86,12 @@ export function GuestManager({
       }
       return true;
     });
-  }, [guests, q, tt, vn, sl, nh]);
+  }, [guests, q, tt, vn, sl, nh, ls]);
 
   const dsSales = useMemo(() => [...new Set(guests.map((g) => g.salesOwner))].sort(), [guests]);
   const dsNhom = useMemo(() => [...new Set(guests.map((g) => g.them.nhomKhachMoi).filter(Boolean) as string[])].sort(), [guests]);
-  const coLoc = q || tt || vn || sl || nh;
+  const coLoc = q || tt || vn || sl || nh || ls;
+  const coLichSu = guests.some((g) => g.lichSu);
 
   return (
     <div className="space-y-5">
@@ -157,8 +163,17 @@ export function GuestManager({
             ))}
           </select>
         )}
+        {coLichSu && (
+          <select className="input w-auto" value={ls} onChange={(e) => setLs(e.target.value)}>
+            <option value="">Năm trước: tất cả</option>
+            <option value="den">Năm trước đã đến</option>
+            <option value="khongDen">Năm trước mời, không đến</option>
+            <option value="congTy">Cùng công ty năm trước</option>
+            <option value="moi">Khách mới</option>
+          </select>
+        )}
         {coLoc && (
-          <button className="btn-ghost btn-sm" onClick={() => { setQ(""); setTt(""); setVn(""); setSl(""); setNh(""); }}>
+          <button className="btn-ghost btn-sm" onClick={() => { setQ(""); setTt(""); setVn(""); setSl(""); setNh(""); setLs(""); }}>
             Xóa bộ lọc
           </button>
         )}
@@ -240,7 +255,10 @@ function Dong({ g, salesTeam, venues }: { g: GuestRow; salesTeam: string[]; venu
           {g.isVip && <span className="ml-1.5 chip bg-brand/15 text-brand-deep">VIP</span>}
         </td>
         <td className="px-3 py-3">
-          <div className="font-medium text-ink">{tenGoi({ danhXung: g.them.danhXung, hoTen: g.hoTen })}</div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="font-medium text-ink">{tenGoi({ danhXung: g.them.danhXung, hoTen: g.hoTen })}</span>
+            <ChipLichSu ls={g.lichSu} />
+          </div>
           {(g.them.chucVu || g.them.congTy) && (
             <div className="text-xs text-ink-soft">{[g.them.chucVu, g.them.congTy].filter(Boolean).join(" · ")}</div>
           )}
@@ -385,6 +403,7 @@ function ChiTiet({ g, canhBao }: { g: GuestRow; canhBao: string[] }) {
     ["Thiệp giấy", g.daGuiThiepGiay ? "Đã gửi" : "Chưa gửi"],
     ["Cảnh báo khi duyệt", canhBao.length ? canhBao.map((c) => NHAN_CANH_BAO[c] || c).join(", ") : null],
     ["Ghi chú", g.ghiChu],
+    ["Năm trước", g.lichSu?.chiTiet ?? null],
     ["Tạo lúc", gio(g.createdAt)],
   ];
   return (

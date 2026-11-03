@@ -3,6 +3,8 @@
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { StatusBadge } from "./StatusBadge";
+import { ChipLichSu } from "./ChipLichSu";
+import type { LichSu } from "@/lib/lichSu";
 import { FormKhach, OThongTin, SoNguoiDiCung, docDiCungForm, docThem } from "./FormKhach";
 import { che4SoCuoi, boDau, dinhDangGio } from "@/lib/format";
 import { taoKhach, danhDauDaMoi, datThiepGiay, xacNhanKhach, guiDuyet, xoaNhap } from "@/lib/actions";
@@ -35,6 +37,7 @@ export interface SalesGuest {
   xacNhanLuc: string | null;
   checkinLuc: string | null;
   them: ThongTinThem;
+  lichSu: LichSu | null;
 }
 export interface SalesVenue {
   id: string;
@@ -158,6 +161,7 @@ function DienThoai({ guests, ds, venues, venuesSua, loc }: ViewProps) {
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-mono text-xs text-ink-muted">{g.soThuTu}</span>
                     <span className="font-medium text-ink">{tenGoi(g)}</span>
+                    <ChipLichSu ls={g.lichSu} />
                     {g.isVip && <span className="chip bg-brand/15 text-brand-deep">VIP</span>}
                   </div>
                   {(g.chucVu || g.congTy) && <div className="mt-0.5 text-xs text-ink-soft">{[g.chucVu, g.congTy].filter(Boolean).join(" · ")}</div>}
@@ -269,7 +273,10 @@ function DongMayTinh({ g, venuesSua }: { g: SalesGuest; venuesSua: { id: string;
           {g.isVip && <span className="ml-1.5 chip bg-brand/15 text-brand-deep">VIP</span>}
         </td>
         <td className="px-3 py-3">
-          <div className="font-medium text-ink">{tenGoi(g)}</div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="font-medium text-ink">{tenGoi(g)}</span>
+            <ChipLichSu ls={g.lichSu} />
+          </div>
           {(g.chucVu || g.congTy) && <div className="text-xs text-ink-soft">{[g.chucVu, g.congTy].filter(Boolean).join(" · ")}</div>}
           <div className="text-xs text-ink-muted">{che4SoCuoi(g.sdt)}</div>
           {g.khachDiCung && <div className="text-xs text-ink-soft">Cùng: {moTaDiCung(g.khachDiCung)}</div>}
@@ -336,6 +343,7 @@ function ChiTiet({ g }: { g: SalesGuest }) {
     ["Phát hành vé", gio(g.phatHanhLuc)],
     ["Xác nhận lúc", gio(g.xacNhanLuc)],
     ["Check in", g.checkinLuc ? `${gio(g.checkinLuc)}${g.soNguoiDen ? `, ${g.soNguoiDen} người` : ""}` : null],
+    ["Năm trước", g.lichSu?.chiTiet ?? null],
     ["Ghi chú", g.ghiChu],
   ];
   return (

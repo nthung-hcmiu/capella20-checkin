@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { yeuCauTrang } from "@/lib/auth";
 import { GuestManager, GuestRow, VenueOpt } from "@/components/GuestManager";
 import { TRUONG_CHU } from "@/lib/khach";
+import { taiBoKhop } from "@/lib/lichSu";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +13,9 @@ export default async function KhachPage() {
     prisma.venue.findMany({ orderBy: { thuTu: "asc" } }),
   ]);
 
+  const boKhop = await taiBoKhop(prisma);
   const rows: GuestRow[] = guests.map((g) => ({
+    lichSu: boKhop.coDuLieu ? boKhop.khop(g) : null,
     id: g.id,
     soThuTu: g.soThuTu,
     maBiMat: g.maBiMat,

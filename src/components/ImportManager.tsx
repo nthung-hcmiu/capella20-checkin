@@ -5,6 +5,7 @@ import Link from "next/link";
 import { boDau } from "@/lib/format";
 import { nhapDanhSach, type DongNhap, type KetQuaNhap } from "@/lib/nhapActions";
 import { StatusBadge } from "./StatusBadge";
+import { ChipLichSu } from "./ChipLichSu";
 
 type Truong = keyof DongNhap;
 
@@ -415,10 +416,11 @@ export function ImportManager({
               {ketQua.tongHop.khongSdt.toLocaleString("vi-VN")} khách chưa có SĐT: vẫn nhập được nhưng phải bổ sung SĐT trên app trước khi gửi duyệt.
             </p>
           )}
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             <O nhan="Hợp lệ" so={ketQua.tongHop.hopLe} />
             {laSales ? <O nhan="Nháp" so={ketQua.tongHop.nhap} /> : <O nhan="Đã phát hành vé" so={ketQua.tongHop.phatHanh} />}
             <O nhan="Chờ duyệt" so={ketQua.tongHop.choDuyet} />
+            {ketQua.tongHop.namTruoc > 0 && <O nhan="Đã mời năm trước" so={ketQua.tongHop.namTruoc} />}
             <O nhan="Có cảnh báo" so={ketQua.tongHop.canhBao} />
             <O nhan="Lỗi, bỏ qua" so={ketQua.tongHop.loi} do />
           </div>
@@ -459,7 +461,10 @@ export function ImportManager({
                         <span className="text-wine">{d.loi}</span>
                       ) : (
                         <div className="space-y-1">
-                          {d.trangThai && <StatusBadge trangThai={d.trangThai} />}
+                          <div className="flex flex-wrap gap-1">
+                            {d.trangThai && <StatusBadge trangThai={d.trangThai} />}
+                            <ChipLichSu ls={d.lichSu} />
+                          </div>
                           {d.canhBao && <div className="text-brand-deep">{d.canhBao}</div>}
                         </div>
                       )}

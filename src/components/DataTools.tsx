@@ -2,8 +2,11 @@
 
 import { useState, useTransition } from "react";
 import { chotVangMat, napDuLieuMau, xoaToanBoKhach, type KetQua } from "@/lib/actions";
+import { LichSuNamTruoc, type NamDaTai } from "./LichSuNamTruoc";
 
-export function DataTools({ soKhach, soCheckin, soThamDu }: { soKhach: number; soCheckin: number; soThamDu: number }) {
+export function DataTools({
+  soKhach, soCheckin, soThamDu, namDaTai,
+}: { soKhach: number; soCheckin: number; soThamDu: number; namDaTai: NamDaTai[] }) {
   const [pending, start] = useTransition();
   const [kq, setKq] = useState<KetQua | null>(null);
   const [chuXoa, setChuXoa] = useState("");
@@ -42,6 +45,8 @@ export function DataTools({ soKhach, soCheckin, soThamDu }: { soKhach: number; s
           Tải file CSV
         </a>
       </div>
+
+      <LichSuNamTruoc ds={namDaTai} />
 
       <div className="card p-6">
         <h2 className="font-display text-lg text-ink">Chốt vắng mặt sau sự kiện</h2>
