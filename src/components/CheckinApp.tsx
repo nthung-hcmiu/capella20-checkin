@@ -273,38 +273,80 @@ function QuetQR({ onMa }: { onMa: (ma: string) => void }) {
 
   useEffect(() => () => dung(), []);
 
+  // Bo doc QR: dung BarcodeDetector co san (Chrome Android) neu ho tro QR,
+  // khong thi dung jsQR doc tung khung hinh qua canvas (Safari iPhone, Firefox...)
+  const taoBoDoc = async (): Promise<(v: HTMLVideoElement) => Promise<string | null>> => {
+    const BD = (window as any).BarcodeDetector;
+    if (BD) {
+      try {
+        const ho = BD.getSupportedFormats ? await BD.getSupportedFormats() : ["qr_code"];
+        if (ho.includes("qr_code")) {
+          const detector = new BD({ formats: ["qr_code"] });
+          return async (v) => {
+            const codes = await detector.detect(v);
+            return codes && codes.length > 0 ? (codes[0].rawValue as string) : null;
+          };
+        }
+      } catch {}
+    }
+    const { default: jsQR } = await import("jsqr");
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
+    return async (v) => {
+      const w = v.videoWidth, h = v.videoHeight;
+      if (!w || !h) return null;
+      // Thu nho khung hinh cho nhe may, QR tren thiep van du ro
+      const tl = Math.min(1, 640 / Math.max(w, h));
+      canvas.width = Math.round(w * tl);
+      canvas.height = Math.round(h * tl);
+      ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
+      const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const r = jsQR(img.data, img.width, img.height, { inversionAttempts: "dontInvert" });
+      return r?.data || null;
+    };
+  };
+
   const bat = async () => {
     setLoi(null);
-    if (typeof window === "undefined" || !("BarcodeDetector" in window)) {
-      setLoi("Trình duyệt này chưa hỗ trợ quét QR trực tiếp (thường gặp trên iPhone). Dùng Nhập số hoặc Tìm tên, hoặc mở bằng Chrome trên Android.");
+    if (typeof window === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+      setLoi("Trình duyệt này không mở được camera. Trên iPhone hãy mở bằng Safari (không mở trong Zalo, Facebook), hoặc dùng Nhập số.");
       return;
     }
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false,
+      });
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.setAttribute("playsinline", "true");
         await videoRef.current.play();
       }
       setChay(true);
       quetRef.current = true;
-      const detector = new (window as any).BarcodeDetector({ formats: ["qr_code"] });
+      const doc = await taoBoDoc();
       const vong = async () => {
         if (!quetRef.current || !videoRef.current) return;
         try {
-          const codes = await detector.detect(videoRef.current);
-          if (codes && codes.length > 0) {
-            const raw = codes[0].rawValue as string;
+          const raw = await doc(videoRef.current);
+          if (raw) {
             dung();
             onMa(raw);
             return;
           }
         } catch {}
-        requestAnimationFrame(vong);
+        // Khoang 8 lan moi giay, du nhanh ma khong nong may
+        setTimeout(vong, 120);
       };
-      requestAnimationFrame(vong);
-    } catch {
-      setLoi("Không mở được camera. Kiểm tra quyền camera của trình duyệt, hoặc dùng Nhập số.");
+      vong();
+    } catch (e: any) {
+      dung();
+      setLoi(
+        e?.name === "NotAllowedError"
+          ? "Chưa cho phép camera. Trên iPhone: Cài đặt > Safari > Camera > Cho phép, rồi tải lại trang. Hoặc dùng Nhập số."
+          : "Không mở được camera. Kiểm tra quyền camera của trình duyệt, hoặc dùng Nhập số."
+      );
     }
   };
 

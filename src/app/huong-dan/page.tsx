@@ -97,8 +97,8 @@ const HUONG_DAN: VaiTro[] = [
         tieuDe: "Check in",
         buoc: [
           ["Vào ca", "Đăng nhập > chọn làn phụ trách."],
-          ["Quét QR", "Tab Quét QR > Bật camera > hướng vào QR trên điện thoại hoặc thiệp giấy. Dùng Chrome trên Android."],
-          ["Nhập số", "Tab Nhập số > gõ số thứ tự trên thiệp > Check in. iPhone dùng cách này."],
+          ["Quét QR", "Tab Quét QR > Bật camera > hướng vào QR trên điện thoại hoặc thiệp giấy. Dùng được trên iPhone (Safari, Chrome) và Android. Mở app bằng trình duyệt, không mở link trong Zalo hay Facebook."],
+          ["Nhập số", "Tab Nhập số > gõ số thứ tự trên thiệp > Check in. Dùng khi QR mờ, màn hình khách quá tối hoặc camera chưa được cho phép."],
           ["Tìm tên", "Tab Tìm tên / SĐT > gõ tên khách, tên công ty hoặc SĐT > chọn khách."],
           ["Số người thực tế", "Trên thẻ kết quả, bấm + hoặc − nếu khách đi nhiều hoặc ít người hơn đăng ký."],
         ],
