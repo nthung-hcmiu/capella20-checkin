@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { boDau } from "@/lib/format";
 import { nhapDanhSach, type DongNhap, type KetQuaNhap } from "@/lib/nhapActions";
@@ -144,6 +144,16 @@ export function ImportManager({
     () => bang.slice(dongTieuDe + 1).filter((r) => r.some((c) => c.trim() !== "")),
     [bang, dongTieuDe]
   );
+  // Bo qua dong chi co STT (file mau Excel hay danh so san hang tram dong trong):
+  // dong phai co ten khach hoac SDT moi tinh
+  const dongCoKhach = useMemo(() => {
+    if (!cot) return dongDuLieu;
+    const co = (r: string[], i: number) => i >= 0 && String(r[i] ?? "").trim() !== "";
+    return dongDuLieu.filter((r) => co(r, cot.hoTen) || co(r, cot.sdt));
+  }, [dongDuLieu, cot]);
+  const soDongTrong = dongDuLieu.length - dongCoKhach.length;
+  const [loiNhap, setLoiNhap] = useState<string | null>(null);
+  const ketQuaRef = useRef<HTMLDivElement>(null);
 
   const docFile = async (f: File) => {
     setLoiDoc(null); setKiemTra(null); setDaNhap(null); setBang([]); setCot(null);
@@ -186,7 +196,7 @@ export function ImportManager({
   };
 
   const dongNhap = (): DongNhap[] =>
-    dongDuLieu.map((r) => {
+    dongCoKhach.map((r) => {
       const lay = (k: Truong) => (cot && cot[k] >= 0 ? r[cot[k]] ?? "" : "");
       return Object.fromEntries(TRUONG.map((f) => [f.key, lay(f.key)])) as unknown as DongNhap;
     });
@@ -196,15 +206,28 @@ export function ImportManager({
 
   const chay = (ghi: boolean) =>
     start(async () => {
-      const r = await nhapDanhSach(dongNhap(), {
-        venueMacDinh: venueMacDinh || undefined,
-        trangThaiDich,
-        salesMacDinh: salesMacDinh || undefined,
-        dongBatDau: dongTieuDe + 2,
-        ghi,
-      });
-      if (ghi) { setDaNhap(r); setKiemTra(null); } else setKiemTra(r);
+      setLoiNhap(null);
+      if (dongCoKhach.length === 0) {
+        setLoiNhap("Không có dòng nào có tên khách. Kiểm tra lại cột Tên khách mời và dòng tiêu đề.");
+        return;
+      }
+      try {
+        const r = await nhapDanhSach(dongNhap(), {
+          venueMacDinh: venueMacDinh || undefined,
+          trangThaiDich,
+          salesMacDinh: salesMacDinh || undefined,
+          dongBatDau: dongTieuDe + 2,
+          ghi,
+        });
+        if (ghi) { setDaNhap(r); setKiemTra(null); } else setKiemTra(r);
+      } catch {
+        setLoiNhap("Máy chủ chưa xử lý được file. Tải lại trang rồi thử lại; nếu vẫn lỗi, tách file thành nhiều phần nhỏ hơn hoặc báo BTC.");
+      }
     });
+  // Co ket qua thi cuon toi khung ket qua de khong bi lot ra ngoai man hinh
+  useEffect(() => {
+    if (kiemTra || daNhap) ketQuaRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [kiemTra, daNhap]);
 
   const ketQua = daNhap || kiemTra;
   const dongHien = ketQua ? (chiXemLoi ? ketQua.dong.filter((d) => d.loi || d.canhBao) : ketQua.dong).slice(0, 300) : [];
@@ -238,7 +261,10 @@ export function ImportManager({
           />
           <span className="text-sm font-medium text-ink">{dangDoc ? "Đang đọc file..." : tenFile || "Bấm để chọn file .xlsx hoặc .csv"}</span>
           <span className="mt-1 text-xs text-ink-muted">
-            {bang.length > 0 ? `${dongDuLieu.length.toLocaleString("vi-VN")} dòng dữ liệu` : "Dòng đầu tiên nên là tiêu đề cột"}
+            {bang.length > 0
+              ? `${dongCoKhach.length.toLocaleString("vi-VN")} dòng có tên khách` +
+                (soDongTrong > 0 ? `, bỏ qua ${soDongTrong.toLocaleString("vi-VN")} dòng trống (chỉ có STT)` : "")
+              : "Dòng đầu tiên nên là tiêu đề cột"}
           </span>
         </label>
         {loiDoc && <div className="mt-3 rounded-xl bg-wine/10 px-4 py-2.5 text-sm text-wine">{loiDoc}</div>}
@@ -399,13 +425,17 @@ export function ImportManager({
               </button>
             )}
             {thieuCot && <span className="text-xs text-wine">Cần có cột Tên khách mời, và cột Đơn vị (venue) hoặc venue mặc định.</span>}
+            {kiemTra && !pending && (
+              <span className={`text-sm ${kiemTra.ok ? "text-sage" : "text-wine"}`}>{kiemTra.thongBao} Xem chi tiết bên dưới.</span>
+            )}
+            {loiNhap && <span className="text-sm text-wine">{loiNhap}</span>}
           </div>
         </div>
       )}
 
       {/* Ket qua */}
       {ketQua && (
-        <div className="card p-6">
+        <div ref={ketQuaRef} className="card scroll-mt-4 p-6">
           <div className="text-xs font-medium uppercase tracking-wider text-brand-deep">{daNhap ? "Đã nhập" : "Bước 3"}</div>
           <h2 className="mt-1 font-display text-lg text-ink">{daNhap ? "Kết quả nhập" : "Kết quả kiểm tra"}</h2>
           <div className={`mt-3 rounded-xl px-4 py-2.5 text-sm ${ketQua.ok ? "bg-sage/10 text-sage" : "bg-wine/10 text-wine"}`}>
