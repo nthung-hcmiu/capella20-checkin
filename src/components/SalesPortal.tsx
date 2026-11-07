@@ -6,6 +6,7 @@ import { StatusBadge } from "./StatusBadge";
 import { ChipLichSu } from "./ChipLichSu";
 import { HopChon, HopChonTatCa, ThanhHangLoat } from "./ThanhHangLoat";
 import type { LichSu } from "@/lib/lichSu";
+import { moTaChoSales, type CongTySales } from "@/lib/congTy";
 import { FormKhach, OThongTin, SoNguoiDiCung, docDiCungForm, docThem } from "./FormKhach";
 import { che4SoCuoi, boDau, dinhDangGio } from "@/lib/format";
 import { taoKhach, danhDauDaMoi, datThiepGiay, xacNhanKhach, guiDuyet, xoaNhap } from "@/lib/actions";
@@ -39,6 +40,7 @@ export interface SalesGuest {
   checkinLuc: string | null;
   them: ThongTinThem;
   lichSu: LichSu | null;
+  congTyKhac: CongTySales | null;
 }
 export interface SalesVenue {
   id: string;
@@ -172,6 +174,11 @@ function DienThoai({ guests, ds, venues, venuesSua, loc }: ViewProps) {
                     {g.them.doanhThuDuKien ? ` · ${g.them.doanhThuDuKien}` : ""}
                   </div>
                   {g.khachDiCung && <div className="mt-0.5 text-xs text-ink-soft">Cùng: {moTaDiCung(g.khachDiCung)}</div>}
+                  {g.congTyKhac && (
+                    <div className={`mt-0.5 text-xs ${g.congTyKhac.salesKhac ? "text-wine" : "text-ink-muted"}`}>
+                      Cùng công ty: +{g.congTyKhac.cuaToi + g.congTyKhac.salesKhac} khách{g.congTyKhac.salesKhac ? `, ${g.congTyKhac.salesKhac} của sales khác` : ""}
+                    </div>
+                  )}
                   {CHUA_PHAT_HANH.includes(g.trangThai) && thieuCua(g) && <div className="mt-1 text-xs text-wine">{thieuCua(g)}</div>}
                 </div>
                 <StatusBadge trangThai={g.trangThai} />
@@ -299,6 +306,11 @@ function DongMayTinh({
           {(g.chucVu || g.congTy) && <div className="text-xs text-ink-soft">{[g.chucVu, g.congTy].filter(Boolean).join(" · ")}</div>}
           <div className="text-xs text-ink-muted">{che4SoCuoi(g.sdt)}</div>
           {g.khachDiCung && <div className="text-xs text-ink-soft">Cùng: {moTaDiCung(g.khachDiCung)}</div>}
+          {g.congTyKhac && (
+                    <div className={`text-xs ${g.congTyKhac.salesKhac ? "text-wine" : "text-ink-muted"}`}>
+                      Cùng công ty: +{g.congTyKhac.cuaToi + g.congTyKhac.salesKhac} khách{g.congTyKhac.salesKhac ? `, ${g.congTyKhac.salesKhac} của sales khác` : ""}
+                    </div>
+                  )}
         </td>
         <td className="px-3 py-3">
           <span className="inline-flex items-center gap-1.5 text-xs text-ink-soft">
@@ -363,6 +375,7 @@ function ChiTiet({ g }: { g: SalesGuest }) {
     ["Xác nhận lúc", gio(g.xacNhanLuc)],
     ["Check in", g.checkinLuc ? `${gio(g.checkinLuc)}${g.soNguoiDen ? `, ${g.soNguoiDen} người` : ""}` : null],
     ["Năm trước", g.lichSu?.chiTiet ?? null],
+    ["Cùng công ty", moTaChoSales(g.congTyKhac)],
     ["Ghi chú", g.ghiChu],
   ];
   return (

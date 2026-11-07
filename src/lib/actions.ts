@@ -10,6 +10,7 @@ import { batBuocQuanTri, batBuocQuyen, bamMatKhau } from "./auth";
 import { gieoDuLieu } from "./seedData";
 import { chuanHoTen, tenDangNhapGoiY } from "./taiKhoan";
 import { taiBoKhop } from "./lichSu";
+import { CHON_CONG_TY, choBtc, choSales, moTaChoBtc, moTaChoSales, taoBoCongTy } from "./congTy";
 import crypto from "crypto";
 
 function lamTuoi() {
@@ -117,7 +118,7 @@ export async function taoKhach(input: {
     return { ok: false, thongBao: e?.message || "Không cấp được số thứ tự." };
   }
 
-  await prisma.guest.create({
+  const moi = await prisma.guest.create({
     data: {
       ...them,
       soThuTu,
@@ -143,6 +144,12 @@ export async function taoKhach(input: {
     if (trung && u.vaiTro === "ADMIN") note += ` (khách số ${trung.g.soThuTu}, ${trung.g.hoTen})`;
     note += ".";
   }
+  // Bao cong ty nay da co khach khac duoc moi (sales chi thay so luong)
+  const boCty = taoBoCongTy(await prisma.guest.findMany({ select: CHON_CONG_TY }));
+  const khacCty = boCty.timKhac(moi);
+  const salesMoi = moi.salesOwner;
+  const moTaCty = u.vaiTro === "SALES" ? moTaChoSales(choSales(khacCty, u.hoTen, soNguoiMoi)) : moTaChoBtc(choBtc(khacCty, salesMoi, soNguoiMoi));
+  if (moTaCty) note += ` ${moTaCty}`;
   // Nhac sales lich su nam truoc cua khach nay
   const boKhop = await taiBoKhop(prisma);
   if (boKhop.coDuLieu) note += ` ${boKhop.khop({ hoTen, sdt, maCorp: them.maCorp, congTy: them.congTy })!.chiTiet}`;

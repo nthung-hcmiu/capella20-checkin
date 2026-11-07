@@ -5,6 +5,7 @@ import { CHIEM_QUOTA, TRANG_THAI } from "@/lib/constants";
 import { TRUONG_CHU } from "@/lib/khach";
 import { urlQR } from "@/lib/codes";
 import { taiBoKhop } from "@/lib/lichSu";
+import { CHON_CONG_TY, choSales, taoBoCongTy } from "@/lib/congTy";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,8 @@ export default async function SalesPage({ searchParams }: { searchParams: { nhom
   const venuesSua = venues.filter((v) => duocMoi(v) || guests.some((g) => g.venueId === v.id)).map((v) => ({ id: v.id, ten: v.ten }));
 
   const boKhop = await taiBoKhop(prisma);
+  // Doi chieu cong ty voi toan bo khach (ke ca cua sales khac); chi gui so luong xuong trinh duyet
+  const boCty = taoBoCongTy(await prisma.guest.findMany({ select: CHON_CONG_TY }));
 
   return (
     <SalesPortal
@@ -58,6 +61,7 @@ export default async function SalesPage({ searchParams }: { searchParams: { nhom
         checkinLuc: g.checkinLuc?.toISOString() ?? null,
         them: Object.fromEntries(TRUONG_CHU.map((k) => [k, g[k] ?? null])),
         lichSu: boKhop.coDuLieu ? boKhop.khop(g) : null,
+        congTyKhac: choSales(boCty.timKhac(g), u.hoTen, g.soNguoiMoi),
       }))}
       venues={venueThem.map((v) => ({
         id: v.id,

@@ -6,6 +6,7 @@ import { CHIEM_QUOTA, TRANG_THAI } from "./constants";
 import { boDau, chuanHoaSdt, sdtHopLe } from "./format";
 import { batBuocQuyen } from "./auth";
 import { taiBoKhop, type LichSu } from "./lichSu";
+import { choSales, moTaChoSales, taoBoCongTy } from "./congTy";
 import { LINH_VUC, PHAN_LOAI_KHACH, TRUONG_CHU, ghiDiCung, khoaTen, lamSach, thieuThongTinMoi, type ThongTinThem } from "./khach";
 
 export interface DongNhap extends ThongTinThem {
@@ -44,6 +45,7 @@ export interface TongHopNhap {
   canhBao: number;
   khongSdt: number;
   namTruoc: number; // khach da duoc moi nam truoc
+  cungCongTy: number; // khach co cong ty da co nguoi khac duoc moi
 }
 
 export interface KetQuaNhap {
@@ -64,7 +66,7 @@ function laCo(s: string): boolean {
 }
 
 function tongHopRong(): TongHopNhap {
-  return { hopLe: 0, loi: 0, nhap: 0, choDuyet: 0, phatHanh: 0, canhBao: 0, khongSdt: 0, namTruoc: 0 };
+  return { hopLe: 0, loi: 0, nhap: 0, choDuyet: 0, phatHanh: 0, canhBao: 0, khongSdt: 0, namTruoc: 0, cungCongTy: 0 };
 }
 
 export async function nhapDanhSach(
@@ -90,7 +92,7 @@ export async function nhapDanhSach(
   const [venues, salesAcc, daCo] = await Promise.all([
     prisma.venue.findMany(),
     prisma.staffUser.findMany({ where: { vaiTro: "SALES" }, select: { hoTen: true } }),
-    prisma.guest.findMany({ select: { sdt: true, hoTen: true, maCorp: true, congTy: true, trangThai: true, soThuTu: true, venueId: true, maBiMat: true, soNguoiMoi: true } }),
+    prisma.guest.findMany({ select: { id: true, salesOwner: true, sdt: true, hoTen: true, maCorp: true, congTy: true, trangThai: true, soThuTu: true, venueId: true, maBiMat: true, soNguoiMoi: true } }),
   ]);
 
   // Tim venue theo ten hoac ma, khong phan biet dau; "Riverside" khop "Riverside Palace"
@@ -113,6 +115,7 @@ export async function nhapDanhSach(
   };
 
   const boKhop = await taiBoKhop(prisma);
+  const boCty = taoBoCongTy(daCo);
   const venueMacDinh = tuyChon.venueMacDinh ? venues.find((v) => v.id === tuyChon.venueMacDinh) : undefined;
   const venueSales = laSales && u.venueId ? venues.find((v) => v.id === u.venueId) : undefined;
   const conHieuLuc = daCo.filter((g) => g.trangThai !== TRANG_THAI.DA_HUY);
@@ -233,6 +236,17 @@ export async function nhapDanhSach(
     if (ds.includes("HET_QUOTA")) canhBao.unshift(`${venue.ten} đã hết quota`);
     if (ds[0] === "TRUNG_SDT") canhBao.unshift("Trùng SĐT với khách đã có, BTC sẽ xem khi duyệt");
     if (ds[0] === "TRUNG_TEN") canhBao.unshift("Trùng tên và công ty với khách đã có, BTC sẽ xem khi duyệt");
+    // Cong ty da co khach khac (trong CSDL hoac dong truoc cua file nay)
+    const khacCty = boCty.timKhac({ maCorp: them.maCorp, congTy: them.congTy });
+    if (khacCty.length) {
+      canhBao.push(
+        laSales
+          ? moTaChoSales(choSales(khacCty, u.hoTen, soNguoi))!.replace(/\.$/, "")
+          : `Cùng công ty đã có ${khacCty.length} khách (sales ${[...new Set(khacCty.map((x) => x.salesOwner))].join(", ")})`
+      );
+      tongHop.cungCongTy++;
+    }
+    boCty.them({ id: `dong-${dong}`, hoTen, congTy: them.congTy ?? null, maCorp: them.maCorp ?? null, salesOwner, soThuTu, soNguoiMoi: soNguoi, trangThai });
     if (canhBao.length) kq.canhBao = canhBao.join(". ");
     tongHop.hopLe++;
     if (boKhop.coDuLieu) {

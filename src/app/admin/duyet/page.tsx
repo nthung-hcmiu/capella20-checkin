@@ -3,6 +3,7 @@ import { yeuCauTrang } from "@/lib/auth";
 import { TRANG_THAI } from "@/lib/constants";
 import { ApproveQueue, ChoDuyetItem } from "@/components/ApproveQueue";
 import { taiBoKhop } from "@/lib/lichSu";
+import { CHON_CONG_TY, choBtc, moTaChoBtc, taoBoCongTy } from "@/lib/congTy";
 import { khoaTen, moTaDiCung, tenGoi, thieuThongTinMoi } from "@/lib/khach";
 
 export const dynamic = "force-dynamic";
@@ -23,6 +24,7 @@ export default async function DuyetPage() {
   });
 
   const boKhop = await taiBoKhop(prisma);
+  const boCty = taoBoCongTy(await prisma.guest.findMany({ select: CHON_CONG_TY }));
   const items: ChoDuyetItem[] = ds.map((g) => {
     const khoa = khoaTen(g.hoTen, g.maCorp, g.congTy);
     const canhBao = (g.lyDoChoDuyet || "").split(",").filter(Boolean);
@@ -42,6 +44,10 @@ export default async function DuyetPage() {
       soNguoiMoi: g.soNguoiMoi,
       diCung: moTaDiCung(g.khachDiCung),
       lichSu: boKhop.coDuLieu ? boKhop.khop(g) : null,
+      ...(() => {
+        const c = choBtc(boCty.timKhac(g), g.salesOwner, g.soNguoiMoi);
+        return { congTyKhac: moTaChoBtc(c), nhieuSales: !!c?.nhieuSales };
+      })(),
       thieu: thieuThongTinMoi({ sdt: g.sdt, diaChi: g.diaChi, chucVu: g.chucVu, soNguoiMoi: g.soNguoiMoi, khachDiCung: g.khachDiCung }),
       salesOwner: g.salesOwner,
       canhBao,

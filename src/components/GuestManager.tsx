@@ -10,6 +10,7 @@ import { NHAN_TRUONG, TRUONG_CHU, moTaDiCung, tenGoi, thieuThongTinMoi, type Tho
 import { ChipLichSu } from "./ChipLichSu";
 import { HopChon, HopChonTatCa, ThanhHangLoat } from "./ThanhHangLoat";
 import type { LichSu } from "@/lib/lichSu";
+import { moTaChoBtc, type CongTyBtc } from "@/lib/congTy";
 import { FormKhach, OThongTin, SoNguoiDiCung, docDiCungForm, docThem } from "./FormKhach";
 
 export interface GuestRow {
@@ -38,6 +39,7 @@ export interface GuestRow {
   daGuiThiepGiay: boolean;
   them: ThongTinThem;
   lichSu: LichSu | null;
+  congTyKhac: CongTyBtc | null;
 }
 export interface VenueOpt {
   id: string;
@@ -64,6 +66,7 @@ export function GuestManager({
   const [sl, setSl] = useState("");
   const [nh, setNh] = useState("");
   const [ls, setLs] = useState("");
+  const [ct, setCt] = useState("");
   const [moForm, setMoForm] = useState(false);
   const [soHien, setSoHien] = useState(MOI_TRANG);
 
@@ -75,6 +78,8 @@ export function GuestManager({
       if (sl && g.salesOwner !== sl) return false;
       if (nh && (g.them.nhomKhachMoi || "") !== nh) return false;
       if (ls && g.lichSu?.loai !== ls) return false;
+      if (ct === "nhieuSales" && !g.congTyKhac?.nhieuSales) return false;
+      if (ct === "tren2" && !((g.congTyKhac?.tongNguoi ?? g.soNguoiMoi) > 2)) return false;
       if (s) {
         return (
           boDau(g.hoTen).includes(s) ||
@@ -87,16 +92,16 @@ export function GuestManager({
       }
       return true;
     });
-  }, [guests, q, tt, vn, sl, nh, ls]);
+  }, [guests, q, tt, vn, sl, nh, ls, ct]);
 
   const dsSales = useMemo(() => [...new Set(guests.map((g) => g.salesOwner))].sort(), [guests]);
   const dsNhom = useMemo(() => [...new Set(guests.map((g) => g.them.nhomKhachMoi).filter(Boolean) as string[])].sort(), [guests]);
-  const coLoc = q || tt || vn || sl || nh || ls;
+  const coLoc = q || tt || vn || sl || nh || ls || ct;
   const coLichSu = guests.some((g) => g.lichSu);
 
   // Tick chon khach de thao tac hang loat; doi bo loc thi bo chon cho khoi nham
   const [chon, setChon] = useState<Set<string>>(new Set());
-  useEffect(() => setChon(new Set()), [q, tt, vn, sl, nh, ls]);
+  useEffect(() => setChon(new Set()), [q, tt, vn, sl, nh, ls, ct]);
   const doiChon = (id: string) =>
     setChon((s) => {
       const m = new Set(s);
@@ -184,8 +189,13 @@ export function GuestManager({
             <option value="moi">Khách mới</option>
           </select>
         )}
+        <select className="input w-auto" value={ct} onChange={(e) => setCt(e.target.value)}>
+          <option value="">Công ty: tất cả</option>
+          <option value="nhieuSales">Nhiều sales cùng mời một công ty</option>
+          <option value="tren2">Công ty được mời trên 2 người</option>
+        </select>
         {coLoc && (
-          <button className="btn-ghost btn-sm" onClick={() => { setQ(""); setTt(""); setVn(""); setSl(""); setNh(""); setLs(""); }}>
+          <button className="btn-ghost btn-sm" onClick={() => { setQ(""); setTt(""); setVn(""); setSl(""); setNh(""); setLs(""); setCt(""); }}>
             Xóa bộ lọc
           </button>
         )}
@@ -285,6 +295,12 @@ function Dong({
           </div>
           {(g.them.chucVu || g.them.congTy) && (
             <div className="text-xs text-ink-soft">{[g.them.chucVu, g.them.congTy].filter(Boolean).join(" · ")}</div>
+          )}
+          {g.congTyKhac && (
+            <div className={`text-xs ${g.congTyKhac.nhieuSales ? "text-wine" : "text-ink-muted"}`} title={moTaChoBtc(g.congTyKhac) || ""}>
+              Cùng công ty: +{g.congTyKhac.soKhac} khách, tổng {g.congTyKhac.tongNguoi} người
+              {g.congTyKhac.nhieuSales ? " · có sales khác cùng mời" : ""}
+            </div>
           )}
           <div className="text-xs text-ink-muted">
             {che4SoCuoi(g.sdt)} · {g.salesOwner}
@@ -428,6 +444,7 @@ function ChiTiet({ g, canhBao }: { g: GuestRow; canhBao: string[] }) {
     ["Cảnh báo khi duyệt", canhBao.length ? canhBao.map((c) => NHAN_CANH_BAO[c] || c).join(", ") : null],
     ["Ghi chú", g.ghiChu],
     ["Năm trước", g.lichSu?.chiTiet ?? null],
+    ["Cùng công ty", moTaChoBtc(g.congTyKhac)],
     ["Tạo lúc", gio(g.createdAt)],
   ];
   return (

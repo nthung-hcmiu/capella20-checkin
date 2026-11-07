@@ -3,6 +3,7 @@ import { yeuCauTrang } from "@/lib/auth";
 import { GuestManager, GuestRow, VenueOpt } from "@/components/GuestManager";
 import { TRUONG_CHU } from "@/lib/khach";
 import { taiBoKhop } from "@/lib/lichSu";
+import { choBtc, taoBoCongTy } from "@/lib/congTy";
 
 export const dynamic = "force-dynamic";
 
@@ -14,8 +15,10 @@ export default async function KhachPage() {
   ]);
 
   const boKhop = await taiBoKhop(prisma);
+  const boCty = taoBoCongTy(guests);
   const rows: GuestRow[] = guests.map((g) => ({
     lichSu: boKhop.coDuLieu ? boKhop.khop(g) : null,
+    congTyKhac: g.trangThai === "DA_HUY" ? null : choBtc(boCty.timKhac(g), g.salesOwner, g.soNguoiMoi),
     id: g.id,
     soThuTu: g.soThuTu,
     maBiMat: g.maBiMat,

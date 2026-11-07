@@ -421,6 +421,7 @@ export function ImportManager({
             {laSales ? <O nhan="Nháp" so={ketQua.tongHop.nhap} /> : <O nhan="Đã phát hành vé" so={ketQua.tongHop.phatHanh} />}
             <O nhan="Chờ duyệt" so={ketQua.tongHop.choDuyet} />
             {ketQua.tongHop.namTruoc > 0 && <O nhan="Đã mời năm trước" so={ketQua.tongHop.namTruoc} />}
+            {ketQua.tongHop.cungCongTy > 0 && <O nhan="Công ty đã có khách" so={ketQua.tongHop.cungCongTy} />}
             <O nhan="Có cảnh báo" so={ketQua.tongHop.canhBao} />
             <O nhan="Lỗi, bỏ qua" so={ketQua.tongHop.loi} do />
           </div>
