@@ -24,7 +24,7 @@ const HUONG_DAN: VaiTro[] = [
           ["Xem khách", "Danh sách khách: bấm vào dòng nào là mở toàn bộ thông tin và các nút xử lý của khách đó."],
           ["Cùng công ty", "Danh sách khách > bộ lọc Công ty: xem công ty nào có nhiều sales cùng mời, hoặc được mời trên 2 người. Hàng Chờ duyệt cũng ghi rõ các khách cùng công ty và sales của từng người."],
           ["Theo dõi theo sales", "Quota venue > Theo dõi theo sales: mỗi sales đã mời bao nhiêu công ty, bao nhiêu khách, bao nhiêu thiệp đang nháp, chờ duyệt, đã có vé, đã xác nhận, đã check in."],
-          ["Khách năm trước", "Dữ liệu > Danh sách khách năm trước: tải file check in từng năm (2024, 2025...). File nhiều sheet thì app gộp và bỏ trùng, sheet khác cấu trúc được bỏ chọn sẵn. Sau đó mỗi khách có nhãn: đã đến, mời không đến, cùng công ty, hoặc khách mới. Bảng điều khiển đếm số khách đã đến năm trước mà năm nay chưa mời lại."],
+          ["Khách năm trước", "Dữ liệu > Danh sách khách năm trước: tải file check in từng năm (2024, 2025...). File nhiều sheet thì app gộp và bỏ trùng, sheet khác cấu trúc được bỏ chọn sẵn. Sau đó mỗi khách có nhãn: đã đến, mời không đến, cùng công ty, hoặc khách mới. Bảng điều khiển so sánh từng năm (2024, 2025...) trong cùng một bảng: được mời, đã đến, năm nay mời lại, đã đến mà năm nay chưa mời."],
           ["In QR thiệp giấy", "Danh sách khách > In QR thiệp giấy. Lọc theo venue, sales, hoặc chỉ thiệp giấy chưa gửi."],
           ["Theo dõi", "Bảng điều khiển: doanh thu dự kiến, số công ty, số khách theo venue so với KPI. Quota và KPI venue: số thiệp còn lại, mục tiêu từng venue."],
         ],

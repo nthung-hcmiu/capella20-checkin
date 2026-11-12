@@ -58,17 +58,27 @@ function cacKhoaCongTy(g: { maCorp?: string | null; congTy?: string | null }): s
   return ds;
 }
 
+export interface ThongKeNam {
+  nam: number;
+  tong: number; // khach chinh duoc moi nam do
+  daDen: number;
+  moiLai: number; // nam nay da moi lai
+  moiLaiDaDen: number; // trong so moi lai, nam do da den
+  denChuaMoiLai: number; // nam do da den nhung nam nay chua moi
+}
+
 export interface BoKhop {
   coDuLieu: boolean;
   nam: number | null; // nam moi nhat da tai
   khop: (g: KhachKhop) => LichSu | null;
-  thongKe: (guests: KhachKhop[]) => { daMoiLai: number; namTruocDaDen: number; denNhungChuaMoiLai: number; tongNamTruoc: number };
+  // Moi nam mot dong: so khach chinh nam do, bao nhieu da den, nam nay moi lai bao nhieu
+  thongKe: (guests: KhachKhop[]) => ThongKeNam[];
 }
 
 // Tai toan bo lich su (vai nghin dong) va tao ham khop trong bo nho. Co nhieu nam thi hien tung nam.
 export async function taiBoKhop(prisma: PrismaClient): Promise<BoKhop> {
   const ds = (await prisma.khachNamTruoc.findMany({ orderBy: { nam: "desc" } })) as (DongLichSu & { laDiKem: boolean })[];
-  if (ds.length === 0) return { coDuLieu: false, nam: null, khop: () => null, thongKe: () => ({ daMoiLai: 0, namTruocDaDen: 0, denNhungChuaMoiLai: 0, tongNamTruoc: 0 }) };
+  if (ds.length === 0) return { coDuLieu: false, nam: null, khop: () => null, thongKe: () => [] };
 
   const cacNam = [...new Set(ds.map((d) => d.nam))].sort((a, b) => b - a);
   const nam = cacNam[0];
@@ -128,17 +138,16 @@ export async function taiBoKhop(prisma: PrismaClient): Promise<BoKhop> {
     return { loai: "moi", nhan: "Khách mới", chiTiet: `Các năm ${cacNam.join(", ")} chưa mời khách này và cả công ty này.` };
   };
 
-  const thongKe = (guests: KhachKhop[]) => {
+  const thongKe = (guests: KhachKhop[]): ThongKeNam[] => {
     const khoaNay = new Set<string>();
     for (const g of guests) for (const k of cacKhoa(g)) khoaNay.add(k);
-    const namMoiNhat = ds.filter((d) => d.nam === nam && !d.laDiKem);
-    const daMoiLai = new Set(namMoiNhat.filter((d) => cacKhoa(d).some((k) => khoaNay.has(k))));
-    return {
-      tongNamTruoc: namMoiNhat.length,
-      daMoiLai: daMoiLai.size,
-      namTruocDaDen: namMoiNhat.filter((d) => d.soDen > 0).length,
-      denNhungChuaMoiLai: namMoiNhat.filter((d) => d.soDen > 0 && !daMoiLai.has(d)).length,
-    };
+    return cacNam.map((n) => {
+      const chinh = ds.filter((d) => d.nam === n && !d.laDiKem);
+      const moiLai = chinh.filter((d) => cacKhoa(d).some((k) => khoaNay.has(k)));
+      const daDen = chinh.filter((d) => d.soDen > 0);
+      const moiLaiDaDen = moiLai.filter((d) => d.soDen > 0).length;
+      return { nam: n, tong: chinh.length, daDen: daDen.length, moiLai: moiLai.length, moiLaiDaDen, denChuaMoiLai: daDen.length - moiLaiDaDen };
+    });
   };
 
   return { coDuLieu: true, nam, khop, thongKe };

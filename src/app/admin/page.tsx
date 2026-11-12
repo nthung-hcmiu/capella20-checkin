@@ -21,7 +21,7 @@ export default async function Dashboard({ searchParams }: { searchParams: { khon
   // Doi chieu khach nam truoc: bao nhieu khach cu duoc moi lai, bao nhieu khach da den nam truoc chua duoc moi lai
   const boKhop = await taiBoKhop(prisma);
   const conHieuLuc = guests.filter((g) => g.trangThai !== TRANG_THAI.DA_HUY);
-  const tkNamTruoc = boKhop.coDuLieu ? boKhop.thongKe(conHieuLuc) : null;
+  const tkNamTruoc = boKhop.thongKe(conHieuLuc);
   const demLs: Record<string, number> = {};
   if (boKhop.coDuLieu) for (const g of conHieuLuc) { const l = boKhop.khop(g)!.loai; demLs[l] = (demLs[l] || 0) + 1; }
   const venues = await prisma.venue.findMany({ orderBy: { thuTu: "asc" } });
@@ -118,26 +118,46 @@ export default async function Dashboard({ searchParams }: { searchParams: { khon
         />
       </div>
 
-      {/* Khach nam truoc */}
-      {tkNamTruoc && (
-        <div className="card p-6">
-          <div className="flex flex-wrap items-end justify-between gap-2">
-            <div>
-              <h2 className="font-display text-lg text-ink">So với khách năm {boKhop.nam}</h2>
-              <p className="text-xs text-ink-muted">
-                Năm {boKhop.nam} có {tkNamTruoc.tongNamTruoc} khách được mời, {tkNamTruoc.namTruocDaDen} khách đã đến.
-              </p>
-            </div>
+      {/* So voi cac nam truoc: moi nam mot dong, khong kem chu thich */}
+      {tkNamTruoc.length > 0 && (
+        <div className="card overflow-hidden">
+          <div className="flex flex-wrap items-center justify-between gap-2 px-6 py-4">
+            <h2 className="font-display text-lg text-ink">So với khách các năm trước</h2>
             <Link href="/admin/khach" className="text-xs font-medium text-brand hover:underline">
               Lọc trong danh sách khách →
             </Link>
           </div>
-          <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-5">
-            <OSo nhan="Năm trước đã đến, mời lại" so={demLs.den || 0} />
-            <OSo nhan="Năm trước mời, không đến" so={demLs.khongDen || 0} />
-            <OSo nhan="Mới, cùng công ty năm trước" so={demLs.congTy || 0} />
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-t border-ivory-deep text-left text-xs uppercase tracking-wider text-ink-muted">
+                  <th className="px-6 py-3 font-medium">Năm</th>
+                  <th className="px-3 py-3 text-right font-medium">Khách được mời</th>
+                  <th className="px-3 py-3 text-right font-medium">Đã đến</th>
+                  <th className="px-3 py-3 text-right font-medium">Năm nay mời lại</th>
+                  <th className="px-3 py-3 text-right font-medium">Mời lại, năm đó đã đến</th>
+                  <th className="px-6 py-3 text-right font-medium">Đã đến, năm nay chưa mời</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tkNamTruoc.map((t) => (
+                  <tr key={t.nam} className="border-t border-ivory-deep">
+                    <td className="px-6 py-3 font-display text-lg text-ink">{t.nam}</td>
+                    <td className="px-3 py-3 text-right">{t.tong}</td>
+                    <td className="px-3 py-3 text-right">{t.daDen}</td>
+                    <td className="px-3 py-3 text-right">{t.moiLai}</td>
+                    <td className="px-3 py-3 text-right">{t.moiLaiDaDen}</td>
+                    <td className="px-6 py-3 text-right font-medium text-brand">{t.denChuaMoiLai}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="grid grid-cols-2 gap-3 border-t border-ivory-deep p-4 lg:grid-cols-4">
+            <OSo nhan="Khách năm nay từng được mời" so={(demLs.den || 0) + (demLs.khongDen || 0)} />
+            <OSo nhan="Trong đó lần gần nhất có đến" so={demLs.den || 0} />
+            <OSo nhan="Người mới, công ty cũ" so={demLs.congTy || 0} />
             <OSo nhan="Khách mới hoàn toàn" so={demLs.moi || 0} />
-            <OSo nhan={`Đã đến ${boKhop.nam}, chưa mời lại`} so={tkNamTruoc.denNhungChuaMoiLai} noiBat />
           </div>
         </div>
       )}
