@@ -46,6 +46,7 @@ export interface TongHopNhap {
   khongSdt: number;
   namTruoc: number; // khach da duoc moi nam truoc
   cungCongTy: number; // khach co cong ty da co nguoi khac duoc moi
+  khacSales: number; // sales tu nhap: dong cua sales khac bi bo qua
 }
 
 export interface KetQuaNhap {
@@ -66,7 +67,7 @@ function laCo(s: string): boolean {
 }
 
 function tongHopRong(): TongHopNhap {
-  return { hopLe: 0, loi: 0, nhap: 0, choDuyet: 0, phatHanh: 0, canhBao: 0, khongSdt: 0, namTruoc: 0, cungCongTy: 0 };
+  return { hopLe: 0, loi: 0, nhap: 0, choDuyet: 0, phatHanh: 0, canhBao: 0, khongSdt: 0, namTruoc: 0, cungCongTy: 0, khacSales: 0 };
 }
 
 export async function nhapDanhSach(
@@ -192,6 +193,17 @@ export async function nhapDanhSach(
     const canhBao: string[] = [];
     if (khopVenue && !khopVenue.chinhXac) canhBao.push(`Venue ghi "${r.venue.trim()}", đã hiểu là ${venue.ten}`);
 
+    // Sales tu nhap: dong ghi nguoi phu trach la sales khac thi bo qua, tranh nhan khach cua nguoi khac
+    if (laSales && r.sales?.trim()) {
+      const chu = timSales(r.sales);
+      if (chu && chu !== u.hoTen) {
+        kq.loi = `Khách của ${chu}, bỏ qua. Nhờ ${chu} tự nhập hoặc BTC nhập file gộp`;
+        kq.salesOwner = chu;
+        tongHop.loi++;
+        tongHop.khacSales++;
+        return;
+      }
+    }
     const salesKhop = laSales ? u.hoTen : timSales(r.sales);
     const salesOwner = laSales ? u.hoTen : salesKhop || String(r.sales || "").trim() || tuyChon.salesMacDinh?.trim() || "BTC";
     kq.salesOwner = salesOwner;

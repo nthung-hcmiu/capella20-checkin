@@ -442,6 +442,12 @@ export function ImportManager({
           <div className={`mt-3 rounded-xl px-4 py-2.5 text-sm ${ketQua.ok ? "bg-sage/10 text-sage" : "bg-wine/10 text-wine"}`}>
             {ketQua.thongBao}
           </div>
+          {ketQua.tongHop.khacSales > 0 && (
+            <div className="mt-3 rounded-xl bg-wine/10 px-4 py-2.5 text-sm text-wine">
+              Bỏ qua {ketQua.tongHop.khacSales.toLocaleString("vi-VN")} dòng ghi người phụ trách là sales khác. File gộp của cả venue nên để BTC nhập,
+              app sẽ tự chia khách cho đúng sales.
+            </div>
+          )}
           {ketQua.tongHop.khongSdt > 0 && (
             <p className="mt-3 text-xs text-ink-muted">
               {ketQua.tongHop.khongSdt.toLocaleString("vi-VN")} khách chưa có SĐT: vẫn nhập được nhưng phải bổ sung SĐT trên app trước khi gửi duyệt.
@@ -530,7 +536,7 @@ export function ImportManager({
           <li>Phân loại khách chỉ có Khách cũ và Khách tiềm năng (file cũ ghi Netsuite, Contact mới vẫn tự đổi). Lĩnh vực theo danh sách cố định của app.</li>
           <li>Mời 2 người thì điền Tên khách thứ 2 và Chức vụ khách thứ 2. Thiếu thì vẫn nhập được nhưng phải bổ sung trên app trước khi gửi duyệt.</li>
           {laSales ? (
-            <li>Cột người phụ trách trong file được bỏ qua: mọi khách nhập vào đều do bạn phụ trách. Mỗi lần tối đa 500 dòng.</li>
+            <li>Khách nhập vào đều do bạn phụ trách. Dòng ghi người phụ trách là sales khác sẽ bị bỏ qua (file gộp của venue nên để BTC nhập). Mỗi lần tối đa 500 dòng.</li>
           ) : (
             <li>Tên sales phải trùng họ tên tài khoản sales thì sales đó mới thấy khách trong Cổng Sales.</li>
           )}
