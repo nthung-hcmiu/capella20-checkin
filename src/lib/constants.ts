@@ -139,7 +139,7 @@ export const LAUNCH = {
 
 export const SU_KIEN = {
   ten: "Capella 20 năm, Đêm tri ân khách hàng",
-  ngay: "12/11/2026",
+  ngay: "03/12/2026",
   diaDiem: "Riverside Palace",
   soKhach: 800,
 };

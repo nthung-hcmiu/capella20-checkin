@@ -117,6 +117,6 @@ src/components/        giao dien dung chung
 
 - Check in offline: hang doi cuc bo (IndexedDB) va dong bo khi co mang.
 - Xuat sticker QR ca nhan (phuong an thiep B).
-- Gui thiep qua Zalo / kenh da chon, nhac han xac nhan 07/11.
+- Gui thiep qua Zalo / kenh da chon, nhac han xac nhan truoc su kien 03/12.
 - Nhat ky thao tac va dong bo CRM sau su kien.
 ```
