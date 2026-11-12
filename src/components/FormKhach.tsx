@@ -63,8 +63,6 @@ export function OThongTin({ them, coDanhXung = true, coChucVu = true }: { them?:
       {o("doanhThuDuKien", "95.000.000 đ")}
       <OChon ten="linhVuc" nhan={NHAN_TRUONG.linhVuc} ds={LINH_VUC} gt={them?.linhVuc} />
       <OChon ten="nguonKhach" nhan={NHAN_TRUONG.nguonKhach} ds={PHAN_LOAI_KHACH} gt={them?.nguonKhach} />
-      {o("nhomKhachMoi", "Khách Corporate")}
-      {o("nhomKhach", "Khách end-user")}
     </>
   );
 }

@@ -366,8 +366,6 @@ function ChiTiet({ g }: { g: SalesGuest }) {
     ["Số điện thoại", g.sdt],
     [NHAN_TRUONG.diaChi, g.them.diaChi],
     [NHAN_TRUONG.maCorp, g.them.maCorp],
-    [NHAN_TRUONG.nhomKhachMoi, g.them.nhomKhachMoi],
-    [NHAN_TRUONG.nhomKhach, g.them.nhomKhach],
     [NHAN_TRUONG.linhVuc, g.them.linhVuc],
     [NHAN_TRUONG.nguonKhach, g.them.nguonKhach],
     ["Khách đi cùng", moTaDiCung(g.khachDiCung) || null],

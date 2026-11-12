@@ -76,7 +76,7 @@ export function GuestManager({
       if (tt && g.trangThai !== tt) return false;
       if (vn && g.venueId !== vn) return false;
       if (sl && g.salesOwner !== sl) return false;
-      if (nh && (g.them.nhomKhachMoi || "") !== nh) return false;
+      if (nh && (g.them.nguonKhach || "") !== nh) return false;
       if (ls && g.lichSu?.loai !== ls) return false;
       if (ct === "nhieuSales" && !g.congTyKhac?.nhieuSales) return false;
       if (ct === "tren2" && !((g.congTyKhac?.tongNguoi ?? g.soNguoiMoi) > 2)) return false;
@@ -95,7 +95,7 @@ export function GuestManager({
   }, [guests, q, tt, vn, sl, nh, ls, ct]);
 
   const dsSales = useMemo(() => [...new Set(guests.map((g) => g.salesOwner))].sort(), [guests]);
-  const dsNhom = useMemo(() => [...new Set(guests.map((g) => g.them.nhomKhachMoi).filter(Boolean) as string[])].sort(), [guests]);
+  const dsNhom = useMemo(() => [...new Set(guests.map((g) => g.them.nguonKhach).filter(Boolean) as string[])].sort(), [guests]);
   const coLoc = q || tt || vn || sl || nh || ls || ct;
   const coLichSu = guests.some((g) => g.lichSu);
 
@@ -172,7 +172,7 @@ export function GuestManager({
         </select>
         {dsNhom.length > 0 && (
           <select className="input w-auto" value={nh} onChange={(e) => setNh(e.target.value)}>
-            <option value="">Mọi nhóm khách mời</option>
+            <option value="">Mọi phân loại khách</option>
             {dsNhom.map((x) => (
               <option key={x} value={x}>
                 {x}

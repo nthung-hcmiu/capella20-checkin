@@ -220,7 +220,7 @@ export async function nhapDanhSach(
     if (thieu) canhBao.push(`${thieu}, bổ sung trên app trước khi gửi duyệt`);
     if (soNguoi > 2) canhBao.push("File chỉ nhập được khách thứ 2, người thứ 3 trở đi bổ sung trên app");
     if (them.linhVuc && !LINH_VUC.includes(them.linhVuc)) canhBao.push(`Lĩnh vực "${them.linhVuc}" ngoài danh sách`);
-    if (them.nguonKhach && !PHAN_LOAI_KHACH.includes(them.nguonKhach)) canhBao.push(`Phân loại khách "${them.nguonKhach}" không phải Khách cũ / Khách tiềm năng`);
+    if (them.nguonKhach && !PHAN_LOAI_KHACH.includes(them.nguonKhach)) canhBao.push(`Phân loại khách "${them.nguonKhach}" không phải Khách cũ / Khách tiềm năng / Đối tác`);
 
     // Canh bao cho BTC. Khach trung luon vao Cho duyet; con lai theo lua chon nhap.
     const ds: string[] = [];

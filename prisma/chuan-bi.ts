@@ -57,7 +57,7 @@ async function main() {
     console.log(`[capella] Chuyen trang thai cu: ${doi1.count} Danh sach cho, ${doi2.count} Chua phan hoi.`);
   }
 
-  // Phan loai khach chi con Khach cu / Khach tiem nang; linh vuc gop theo danh sach co dinh
+  // Phan loai khach chi con Khach cu / Khach tiem nang / Doi tac; linh vuc gop theo danh sach co dinh
   const canChuan = await prisma.guest.findMany({
     where: { OR: [{ nguonKhach: { not: null } }, { linhVuc: { not: null } }] },
     select: { id: true, nguonKhach: true, linhVuc: true },

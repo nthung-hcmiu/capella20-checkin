@@ -24,7 +24,7 @@ export async function GET() {
   const boKhop = await taiBoKhop(prisma);
   // Thu tu cot theo mau danh sach cac nam truoc, roi den cac cot cua he thong
   const tieuDe = [
-    "STT", "Đơn vị", "Nhóm khách mời", "Mã CORP Netsuite", "Company Name", "Nhóm khách",
+    "STT", "Đơn vị", "Mã CORP Netsuite", "Company Name",
     "Lĩnh vực", "Danh xưng", "Tên khách mời", "Chức vụ", "Số điện thoại", "Địa chỉ", "Số lượng người tham dự",
     "Tên khách thứ 2", "Chức vụ khách thứ 2", "Phân loại khách",
     "Phân loại khách VIP", "Doanh thu dự kiến", "Round 1: Khách đã nhận thiệp online", "Round 2: Đã gửi thiệp giấy",
@@ -36,7 +36,7 @@ export async function GET() {
     // Khach thu 2 vao cot rieng; nguoi thu 3 tro di ghep vao cung o, ngan cach dau cham phay
     const dc = docDiCung(g.khachDiCung);
     return [
-      o(i + 1), o(g.venue.ten), o(g.nhomKhachMoi), o(g.maCorp), o(g.congTy), o(g.nhomKhach),
+      o(i + 1), o(g.venue.ten), o(g.maCorp), o(g.congTy),
       o(g.linhVuc), o(g.danhXung), o(g.hoTen), o(g.chucVu), g.sdt ? `="${g.sdt}"` : o(""), o(g.diaChi), o(g.soNguoiMoi),
       o(dc.map((x) => x.hoTen).join("; ")), o(dc.map((x) => x.chucVu).join("; ")), o(g.nguonKhach),
       o(g.isVip ? "VIP" : "THƯỜNG"), o(g.doanhThuDuKien), o(daNhanOnline.includes(g.trangThai) ? "ĐÃ NHẬN" : ""),

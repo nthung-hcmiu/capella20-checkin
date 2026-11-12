@@ -59,7 +59,7 @@ const HUONG_DAN: VaiTro[] = [
       {
         tieuDe: "Lập khách",
         buoc: [
-          ["Thêm khách", "Khách của tôi > Thêm khách. Bắt buộc tên, SĐT, địa chỉ và chức vụ; mời 2 người thì điền cả tên và chức vụ khách thứ 2. Chọn lĩnh vực, phân loại khách (Khách cũ hoặc Khách tiềm năng), ghi doanh thu dự kiến. Khách mới lưu ở trạng thái Nháp."],
+          ["Thêm khách", "Khách của tôi > Thêm khách. Bắt buộc tên, SĐT, địa chỉ và chức vụ; mời 2 người thì điền cả tên và chức vụ khách thứ 2. Chọn lĩnh vực, phân loại khách (Khách cũ, Khách tiềm năng hoặc Đối tác), ghi doanh thu dự kiến. Khách mới lưu ở trạng thái Nháp."],
           ["Venue", "Tài khoản gắn với venue nào thì chỉ thêm và nhập khách cho venue đó."],
           ["Nhãn năm trước", "Cạnh tên khách có nhãn cho biết năm trước khách được mời chưa, có đến không. Bấm vào khách để xem chi tiết."],
           ["Cùng công ty", "Dòng \"Cùng công ty\" cho biết công ty đó đã có bao nhiêu khách khác được mời. Chữ đỏ là có sales khác cùng mời, nên trao đổi với nhau để khỏi mời chồng."],

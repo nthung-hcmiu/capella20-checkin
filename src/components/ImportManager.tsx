@@ -23,8 +23,6 @@ const TRUONG: { key: Truong; nhan: string; batBuoc?: boolean; phu?: boolean; don
   { key: "chucVu", nhan: "Chức vụ", phu: true, dongNghia: ["chuc vu", "chuc danh", "position", "title"] },
   { key: "congTy", nhan: "Company Name", phu: true, dongNghia: ["company name", "ten cong ty", "cong ty", "company", "doanh nghiep"] },
   { key: "maCorp", nhan: "Mã CORP Netsuite", phu: true, dongNghia: ["ma corp netsuite", "ma corp", "ma netsuite", "ma khach hang"] },
-  { key: "nhomKhachMoi", nhan: "Nhóm khách mời", phu: true, dongNghia: ["nhom khach moi"] },
-  { key: "nhomKhach", nhan: "Nhóm khách", phu: true, dongNghia: ["nhom khach"] },
   { key: "linhVuc", nhan: "Lĩnh vực", phu: true, dongNghia: ["linh vuc", "nganh nghe", "nganh"] },
   { key: "nguonKhach", nhan: "Phân loại khách", phu: true, dongNghia: ["phan loai khach", "nguon khach"] },
   { key: "doanhThuDuKien", nhan: "Doanh thu dự kiến", phu: true, dongNghia: ["doanh thu du kien", "doanh thu"] },
@@ -70,10 +68,13 @@ export function oThanhChu(v: unknown): string {
   return String(v).replace(/^="(.*)"$/, "$1").trim();
 }
 
+const COT_BO_QUA = ["nhom khach moi", "nhom khach"];
+
 function doanCot(tieuDe: string[]): Record<Truong, number> {
   const chuan = tieuDe.map((h) => boDau(String(h)).replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim());
   const ketQua = Object.fromEntries(TRUONG.map((f) => [f.key, -1])) as Record<Truong, number>;
-  const daDung = new Set<number>();
+  // Cot da bo khoi app: danh dau de khong bi doan nham sang truong khac (vd "Nhom khach moi" thanh ten khach)
+  const daDung = new Set<number>(chuan.map((h, i) => (COT_BO_QUA.includes(h) ? i : -1)).filter((i) => i >= 0));
   // Luot 1: khop dung nguyen tieu de cho moi truong, de "Phan loai khach" khong lay nham cot "Phan loai khach VIP"
   for (const f of TRUONG) {
     const idx = chuan.findIndex((h, i) => !daDung.has(i) && f.dongNghia.includes(h));
@@ -93,15 +94,15 @@ function doanCot(tieuDe: string[]): Record<Truong, number> {
 
 function taiFileMau() {
   const tieuDe = [
-    "STT", "Đơn vị", "Nhóm khách mời", "Mã CORP Netsuite", "Company Name", "Nhóm khách",
+    "STT", "Đơn vị", "Mã CORP Netsuite", "Company Name",
     "Lĩnh vực", "Danh xưng", "Tên khách mời", "Chức vụ", "Số điện thoại", "Địa chỉ", "Số lượng người tham dự",
     "Tên khách thứ 2", "Chức vụ khách thứ 2", "Phân loại khách",
     "Phân loại khách VIP", "Doanh thu dự kiến", "Round 2: Đã gửi thiệp giấy",
     "Họ và tên người phụ trách tiếp khách", "Ghi chú",
   ];
   const mau = [
-    ["1", "Gallery Hall", "Khách Corporate", "COR0000001", "CÔNG TY TNHH MẪU A", "Khách end-user", "Công Nghệ", "Ông", "Nguyễn Văn An", "Giám đốc", "0901234567", "12 Nguyễn Huệ, P. Bến Nghé, Q.1, TP.HCM", "1", "", "", "Khách cũ", "VIP", "120.000.000 đ", "", "Thu Hà", ""],
-    ["2", "Riverside Palace", "Đối tác Capella", "COR0000002", "CÔNG TY CP MẪU B", "Agency/báo chí/truyền thông", "Giải Trí/Tổ Chức Sự Kiện", "Bà", "Trần Thị Bình", "Trưởng phòng", "0912345678", "45 Lê Lợi, P. Bến Thành, Q.1, TP.HCM", "2", "Lê Văn Cường", "Phó phòng", "Khách tiềm năng", "THƯỜNG", "80.000.000 đ", "", "Minh Quân", "Mời 2 người thì điền tên và chức vụ khách thứ 2"],
+    ["1", "Gallery Hall", "COR0000001", "CÔNG TY TNHH MẪU A", "Công Nghệ", "Ông", "Nguyễn Văn An", "Giám đốc", "0901234567", "12 Nguyễn Huệ, P. Bến Nghé, Q.1, TP.HCM", "1", "", "", "Khách cũ", "VIP", "120.000.000 đ", "", "Thu Hà", ""],
+    ["2", "Riverside Palace", "COR0000002", "CÔNG TY CP MẪU B", "Giải Trí/Tổ Chức Sự Kiện", "Bà", "Trần Thị Bình", "Trưởng phòng", "0912345678", "45 Lê Lợi, P. Bến Thành, Q.1, TP.HCM", "2", "Lê Văn Cường", "Phó phòng", "Khách tiềm năng", "THƯỜNG", "80.000.000 đ", "", "Minh Quân", "Mời 2 người thì điền tên và chức vụ khách thứ 2"],
   ];
   const csv = "﻿" + [tieuDe, ...mau].map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(",")).join("\r\n");
   const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
@@ -535,7 +536,7 @@ export function ImportManager({
           <li>Chống trùng: có SĐT thì theo SĐT (chuẩn hóa +84, dấu cách, mất số 0 do Excel). Không có SĐT thì theo tên khách cùng mã CORP, hoặc cùng công ty. Trùng thì luôn vào Chờ duyệt.</li>
           <li>Cột VIP ghi VIP, x, có hoặc 1 là khách VIP (THƯỜNG là khách thường). Khách VIP và venue hết quota được gắn cảnh báo để BTC xem khi duyệt.</li>
           <li>Venue ghi tên ngắn như “Riverside”, “Claris” vẫn nhận được.</li>
-          <li>Phân loại khách chỉ có Khách cũ và Khách tiềm năng (file cũ ghi Netsuite, Contact mới vẫn tự đổi). Lĩnh vực theo danh sách cố định của app.</li>
+          <li>Phân loại khách gồm Khách cũ, Khách tiềm năng và Đối tác (file cũ ghi Netsuite, Contact mới vẫn tự đổi). Lĩnh vực theo danh sách cố định của app.</li>
           <li>Mời 2 người thì điền Tên khách thứ 2 và Chức vụ khách thứ 2. Thiếu thì vẫn nhập được nhưng phải bổ sung trên app trước khi gửi duyệt.</li>
           {laSales ? (
             <li>Khách nhập vào đều do bạn phụ trách. Dòng ghi người phụ trách là sales khác sẽ bị bỏ qua (file gộp của venue nên để BTC nhập). Mỗi lần tối đa 500 dòng.</li>

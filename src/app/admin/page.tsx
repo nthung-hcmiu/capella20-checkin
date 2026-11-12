@@ -61,7 +61,7 @@ export default async function Dashboard({ searchParams }: { searchParams: { khon
     }
     return [...m.entries()].sort((a, b) => b[1].khach - a[1].khach);
   };
-  const theoNhom = doiSoat((g) => g.nhomKhachMoi || "");
+  const theoPhanLoai = doiSoat((g) => g.nguonKhach || "");
   const theoSales = doiSoat((g) => g.salesOwner);
   const soCho = demTrangThai[TRANG_THAI.CHO_DUYET] || 0;
 
@@ -176,7 +176,7 @@ export default async function Dashboard({ searchParams }: { searchParams: { khon
         </div>
         <div className="hairline" />
         <div className="grid gap-px bg-ivory-deep lg:grid-cols-2">
-          <BangDoiSoat tieuDe="Theo nhóm khách mời" dong={theoNhom} />
+          <BangDoiSoat tieuDe="Theo phân loại khách" dong={theoPhanLoai} />
           <BangDoiSoat tieuDe="Theo người phụ trách" dong={theoSales} />
         </div>
       </div>

@@ -2,10 +2,9 @@
 
 import { boDau } from "./format";
 
-// Cac truong chu ngoai ho ten, SDT. Da bo "Thuoc don vi kinh doanh" va "Phong ban" (cot CSDL van giu).
+// Cac truong chu ngoai ho ten, SDT. Da bo "Thuoc don vi kinh doanh", "Phong ban", "Nhom khach moi", "Nhom khach" (cot CSDL van giu).
 export const TRUONG_CHU = [
-  "danhXung", "chucVu", "congTy", "diaChi", "maCorp", "nhomKhachMoi",
-  "nhomKhach", "linhVuc", "nguonKhach", "doanhThuDuKien",
+  "danhXung", "chucVu", "congTy", "diaChi", "maCorp", "linhVuc", "nguonKhach", "doanhThuDuKien",
 ] as const;
 export type TruongChu = (typeof TRUONG_CHU)[number];
 export type ThongTinThem = Partial<Record<TruongChu, string | null>>;
@@ -16,20 +15,19 @@ export const NHAN_TRUONG: Record<TruongChu, string> = {
   congTy: "Công ty",
   diaChi: "Địa chỉ",
   maCorp: "Mã CORP Netsuite",
-  nhomKhachMoi: "Nhóm khách mời",
-  nhomKhach: "Nhóm khách",
   linhVuc: "Lĩnh vực",
   nguonKhach: "Phân loại khách",
   doanhThuDuKien: "Doanh thu dự kiến",
 };
 
-// Phan loai khach: chi 2 lua chon. File cu ghi Netsuite / Contact moi.
-export const PHAN_LOAI_KHACH = ["Khách cũ", "Khách tiềm năng"];
+// Phan loai khach: 3 lua chon. File cu ghi Netsuite / Contact moi.
+export const PHAN_LOAI_KHACH = ["Khách cũ", "Khách tiềm năng", "Đối tác"];
 export function chuanPhanLoai(s: string | null | undefined): string | null {
   const t = boDau(String(s ?? ""));
   if (!t) return null;
   if (["khach cu", "cu", "netsuite", "old"].includes(t) || t.includes("netsuite") || t.includes("khach cu")) return "Khách cũ";
   if (["khach tiem nang", "tiem nang", "contact moi", "moi", "new"].includes(t) || t.includes("tiem nang") || t.includes("contact")) return "Khách tiềm năng";
+  if (["doi tac", "partner"].includes(t) || t.startsWith("doi tac")) return "Đối tác";
   return String(s).trim();
 }
 

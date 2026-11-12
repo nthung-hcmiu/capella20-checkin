@@ -20,7 +20,6 @@ const CONG_TY_MAU = [
   "CÔNG TY TNHH GIÁO DỤC TRÍ TUỆ", "CÔNG TY CP LOGISTICS HOÀNG HÀ", "CÔNG TY TNHH QUẢNG CÁO NHẬT MINH",
 ];
 const CHUC_VU = ["Giám Đốc", "Phó Giám Đốc", "Trưởng Phòng Nhân Sự", "Account Manager", "Event Executive", "Đại Diện Công Ty", "Trưởng Phòng Marketing", "Kế Toán Trưởng"];
-const NHOM_MOI = ["Khách Corporate", "Khách Corporate", "Khách Corporate", "Khách Corporate", "Đối tác Capella", "Taskforce tiếp khách"];
 
 export function tenDangNhapTu(hoTen: string): string {
   return boDau(hoTen).replace(/[^a-z0-9]/g, "");
@@ -133,7 +132,6 @@ export async function gieoDuLieu(
       const ct = Math.floor(Math.random() * CONG_TY_MAU.length);
       const phuTrach = chon(salesTeam);
       const hoTen = tenNgauNhien();
-      const nhomMoi = chon(NHOM_MOI);
       const guest = await prisma.guest.create({
         data: {
           danhXung: hoTen.includes(" Thị ") ? "Bà" : hoTen.includes(" Văn ") ? "Ông" : chon(["Ông", "Bà"]),
@@ -141,10 +139,8 @@ export async function gieoDuLieu(
           congTy: CONG_TY_MAU[ct],
           diaChi: `${10 + ct * 7} ${chon(["Nguyễn Huệ", "Lê Lợi", "Hai Bà Trưng", "Điện Biên Phủ"])}, TP.HCM`,
           maCorp: `COR${String(9000000 + ct * 137).padStart(7, "0")}`,
-          nhomKhachMoi: nhomMoi,
-          nhomKhach: chon(["Agency/báo chí/truyền thông", "Khách end-user"]),
           linhVuc: LINH_VUC[ct % LINH_VUC.length],
-          nguonKhach: chon([PHAN_LOAI_KHACH[0], PHAN_LOAI_KHACH[0], PHAN_LOAI_KHACH[0], PHAN_LOAI_KHACH[1]]),
+          nguonKhach: chon([PHAN_LOAI_KHACH[0], PHAN_LOAI_KHACH[0], PHAN_LOAI_KHACH[0], PHAN_LOAI_KHACH[1], PHAN_LOAI_KHACH[2]]),
           khachDiCung: soNguoiMoi === 2 ? JSON.stringify([{ hoTen: tenNgauNhien(), chucVu: chon(CHUC_VU) }]) : null,
           doanhThuDuKien: Math.random() < 0.75 ? `${(10 + Math.floor(Math.random() * 190)) * 1000000}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " đ" : null,
           daGuiThiepGiay: daPhatHanh && Math.random() < 0.5,
@@ -174,7 +170,7 @@ export async function gieoDuLieu(
     await prisma.guest.create({
       data: {
         soThuTu: bod.rangeStart + i, maBiMat: sinhMa(), hoTen: tenNgauNhien(), sdt: sdtNgauNhien(),
-        danhXung: i % 2 ? "Bà" : "Ông", chucVu: "Tổng Giám Đốc", congTy: CONG_TY_MAU[i + 4], nhomKhachMoi: "Đối tác Capella",
+        danhXung: i % 2 ? "Bà" : "Ông", chucVu: "Tổng Giám Đốc", congTy: CONG_TY_MAU[i + 4], nguonKhach: "Đối tác",
         khachDiCung: JSON.stringify([{ hoTen: tenNgauNhien(), chucVu: "Phó Tổng Giám Đốc" }]),
         venueId: bod.id, soNguoiMoi: 2, trangThai: i < 2 ? TRANG_THAI.CHO_DUYET : TRANG_THAI.DA_PHAT_HANH,
         isVip: true, salesOwner: salesTeam[i % salesTeam.length], lyDoChoDuyet: i < 2 ? "VIP" : null,
@@ -198,7 +194,7 @@ export async function gieoDuLieu(
     await prisma.guest.create({
       data: {
         soThuTu: theoCode("GALLERY").rangeStart + 500, maBiMat: sinhMa(), hoTen: goc.hoTen, sdt: null,
-        danhXung: goc.danhXung, chucVu: goc.chucVu, congTy: goc.congTy, maCorp: goc.maCorp, nhomKhachMoi: goc.nhomKhachMoi,
+        danhXung: goc.danhXung, chucVu: goc.chucVu, congTy: goc.congTy, maCorp: goc.maCorp,
         venueId: goc.venueId, soNguoiMoi: 1, trangThai: TRANG_THAI.CHO_DUYET,
         salesOwner: salesTeam[3 % salesTeam.length], lyDoChoDuyet: "TRUNG_TEN",
       },
