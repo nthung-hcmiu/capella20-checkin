@@ -36,7 +36,7 @@ const TRUONG_XEM = TRUONG.filter((f) => ["danhXung", "hoTen", "chucVu", "congTy"
   .sort((a, b) => ["danhXung", "hoTen", "chucVu", "congTy", "sdt", "venue", "soNguoiMoi", "vip", "sales"].indexOf(a.key) - ["danhXung", "hoTen", "chucVu", "congTy", "sdt", "venue", "soNguoiMoi", "vip", "sales"].indexOf(b.key));
 
 // Doc CSV theo chuan (dau ngoac kep, xuong dong trong o), tu nhan dau phay hoac cham phay
-function docCsv(text: string): string[][] {
+export function docCsv(text: string): string[][] {
   const t = text.replace(/^﻿/, "");
   const dongDau = t.split(/\r?\n/, 1)[0] || "";
   const sep = (dongDau.match(/;/g) || []).length > (dongDau.match(/,/g) || []).length ? ";" : ",";
@@ -61,7 +61,7 @@ function docCsv(text: string): string[][] {
   return rows;
 }
 
-function oThanhChu(v: unknown): string {
+export function oThanhChu(v: unknown): string {
   if (v == null) return "";
   if (v instanceof Date) return v.toLocaleDateString("vi-VN");
   // Mot so file de SDT o dang ="0909..." khi xuat tu he thong khac
