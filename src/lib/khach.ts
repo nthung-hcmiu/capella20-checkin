@@ -36,16 +36,25 @@ export function chuanPhanLoai(s: string | null | undefined): string | null {
 // Linh vuc: lay tu danh sach khach 2024, gop cac cach ghi khac nhau
 export const LINH_VUC = [
   "Giải Trí/Tổ Chức Sự Kiện", "Event Agency", "Công Nghệ", "Làm Đẹp", "Du Lịch", "Giáo Dục / Đào Tạo",
-  "Hàng Tiêu Dùng", "Chứng Khoán", "Điện Lạnh", "Điện Máy", "Hiệp Hội Doanh Nghiệp", "Đa Ngành", "Khác",
+  "Hàng Tiêu Dùng", "Chứng Khoán", "Điện Lạnh", "Điện Máy", "Hiệp Hội Doanh Nghiệp", "Đa Ngành",
+  // Bo sung theo danh sach sales dang dung nam 2026
+  "Thực Phẩm/Đồ Uống", "Bảo Hiểm", "Dệt May/Thời Trang", "Môi Trường", "Vận Chuyển/Logistics", "Khác",
 ];
 const BIET_DANH_LINH_VUC: Record<string, string> = {
+  agency: "Event Agency", // "Agency/To Chuc Su Kien" truoc "su kien"
   "hiep hoi": "Hiệp Hội Doanh Nghiệp",
   multidisciplinary: "Đa Ngành",
   "giao duc": "Giáo Dục / Đào Tạo",
   "dao tao": "Giáo Dục / Đào Tạo",
   "su kien": "Giải Trí/Tổ Chức Sự Kiện",
   "giai tri": "Giải Trí/Tổ Chức Sự Kiện",
-  agency: "Event Agency",
+  logistics: "Vận Chuyển/Logistics",
+  "van chuyen": "Vận Chuyển/Logistics",
+  "thuc pham": "Thực Phẩm/Đồ Uống",
+  "do uong": "Thực Phẩm/Đồ Uống",
+  "det may": "Dệt May/Thời Trang",
+  "thoi trang": "Dệt May/Thời Trang",
+  "bao hiem": "Bảo Hiểm",
 };
 export function chuanLinhVuc(s: string | null | undefined): string | null {
   const t = boDau(String(s ?? "")).replace(/\s*\/\s*/g, "/");

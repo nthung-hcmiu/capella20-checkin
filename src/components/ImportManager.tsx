@@ -356,6 +356,7 @@ export function ImportManager({
                 ) : (
                   <>
                     <option value="CHO_DUYET">Chờ duyệt</option>
+                    <option value="NHAP">Nháp (sales bổ sung thông tin rồi gửi duyệt)</option>
                     <option value="DA_PHAT_HANH">Đã phát hành vé (BTC đã duyệt file)</option>
                   </>
                 )}
