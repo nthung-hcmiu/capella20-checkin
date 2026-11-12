@@ -1,9 +1,8 @@
 import { prisma } from "@/lib/db";
 import { yeuCauTrang } from "@/lib/auth";
-import { TRANG_THAI } from "@/lib/constants";
+import { DA_PHAT_HANH_VE, TRANG_THAI } from "@/lib/constants";
 import { dinhDangTien } from "@/lib/format";
 import { rong, tongHopTheoVenue } from "@/lib/kpi";
-import { QuotaSales, type DongQuotaSales, type NhomVenue } from "@/components/QuotaSales";
 
 export const dynamic = "force-dynamic";
 
@@ -18,21 +17,27 @@ export default async function QuotaPage() {
   });
   const soLieu = tongHopTheoVenue(guests);
 
-  // Quota theo sales: gom so lieu theo nguoi phu trach (dung lai ham gom theo venue, khoa la ten sales)
+  // Theo doi theo sales: moi sales da moi bao nhieu cong ty, bao nhieu khach (dung lai ham gom, khoa la ten sales)
   const salesTk = await prisma.staffUser.findMany({ where: { vaiTro: "SALES" }, orderBy: { hoTen: "asc" } });
   const theoSales = tongHopTheoVenue(guests.map((g) => ({ ...g, venueId: g.salesOwner })));
-  const dsSales: DongQuotaSales[] = salesTk.map((t) => {
-    const r = theoSales.get(t.hoTen) || rong();
-    return { id: t.id, hoTen: t.hoTen, venueId: t.venueId, quota: t.quota, soKhach: r.soKhach, soThiep: r.thiep, soCongTy: r.soCongTy };
-  });
-  // Nguoi phu trach co khach nhung chua co tai khoan (vd BTC)
+  const demTT = (ten: string, tt: string[]) => guests.filter((g) => g.salesOwner === ten && tt.includes(g.trangThai)).length;
+  const dongSales = (ten: string, venueId: string | null, coTk: boolean) => {
+    const r = theoSales.get(ten) || rong();
+    return {
+      ten, venueId, coTk, ...r,
+      nhap: demTT(ten, [TRANG_THAI.NHAP]),
+      choDuyet: demTT(ten, [TRANG_THAI.CHO_DUYET]),
+      coVe: demTT(ten, DA_PHAT_HANH_VE),
+    };
+  };
+  const dsSales = salesTk.map((t) => dongSales(t.hoTen, t.venueId, true));
+  // Nguoi phu trach co khach nhung chua co tai khoan sales (vd BTC)
   for (const [ten, r] of theoSales) {
-    if (r.thiep === 0 || salesTk.some((t) => t.hoTen === ten)) continue;
-    dsSales.push({ id: null, hoTen: ten, venueId: null, quota: null, soKhach: r.soKhach, soThiep: r.thiep, soCongTy: r.soCongTy });
+    if (r.thiep > 0 && !salesTk.some((t) => t.hoTen === ten)) dsSales.push(dongSales(ten, null, false));
   }
-  const nhomVenue: NhomVenue[] = [
-    ...venues.map((v) => ({ id: v.id as string | null, ten: v.ten, mau: v.mauSac, quota: v.quota })),
-    { id: null, ten: "Chưa gán venue", mau: "#9a9086", quota: 0 },
+  const nhomVenue = [
+    ...venues.map((v) => ({ id: v.id as string | null, ten: v.ten, mau: v.mauSac, quota: v.quota, mucTieuCongTy: v.mucTieuCongTy })),
+    { id: null, ten: "Chưa gán venue", mau: "#9a9086", quota: 0, mucTieuCongTy: 0 },
   ];
   const tongQuota = venues.reduce((s, v) => s + v.quota, 0);
 
@@ -93,7 +98,93 @@ export default async function QuotaPage() {
           })}
       </div>
 
-      <QuotaSales nhom={nhomVenue} ds={dsSales} />
+      {/* Theo doi theo sales */}
+      <div className="card overflow-hidden">
+        <div className="px-5 py-4">
+          <h2 className="font-display text-lg text-ink">Theo dõi theo sales</h2>
+          <p className="mt-0.5 text-xs text-ink-muted">
+            Mỗi sales đã mời bao nhiêu công ty, bao nhiêu khách. Số khách đếm theo người, không tính khách đã hủy, không tham dự hoặc vắng mặt.
+            Phần trăm là tỷ trọng trên quota của venue.
+          </p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-t border-ivory-deep text-left text-xs uppercase tracking-wider text-ink-muted">
+                <th className="px-5 py-3 font-medium">Sales</th>
+                <th className="px-3 py-3 text-right font-medium">Công ty</th>
+                <th className="px-3 py-3 text-right font-medium">Khách</th>
+                <th className="px-3 py-3 text-right font-medium">Thiệp</th>
+                <th className="px-3 py-3 text-right font-medium">Nháp</th>
+                <th className="px-3 py-3 text-right font-medium">Chờ duyệt</th>
+                <th className="px-3 py-3 text-right font-medium">Đã có vé</th>
+                <th className="px-3 py-3 text-right font-medium">Xác nhận</th>
+                <th className="px-3 py-3 text-right font-medium">Check in</th>
+                <th className="px-5 py-3 text-right font-medium">Doanh thu dự kiến</th>
+              </tr>
+            </thead>
+            <tbody>
+              {nhomVenue.map((v) => {
+                const ds = dsSales.filter((d) => d.venueId === v.id);
+                if (!ds.length) return null;
+                const tong = ds.reduce(
+                  (t, d) => ({
+                    soCongTy: t.soCongTy + d.soCongTy, soKhach: t.soKhach + d.soKhach, thiep: t.thiep + d.thiep, nhap: t.nhap + d.nhap,
+                    choDuyet: t.choDuyet + d.choDuyet, coVe: t.coVe + d.coVe, xacNhan: t.xacNhan + d.xacNhan, checkin: t.checkin + d.checkin, doanhThu: t.doanhThu + d.doanhThu,
+                  }),
+                  { soCongTy: 0, soKhach: 0, thiep: 0, nhap: 0, choDuyet: 0, coVe: 0, xacNhan: 0, checkin: 0, doanhThu: 0 }
+                );
+                const o = "px-3 py-2.5 text-right";
+                return [
+                  <tr key={`v-${v.id}`} className="border-t border-ivory-deep bg-ivory/50">
+                    <td className="px-5 py-2.5 font-medium text-ink">
+                      <span className="inline-flex items-center gap-2">
+                        <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: v.mau }} />
+                        {v.ten}
+                      </span>
+                    </td>
+                    <td className={`${o} font-medium`}>
+                      {tong.soCongTy}
+                      {v.mucTieuCongTy > 0 && <span className="font-normal text-ink-muted"> / {v.mucTieuCongTy}</span>}
+                    </td>
+                    <td className={`${o} font-medium`}>
+                      {tong.soKhach}
+                      {v.quota > 0 && <span className="font-normal text-ink-muted"> / {v.quota}</span>}
+                    </td>
+                    <td className={`${o} font-medium`}>{tong.thiep}</td>
+                    <td className={o}>{tong.nhap}</td>
+                    <td className={o}>{tong.choDuyet}</td>
+                    <td className={o}>{tong.coVe}</td>
+                    <td className={o}>{tong.xacNhan}</td>
+                    <td className={o}>{tong.checkin}</td>
+                    <td className="px-5 py-2.5 text-right font-medium">{tong.doanhThu ? dinhDangTien(tong.doanhThu) : "-"}</td>
+                  </tr>,
+                  ...ds.map((d) => (
+                    <tr key={`s-${v.id}-${d.ten}`} className="border-t border-ivory-deep">
+                      <td className="px-5 py-2.5 pl-10 text-ink">
+                        {d.ten}
+                        {!d.coTk && <span className="ml-2 text-[11px] text-ink-muted">chưa có tài khoản sales</span>}
+                      </td>
+                      <td className={o}>{d.soCongTy}</td>
+                      <td className={o}>
+                        {d.soKhach}
+                        {v.quota > 0 && <span className="ml-1.5 text-[11px] text-ink-muted">{Math.round((d.soKhach / v.quota) * 100)}%</span>}
+                      </td>
+                      <td className={o}>{d.thiep}</td>
+                      <td className={`${o} text-ink-muted`}>{d.nhap}</td>
+                      <td className={`${o} text-ink-muted`}>{d.choDuyet}</td>
+                      <td className={`${o} text-ink-muted`}>{d.coVe}</td>
+                      <td className={`${o} text-ink-muted`}>{d.xacNhan}</td>
+                      <td className={`${o} text-ink-muted`}>{d.checkin}</td>
+                      <td className="px-5 py-2.5 text-right text-ink-soft">{d.doanhThu ? dinhDangTien(d.doanhThu) : "-"}</td>
+                    </tr>
+                  )),
+                ];
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

@@ -39,7 +39,9 @@ const TRUONG_XEM = TRUONG.filter((f) => ["danhXung", "hoTen", "chucVu", "congTy"
 export function docCsv(text: string): string[][] {
   const t = text.replace(/^﻿/, "");
   const dongDau = t.split(/\r?\n/, 1)[0] || "";
-  const sep = (dongDau.match(/;/g) || []).length > (dongDau.match(/,/g) || []).length ? ";" : ",";
+  // Tab khi dan tu Google Sheet / Excel; khong thi dau phay hoac cham phay
+  const dem = (c: string) => dongDau.split(c).length - 1;
+  const sep = dem("\t") > 0 && dem("\t") >= dem(",") ? "\t" : dem(";") > dem(",") ? ";" : ",";
   const rows: string[][] = [];
   let row: string[] = [];
   let cell = "";

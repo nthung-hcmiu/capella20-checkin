@@ -45,32 +45,45 @@ export function CapNhatPhuTrach({ venues }: { venues: { id: string; ten: string 
   const [moTa, setMoTa] = useState("");
   const [kq, setKq] = useState<KetQuaPhuTrach | null>(null);
 
+  const xuLy = (sheets: { sheet: string; data: string[][] }[]) => {
+    const b = chonBang(sheets);
+    if (!b) throw new Error("Không thấy cột người phụ trách và cột công ty / tên khách. Nhớ chép cả dòng tiêu đề.");
+    const lay = (r: string[], i: number) => (i >= 0 ? String(r[i] ?? "").trim() : "");
+    const ds = b.rows
+      .slice(b.td + 1)
+      .map((r) => ({ hoTen: lay(r, b.cot.hoTen), congTy: lay(r, b.cot.congTy), maCorp: lay(r, b.cot.maCorp), sales: lay(r, b.cot.sales) }))
+      .filter((r) => r.sales && (r.congTy || r.hoTen || r.maCorp));
+    const tieuDe = b.rows[b.td];
+    const ten = (i: number) => (i >= 0 ? `"${tieuDe[i]}"` : "không có");
+    setDongDau(b.td + 2);
+    setDong(ds);
+    setMoTa(
+      `${ds.length} dòng có người phụ trách. Cột dùng: tên khách ${ten(b.cot.hoTen)}, công ty ${ten(b.cot.congTy)}, mã CORP ${ten(b.cot.maCorp)}, người phụ trách ${ten(b.cot.sales)}.`
+    );
+  };
+
   const docFile = async (f: File) => {
     setLoi(null); setKq(null); setDong(null); setTenFile(f.name);
     try {
-      let sheets: { sheet: string; data: string[][] }[];
-      if (/\.(csv|txt)$/i.test(f.name)) sheets = [{ sheet: f.name, data: docCsv(await f.text()) }];
+      if (/\.(csv|txt)$/i.test(f.name)) xuLy([{ sheet: f.name, data: docCsv(await f.text()) }]);
       else if (/\.xlsx$/i.test(f.name)) {
         const { default: readXlsxFile } = await import("read-excel-file/browser");
         const ds = await readXlsxFile(f);
-        sheets = (ds as any[]).map((s) => ({ sheet: s.sheet, data: s.data.map((r: unknown[]) => r.map(oThanhChu)) }));
-      } else throw new Error("Chọn file .xlsx hoặc .csv (Google Sheet: Tệp > Tải xuống > .xlsx).");
-      const b = chonBang(sheets);
-      if (!b) throw new Error("Không thấy cột người phụ trách và cột công ty / tên khách trong file.");
-      const lay = (r: string[], i: number) => (i >= 0 ? String(r[i] ?? "").trim() : "");
-      const ds = b.rows
-        .slice(b.td + 1)
-        .map((r) => ({ hoTen: lay(r, b.cot.hoTen), congTy: lay(r, b.cot.congTy), maCorp: lay(r, b.cot.maCorp), sales: lay(r, b.cot.sales) }))
-        .filter((r) => r.sales && (r.congTy || r.hoTen || r.maCorp));
-      const tieuDe = b.rows[b.td];
-      const ten = (i: number) => (i >= 0 ? `"${tieuDe[i]}"` : "không có");
-      setDongDau(b.td + 2);
-      setDong(ds);
-      setMoTa(
-        `${ds.length} dòng có người phụ trách. Cột dùng: tên khách ${ten(b.cot.hoTen)}, công ty ${ten(b.cot.congTy)}, mã CORP ${ten(b.cot.maCorp)}, người phụ trách ${ten(b.cot.sales)}.`
-      );
+        xuLy((ds as any[]).map((x) => ({ sheet: x.sheet, data: x.data.map((r: unknown[]) => r.map(oThanhChu)) })));
+      } else throw new Error("Chọn file .xlsx hoặc .csv, hoặc dán thẳng từ Google Sheet vào ô bên dưới.");
     } catch (e: any) {
       setLoi(e?.message || "Không đọc được file.");
+    }
+  };
+
+  // Dan tu Google Sheet / Excel: chon ca bang (Ctrl+A), chep (Ctrl+C), dan vao o
+  const dan = (text: string) => {
+    setLoi(null); setKq(null); setDong(null); setTenFile("");
+    if (!text.trim()) return;
+    try {
+      xuLy([{ sheet: "Dữ liệu dán", data: docCsv(text).map((r) => r.map((c) => c.trim())) }]);
+    } catch (e: any) {
+      setLoi(e?.message || "Không đọc được dữ liệu dán.");
     }
   };
 
@@ -108,6 +121,20 @@ export function CapNhatPhuTrach({ venues }: { venues: { id: string; ten: string 
           <input type="file" accept=".xlsx,.csv,.txt" className="hidden" onChange={(e) => e.target.files?.[0] && docFile(e.target.files[0])} />
           <span className="text-sm font-medium text-ink">{tenFile || "Bấm để chọn file .xlsx hoặc .csv"}</span>
         </label>
+      </div>
+      <div className="mt-3">
+        <label className="label">Hoặc dán từ Google Sheet</label>
+        <textarea
+          className="input min-h-[72px] font-mono text-xs"
+          placeholder="Mở Google Sheet, bấm Ctrl+A để chọn cả bảng, Ctrl+C để chép, rồi bấm vào đây và Ctrl+V"
+          onPaste={(e) => {
+            e.preventDefault();
+            const t = e.clipboardData.getData("text/plain");
+            (e.target as HTMLTextAreaElement).value = `Đã dán ${t.split("\n").length.toLocaleString("vi-VN")} dòng`;
+            dan(t);
+          }}
+          onChange={(e) => { if (!e.target.value.trim()) dan(""); }}
+        />
       </div>
       {loi && <div className="mt-3 rounded-xl bg-wine/10 px-4 py-2.5 text-sm text-wine">{loi}</div>}
 

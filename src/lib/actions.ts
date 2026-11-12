@@ -150,15 +150,6 @@ export async function taoKhach(input: {
   const salesMoi = moi.salesOwner;
   const moTaCty = u.vaiTro === "SALES" ? moTaChoSales(choSales(khacCty, u.hoTen, soNguoiMoi)) : moTaChoBtc(choBtc(khacCty, salesMoi, soNguoiMoi));
   if (moTaCty) note += ` ${moTaCty}`;
-  // Nhac sales quota cua minh (khong chan)
-  if (u.vaiTro === "SALES") {
-    const tk = await prisma.staffUser.findUnique({ where: { id: u.id }, select: { quota: true } });
-    if (tk?.quota != null) {
-      const dung = await prisma.guest.aggregate({ where: { salesOwner: u.hoTen, trangThai: { in: CHIEM_QUOTA } }, _sum: { soNguoiMoi: true } });
-      const so = dung._sum.soNguoiMoi || 0;
-      note += so > tk.quota ? ` Bạn đã vượt quota: ${so}/${tk.quota} khách, BTC sẽ xem khi duyệt.` : ` Quota của bạn: ${so}/${tk.quota} khách.`;
-    }
-  }
   // Nhac sales lich su nam truoc cua khach nay
   const boKhop = await taiBoKhop(prisma);
   if (boKhop.coDuLieu) note += ` ${boKhop.khop({ hoTen, sdt, maCorp: them.maCorp, congTy: them.congTy })!.chiTiet}`;
@@ -703,31 +694,4 @@ export async function thaoTacHangLoat(ids: string[], loai: LoaiHangLoat, giaTri?
       ? `Đã ${viec} ${n} khách.${boQua ? ` Bỏ qua ${boQua} khách không phù hợp trạng thái.` : ""}`
       : `Không có khách nào phù hợp để ${viec}.`,
   };
-}
-
-// ===== Quota theo sales =====
-
-// Dat quota so khach cho mot sales (null = bo quota)
-export async function datQuotaSales(id: string, quota: number | null): Promise<KetQua> {
-  await batBuocQuyen(["ADMIN"]);
-  const t = await prisma.staffUser.findUnique({ where: { id } });
-  if (!t || t.vaiTro !== "SALES") return { ok: false, thongBao: "Chỉ đặt quota cho tài khoản sales." };
-  const q = quota == null || !Number.isFinite(quota) ? null : Math.max(0, Math.min(5000, Math.round(quota)));
-  await prisma.staffUser.update({ where: { id }, data: { quota: q } });
-  lamTuoi();
-  return { ok: true, thongBao: q == null ? `Đã bỏ quota của ${t.hoTen}.` : `Đã đặt quota ${q} khách cho ${t.hoTen}.` };
-}
-
-// Chia deu quota cua venue cho cac sales thuoc venue do (phan du chia cho nguoi dau)
-export async function chiaDeuQuotaVenue(venueId: string): Promise<KetQua> {
-  await batBuocQuyen(["ADMIN"]);
-  const v = await prisma.venue.findUnique({ where: { id: venueId } });
-  if (!v || v.quota <= 0) return { ok: false, thongBao: "Venue chưa có quota." };
-  const ds = await prisma.staffUser.findMany({ where: { vaiTro: "SALES", venueId }, orderBy: { hoTen: "asc" } });
-  if (!ds.length) return { ok: false, thongBao: `${v.ten} chưa có sales nào được gán.` };
-  const phan = Math.floor(v.quota / ds.length);
-  const du = v.quota - phan * ds.length;
-  await prisma.$transaction(ds.map((s, i) => prisma.staffUser.update({ where: { id: s.id }, data: { quota: phan + (i < du ? 1 : 0) } })));
-  lamTuoi();
-  return { ok: true, thongBao: `Đã chia ${v.quota} khách của ${v.ten} cho ${ds.length} sales.` };
 }
