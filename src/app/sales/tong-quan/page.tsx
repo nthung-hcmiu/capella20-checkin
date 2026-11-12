@@ -15,6 +15,7 @@ export default async function SalesTongQuan() {
     prisma.venue.findMany({ orderBy: { thuTu: "asc" } }),
   ]);
   const conHieuLuc = guests.filter((g) => g.trangThai !== TRANG_THAI.DA_HUY);
+  const quota = (await prisma.staffUser.findUnique({ where: { id: u.id }, select: { quota: true } }))?.quota ?? null;
   const soLieu = tongHopTheoVenue(guests);
   const dongVenue = venues.map((v) => ({ v, r: soLieu.get(v.id) || rong() })).filter(({ r }) => r.soKhach > 0);
   const tong = dongVenue.reduce((t, { r }) => cong(t, r), rong());
@@ -41,7 +42,12 @@ export default async function SalesTongQuan() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5 lg:gap-4">
-        <The nhan="Khách phụ trách" gt={conHieuLuc.length.toLocaleString("vi-VN")} phu={`${tong.soKhach} người được mời`} />
+        <The
+          nhan="Khách phụ trách"
+          gt={conHieuLuc.length.toLocaleString("vi-VN")}
+          phu={quota != null ? `${tong.soKhach} / ${quota} người trong quota${tong.soKhach > quota ? ", đã vượt" : ""}` : `${tong.soKhach} người được mời`}
+          tiLe={quota ? Math.round((tong.soKhach / quota) * 100) : undefined}
+        />
         <The nhan="Công ty" gt={tong.soCongTy.toLocaleString("vi-VN")} phu="theo mã CORP hoặc tên" />
         <The nhan="Doanh thu dự kiến" gt={tong.doanhThu ? dinhDangTien(tong.doanhThu) : "0"} phu="mỗi công ty tính một lần" />
         <The nhan="Người xác nhận" gt={tong.xacNhan.toLocaleString("vi-VN")} phu={`${tiLeXN}% số người mời`} tiLe={tiLeXN} />

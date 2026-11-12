@@ -150,6 +150,15 @@ export async function taoKhach(input: {
   const salesMoi = moi.salesOwner;
   const moTaCty = u.vaiTro === "SALES" ? moTaChoSales(choSales(khacCty, u.hoTen, soNguoiMoi)) : moTaChoBtc(choBtc(khacCty, salesMoi, soNguoiMoi));
   if (moTaCty) note += ` ${moTaCty}`;
+  // Nhac sales quota cua minh (khong chan)
+  if (u.vaiTro === "SALES") {
+    const tk = await prisma.staffUser.findUnique({ where: { id: u.id }, select: { quota: true } });
+    if (tk?.quota != null) {
+      const dung = await prisma.guest.aggregate({ where: { salesOwner: u.hoTen, trangThai: { in: CHIEM_QUOTA } }, _sum: { soNguoiMoi: true } });
+      const so = dung._sum.soNguoiMoi || 0;
+      note += so > tk.quota ? ` Bạn đã vượt quota: ${so}/${tk.quota} khách, BTC sẽ xem khi duyệt.` : ` Quota của bạn: ${so}/${tk.quota} khách.`;
+    }
+  }
   // Nhac sales lich su nam truoc cua khach nay
   const boKhop = await taiBoKhop(prisma);
   if (boKhop.coDuLieu) note += ` ${boKhop.khop({ hoTen, sdt, maCorp: them.maCorp, congTy: them.congTy })!.chiTiet}`;
@@ -558,13 +567,18 @@ export interface DongNamTruoc {
   phuTrach?: string;
   soDangKy?: number;
   soDen?: number;
+  laDiKem?: boolean;
 }
 
 // Thay toan bo danh sach cua mot nam bang file moi
 export async function napLichSu(nam: number, rows: DongNamTruoc[]): Promise<KetQua> {
   await batBuocQuanTri();
   if (!Number.isInteger(nam) || nam < 2000 || nam > 2100) return { ok: false, thongBao: "Năm không hợp lệ." };
-  const lam = (s?: string) => (s ?? "").toString().trim().replace(/\s+/g, " ") || null;
+  // File tong hop hay de "0" o o trong (do cong thuc): coi la trong
+  const lam = (s?: string) => {
+    const t = (s ?? "").toString().trim().replace(/\s+/g, " ");
+    return t && t !== "0" ? t : null;
+  };
   const so = (n?: number) => (Number.isFinite(n) ? Math.max(0, Math.min(20, Math.round(n as number))) : 0);
   const data = rows
     .filter((r) => lam(r.hoTen))
@@ -581,12 +595,15 @@ export async function napLichSu(nam: number, rows: DongNamTruoc[]): Promise<KetQ
       phuTrach: lam(r.phuTrach),
       soDangKy: so(r.soDangKy),
       soDen: so(r.soDen),
+      laDiKem: !!r.laDiKem,
     }));
   if (data.length === 0) return { ok: false, thongBao: "File không có dòng khách nào." };
   await prisma.$transaction([prisma.khachNamTruoc.deleteMany({ where: { nam } }), prisma.khachNamTruoc.createMany({ data })]);
   lamTuoi();
-  const den = data.filter((d) => d.soDen > 0).length;
-  return { ok: true, thongBao: `Đã lưu ${data.length} khách năm ${nam}, trong đó ${den} khách đã đến.` };
+  const chinh = data.filter((d) => !d.laDiKem);
+  const den = chinh.filter((d) => d.soDen > 0).length;
+  const kem = data.length - chinh.length;
+  return { ok: true, thongBao: `Đã lưu ${chinh.length} khách năm ${nam} (${den} khách đã đến)${kem ? `, kèm ${kem} người đi kèm` : ""}.` };
 }
 
 export async function xoaLichSu(nam: number): Promise<KetQua> {
@@ -686,4 +703,31 @@ export async function thaoTacHangLoat(ids: string[], loai: LoaiHangLoat, giaTri?
       ? `Đã ${viec} ${n} khách.${boQua ? ` Bỏ qua ${boQua} khách không phù hợp trạng thái.` : ""}`
       : `Không có khách nào phù hợp để ${viec}.`,
   };
+}
+
+// ===== Quota theo sales =====
+
+// Dat quota so khach cho mot sales (null = bo quota)
+export async function datQuotaSales(id: string, quota: number | null): Promise<KetQua> {
+  await batBuocQuyen(["ADMIN"]);
+  const t = await prisma.staffUser.findUnique({ where: { id } });
+  if (!t || t.vaiTro !== "SALES") return { ok: false, thongBao: "Chỉ đặt quota cho tài khoản sales." };
+  const q = quota == null || !Number.isFinite(quota) ? null : Math.max(0, Math.min(5000, Math.round(quota)));
+  await prisma.staffUser.update({ where: { id }, data: { quota: q } });
+  lamTuoi();
+  return { ok: true, thongBao: q == null ? `Đã bỏ quota của ${t.hoTen}.` : `Đã đặt quota ${q} khách cho ${t.hoTen}.` };
+}
+
+// Chia deu quota cua venue cho cac sales thuoc venue do (phan du chia cho nguoi dau)
+export async function chiaDeuQuotaVenue(venueId: string): Promise<KetQua> {
+  await batBuocQuyen(["ADMIN"]);
+  const v = await prisma.venue.findUnique({ where: { id: venueId } });
+  if (!v || v.quota <= 0) return { ok: false, thongBao: "Venue chưa có quota." };
+  const ds = await prisma.staffUser.findMany({ where: { vaiTro: "SALES", venueId }, orderBy: { hoTen: "asc" } });
+  if (!ds.length) return { ok: false, thongBao: `${v.ten} chưa có sales nào được gán.` };
+  const phan = Math.floor(v.quota / ds.length);
+  const du = v.quota - phan * ds.length;
+  await prisma.$transaction(ds.map((s, i) => prisma.staffUser.update({ where: { id: s.id }, data: { quota: phan + (i < du ? 1 : 0) } })));
+  lamTuoi();
+  return { ok: true, thongBao: `Đã chia ${v.quota} khách của ${v.ten} cho ${ds.length} sales.` };
 }

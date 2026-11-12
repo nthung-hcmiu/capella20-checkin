@@ -3,6 +3,7 @@ import { yeuCauTrang } from "@/lib/auth";
 import { TRANG_THAI } from "@/lib/constants";
 import { dinhDangTien } from "@/lib/format";
 import { rong, tongHopTheoVenue } from "@/lib/kpi";
+import { QuotaSales, type DongQuotaSales, type NhomVenue } from "@/components/QuotaSales";
 
 export const dynamic = "force-dynamic";
 
@@ -12,10 +13,27 @@ export default async function QuotaPage() {
   const guests = await prisma.guest.findMany({
     select: {
       venueId: true, trangThai: true, congTy: true, maCorp: true, doanhThuDuKien: true,
-      soNguoiMoi: true, soNguoiXacNhan: true, soNguoiDen: true, lyDoChoDuyet: true,
+      soNguoiMoi: true, soNguoiXacNhan: true, soNguoiDen: true, lyDoChoDuyet: true, salesOwner: true,
     },
   });
   const soLieu = tongHopTheoVenue(guests);
+
+  // Quota theo sales: gom so lieu theo nguoi phu trach (dung lai ham gom theo venue, khoa la ten sales)
+  const salesTk = await prisma.staffUser.findMany({ where: { vaiTro: "SALES" }, orderBy: { hoTen: "asc" } });
+  const theoSales = tongHopTheoVenue(guests.map((g) => ({ ...g, venueId: g.salesOwner })));
+  const dsSales: DongQuotaSales[] = salesTk.map((t) => {
+    const r = theoSales.get(t.hoTen) || rong();
+    return { id: t.id, hoTen: t.hoTen, venueId: t.venueId, quota: t.quota, soKhach: r.soKhach, soThiep: r.thiep, soCongTy: r.soCongTy };
+  });
+  // Nguoi phu trach co khach nhung chua co tai khoan (vd BTC)
+  for (const [ten, r] of theoSales) {
+    if (r.thiep === 0 || salesTk.some((t) => t.hoTen === ten)) continue;
+    dsSales.push({ id: null, hoTen: ten, venueId: null, quota: null, soKhach: r.soKhach, soThiep: r.thiep, soCongTy: r.soCongTy });
+  }
+  const nhomVenue: NhomVenue[] = [
+    ...venues.map((v) => ({ id: v.id as string | null, ten: v.ten, mau: v.mauSac, quota: v.quota })),
+    { id: null, ten: "Chưa gán venue", mau: "#9a9086", quota: 0 },
+  ];
   const tongQuota = venues.reduce((s, v) => s + v.quota, 0);
 
   return (
@@ -74,6 +92,8 @@ export default async function QuotaPage() {
             );
           })}
       </div>
+
+      <QuotaSales nhom={nhomVenue} ds={dsSales} />
     </div>
   );
 }

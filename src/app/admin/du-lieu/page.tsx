@@ -12,9 +12,9 @@ export default async function DuLieuPage() {
     prisma.guest.count(),
     prisma.checkinLog.count({ where: { ketQua: "THANH_CONG" } }),
     prisma.guest.count({ where: { trangThai: TRANG_THAI.THAM_DU } }),
-    prisma.khachNamTruoc.groupBy({ by: ["nam"], _count: { _all: true }, orderBy: { nam: "desc" } }),
+    prisma.khachNamTruoc.groupBy({ by: ["nam"], where: { laDiKem: false }, _count: { _all: true }, orderBy: { nam: "desc" } }),
   ]);
-  const daDen = await prisma.khachNamTruoc.groupBy({ by: ["nam"], where: { soDen: { gt: 0 } }, _count: { _all: true } });
+  const daDen = await prisma.khachNamTruoc.groupBy({ by: ["nam"], where: { soDen: { gt: 0 }, laDiKem: false }, _count: { _all: true } });
   const namDaTai = namTruoc.map((n) => ({
     nam: n.nam,
     soKhach: n._count._all,
