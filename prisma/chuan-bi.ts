@@ -40,8 +40,27 @@ async function main() {
   }
 
   // KPI venue: ghi de quota va muc tieu mot lan cho moi phien ban KPI
-  const kpiDaApDung = (await docCaiDat(prisma, "phienBanKpi")) === PHIEN_BAN_KPI;
-  await dongBoVenue(prisma, !kpiDaApDung);
+  const kpiHienTai = await docCaiDat(prisma, "phienBanKpi");
+  const kpiDaApDung = kpiHienTai === PHIEN_BAN_KPI;
+  // Tu kpi-3 len kpi-4 chi chuyen 5 cong ty (10 khach) tu Holdings sang Chill, cong tru tren so dang co
+  // de khong ghi de quota BTC da chinh tay o venue khac
+  const chiChuyenQuota = kpiHienTai === "2026-10-kpi-3";
+  await dongBoVenue(prisma, !kpiDaApDung && !chiChuyenQuota);
+  if (chiChuyenQuota) {
+    const [bod, chill] = await Promise.all([
+      prisma.venue.findUnique({ where: { code: "BOD" } }),
+      prisma.venue.findUnique({ where: { code: "CHILL" } }),
+    ]);
+    if (bod && chill) {
+      const cty = Math.min(5, bod.mucTieuCongTy);
+      const khach = Math.min(10, bod.quota);
+      await prisma.$transaction([
+        prisma.venue.update({ where: { id: bod.id }, data: { mucTieuCongTy: bod.mucTieuCongTy - cty, quota: bod.quota - khach } }),
+        prisma.venue.update({ where: { id: chill.id }, data: { mucTieuCongTy: chill.mucTieuCongTy + cty, quota: chill.quota + khach } }),
+      ]);
+      console.log(`[capella] Chuyen quota Holdings sang Chill: ${cty} cong ty, ${khach} khach.`);
+    }
+  }
   if (!kpiDaApDung) {
     await ghiCaiDat(prisma, "phienBanKpi", PHIEN_BAN_KPI);
     console.log(`[capella] Ap dung KPI venue ${PHIEN_BAN_KPI}: quota theo so khach muc tieu.`);
