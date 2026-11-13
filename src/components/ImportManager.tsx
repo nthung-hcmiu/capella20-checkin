@@ -251,6 +251,8 @@ export function ImportManager({
         </button>
       </div>
 
+      <CacBuoc buoc={daNhap ? 4 : kiemTra ? 3 : bang.length > 0 && cot ? 2 : 1} />
+
       {/* Buoc 1 */}
       <div className="card p-6">
         <div className="text-xs font-medium uppercase tracking-wider text-brand-deep">Bước 1</div>
@@ -277,8 +279,10 @@ export function ImportManager({
       {bang.length > 0 && cot && !daNhap && (
         <div className="card p-6">
           <div className="text-xs font-medium uppercase tracking-wider text-brand-deep">Bước 2</div>
-          <h2 className="mt-1 font-display text-lg text-ink">Ghép cột</h2>
-          <p className="mt-1 text-sm text-ink-muted">Hệ thống đã đoán theo tiêu đề. Kiểm tra lại, cột nào sai thì chọn lại.</p>
+          <h2 className="mt-1 font-display text-lg text-ink">Ghép cột rồi kiểm tra file</h2>
+          <p className="mt-1 text-sm text-ink-muted">
+            Hệ thống đã đoán cột theo tiêu đề. Xem lại, cột nào sai thì chọn lại, rồi bấm nút <b>Tiếp tục: kiểm tra file</b> ở cuối khung này.
+          </p>
 
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div>
@@ -419,20 +423,20 @@ export function ImportManager({
           </div>
           <p className="mt-2 text-xs text-ink-muted">Xem trước 5 dòng đầu.</p>
 
-          <div className="mt-5 flex flex-wrap items-center gap-3">
-            <button className="btn-ink" disabled={thieuCot || pending} onClick={() => chay(false)}>
-              {pending && !kiemTra ? "Đang kiểm tra..." : "Kiểm tra trước"}
-            </button>
-            {kiemTra && kiemTra.tongHop.hopLe > 0 && (
-              <button className="btn-brand" disabled={pending} onClick={() => chay(true)}>
-                {pending ? "Đang nhập..." : `Nhập ${kiemTra.tongHop.hopLe.toLocaleString("vi-VN")} khách`}
+          <div className="mt-5 rounded-xl bg-ivory/70 p-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <button className="btn-ink" disabled={thieuCot || pending} onClick={() => chay(false)}>
+                {pending && !kiemTra ? "Đang kiểm tra..." : kiemTra ? "Kiểm tra lại" : "Tiếp tục: kiểm tra file"}
               </button>
-            )}
-            {thieuCot && <span className="text-xs text-wine">Cần có cột Tên khách mời, và cột Đơn vị (venue) hoặc venue mặc định.</span>}
+              <span className="text-xs text-ink-muted">Bước này chỉ kiểm tra, chưa lưu gì vào app.</span>
+            </div>
+            {thieuCot && <p className="mt-2 text-xs text-wine">Cần có cột Tên khách mời, và cột Đơn vị (venue) hoặc venue mặc định.</p>}
             {kiemTra && !pending && (
-              <span className={`text-sm ${kiemTra.ok ? "text-sage" : "text-wine"}`}>{kiemTra.thongBao} Xem chi tiết bên dưới.</span>
+              <p className={`mt-2 text-sm ${kiemTra.ok ? "text-sage" : "text-wine"}`}>
+                {kiemTra.thongBao} Khách chưa được lưu: xem Bước 3 ngay bên dưới để lưu vào app.
+              </p>
             )}
-            {loiNhap && <span className="text-sm text-wine">{loiNhap}</span>}
+            {loiNhap && !kiemTra && <p className="mt-2 text-sm text-wine">{loiNhap}</p>}
           </div>
         </div>
       )}
@@ -440,11 +444,54 @@ export function ImportManager({
       {/* Ket qua */}
       {ketQua && (
         <div ref={ketQuaRef} className="card scroll-mt-4 p-6">
-          <div className="text-xs font-medium uppercase tracking-wider text-brand-deep">{daNhap ? "Đã nhập" : "Bước 3"}</div>
-          <h2 className="mt-1 font-display text-lg text-ink">{daNhap ? "Kết quả nhập" : "Kết quả kiểm tra"}</h2>
-          <div className={`mt-3 rounded-xl px-4 py-2.5 text-sm ${ketQua.ok ? "bg-sage/10 text-sage" : "bg-wine/10 text-wine"}`}>
-            {ketQua.thongBao}
-          </div>
+          <div className="text-xs font-medium uppercase tracking-wider text-brand-deep">{daNhap ? "Hoàn tất" : "Bước 3: bước cuối"}</div>
+          <h2 className="mt-1 font-display text-lg text-ink">{daNhap ? "Đã lưu khách vào app" : "Lưu khách vào app"}</h2>
+          {daNhap ? (
+            <div className={`mt-3 rounded-xl px-4 py-3 text-sm ${daNhap.ok ? "bg-sage/10 text-sage" : "bg-wine/10 text-wine"}`}>
+              <div className="font-medium">{daNhap.thongBao}</div>
+              {daNhap.ok && daNhap.tongHop.nhap > 0 && (
+                <div className="mt-1">
+                  Việc tiếp theo: mở danh sách khách, xem các khách đang ở trạng thái Nháp, bổ sung thông tin còn thiếu rồi bấm Gửi duyệt để BTC
+                  duyệt và phát hành vé.
+                </div>
+              )}
+              {daNhap.ok && daNhap.tongHop.nhap === 0 && daNhap.tongHop.choDuyet > 0 && (
+                <div className="mt-1">Khách đã vào hàng Chờ duyệt, BTC duyệt xong sẽ phát hành vé.</div>
+              )}
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Link href={laSales ? (daNhap.tongHop.nhap > 0 ? "/sales?nhom=nhap" : "/sales") : "/admin/khach"} className="btn-brand">
+                  Xem danh sách khách
+                </Link>
+                <button className="btn-ghost" onClick={() => { setDaNhap(null); setBang([]); setTenFile(""); setCot(null); }}>
+                  Nhập file khác
+                </button>
+              </div>
+            </div>
+          ) : ketQua.tongHop.hopLe > 0 ? (
+            <div className="mt-3 rounded-xl border-2 border-brand/40 bg-brand/5 px-4 py-4">
+              <div className="text-sm font-medium text-ink">
+                Chưa xong: file mới được kiểm tra, khách chưa vào app. Bấm nút dưới đây để hoàn tất.
+              </div>
+              <div className="mt-1 text-sm text-ink-soft">
+                {ketQua.thongBao}
+                {ketQua.tongHop.loi > 0 && ` ${ketQua.tongHop.loi.toLocaleString("vi-VN")} dòng lỗi sẽ bị bỏ qua, lý do ghi ở bảng bên dưới.`}
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <button className="btn-brand px-6 py-3 text-base" disabled={pending} onClick={() => chay(true)}>
+                  {pending ? "Đang lưu, chờ chút..." : `Hoàn tất: lưu ${ketQua.tongHop.hopLe.toLocaleString("vi-VN")} khách vào app`}
+                </button>
+                <button className="btn-ghost" disabled={pending} onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+                  Quay lại sửa cột hoặc đổi file
+                </button>
+              </div>
+              {loiNhap && <p className="mt-2 text-sm text-wine">{loiNhap}</p>}
+            </div>
+          ) : (
+            <div className="mt-3 rounded-xl bg-wine/10 px-4 py-3 text-sm text-wine">
+              <div className="font-medium">Chưa lưu được khách nào.</div>
+              <div className="mt-1">{ketQua.thongBao} Xem lý do ở bảng bên dưới, sửa file hoặc chọn lại cột ở Bước 2 rồi kiểm tra lại.</div>
+            </div>
+          )}
           {ketQua.tongHop.khacSales > 0 && (
             <div className="mt-3 rounded-xl bg-wine/10 px-4 py-2.5 text-sm text-wine">
               Bỏ qua {ketQua.tongHop.khacSales.toLocaleString("vi-VN")} dòng ghi người phụ trách là sales khác. File gộp của cả venue nên để BTC nhập,
@@ -466,16 +513,11 @@ export function ImportManager({
             <O nhan="Lỗi, bỏ qua" so={ketQua.tongHop.loi} do />
           </div>
 
-          <div className="mt-5 flex items-center justify-between">
+          <div className="mt-5">
             <label className="flex items-center gap-2 text-sm text-ink-soft">
               <input type="checkbox" className="h-4 w-4 accent-brand" checked={chiXemLoi} onChange={(e) => setChiXemLoi(e.target.checked)} />
               Chỉ xem dòng lỗi hoặc cần chú ý
             </label>
-            {daNhap && (
-              <Link href={laSales ? "/sales" : "/admin/khach"} className="btn-brand btn-sm">
-                Xem danh sách khách
-              </Link>
-            )}
           </div>
           <div className="mt-3 max-h-[480px] overflow-auto rounded-xl border border-ivory-deep">
             <table className="w-full text-xs">
@@ -521,11 +563,6 @@ export function ImportManager({
             </table>
           </div>
           {ketQua.dong.length > 300 && <p className="mt-2 text-xs text-ink-muted">Hiển thị 300 dòng đầu.</p>}
-          {daNhap && (
-            <button className="btn-ghost mt-4" onClick={() => { setDaNhap(null); setBang([]); setTenFile(""); setCot(null); }}>
-              Nhập file khác
-            </button>
-          )}
         </div>
       )}
 
@@ -546,6 +583,36 @@ export function ImportManager({
         </ul>
       </div>
     </div>
+  );
+}
+
+// Thanh tien trinh: sales nhin la biet dang o buoc nao va con buoc nao chua lam
+function CacBuoc({ buoc }: { buoc: number }) {
+  const ds = ["Chọn file", "Ghép cột, kiểm tra file", "Lưu khách vào app"];
+  return (
+    <ol className="card flex flex-wrap items-center gap-x-3 gap-y-2 px-5 py-3 text-sm">
+      {ds.map((t, i) => {
+        const n = i + 1;
+        const xong = buoc > n;
+        const dang = buoc === n;
+        return (
+          <li key={t} className="flex items-center gap-2">
+            {i > 0 && <span className="text-ink-muted">›</span>}
+            <span
+              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-medium ${
+                xong ? "bg-sage text-white" : dang ? "bg-brand text-white" : "bg-ivory-deep text-ink-muted"
+              }`}
+            >
+              {xong ? "✓" : n}
+            </span>
+            <span className={dang ? "font-medium text-ink" : xong ? "text-ink-soft" : "text-ink-muted"}>{t}</span>
+          </li>
+        );
+      })}
+      <li className={`ml-auto text-xs ${buoc > 3 ? "font-medium text-sage" : "text-ink-muted"}`}>
+        {buoc > 3 ? "Đã xong" : `Đang ở bước ${buoc}/3`}
+      </li>
+    </ol>
   );
 }
 
