@@ -19,8 +19,9 @@ const HUONG_DAN: VaiTro[] = [
       {
         tieuDe: "Trước sự kiện",
         buoc: [
-          ["Nhập danh sách", "Nhập danh sách > chọn file Excel > chọn trạng thái sau khi nhập (Chờ duyệt hoặc Đã phát hành vé) > Kiểm tra trước > Nhập."],
+          ["Nhập danh sách", "Nhập danh sách > chọn file Excel > chọn trạng thái sau khi nhập (Chờ duyệt hoặc Đã phát hành vé) > Tiếp tục: kiểm tra file > Hoàn tất: lưu khách vào app."],
           ["Duyệt", "Chờ duyệt: khách sales đã gửi. Xem cảnh báo (trùng SĐT, trùng tên cùng công ty, VIP, venue hết quota) rồi Duyệt hoặc Từ chối. Khách không có cảnh báo duyệt một lần bằng nút Duyệt tất cả."],
+          ["Trả về nháp", "Vé đã phát hành mà cần cho sales sửa số người mời, VIP hoặc venue: Danh sách khách > bấm vào khách > Trả về nháp (hoặc tick nhiều khách rồi chọn Trả về nháp để sales sửa). Sales sửa xong gửi duyệt, BTC duyệt lại. Số thứ tự và mã QR giữ nguyên. Trong lúc chờ duyệt lại, QR vẫn quét được nhưng lễ tân sẽ thấy cảnh báo thiệp chưa phát hành, nên duyệt lại trước ngày sự kiện."],
           ["Xem khách", "Danh sách khách: bấm vào dòng nào là mở toàn bộ thông tin và các nút xử lý của khách đó."],
           ["Cùng công ty", "Danh sách khách > bộ lọc Công ty: xem công ty nào có nhiều sales cùng mời, hoặc được mời trên 2 người. Hàng Chờ duyệt cũng ghi rõ các khách cùng công ty và sales của từng người."],
           ["Theo dõi theo sales", "Quota venue > Theo dõi theo sales: mỗi sales đã mời bao nhiêu công ty, bao nhiêu khách, bao nhiêu thiệp đang nháp, chờ duyệt, đã có vé, đã xác nhận, đã check in."],

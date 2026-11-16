@@ -5,7 +5,7 @@ import Link from "next/link";
 import { StatusBadge } from "./StatusBadge";
 import { DUOC_XAC_NHAN, NHAN_CANH_BAO, NHAN_TRANG_THAI, TRANG_THAI } from "@/lib/constants";
 import { che4SoCuoi, boDau, dinhDangGio } from "@/lib/format";
-import { taoKhach, datThiepGiay, xacNhanKhach, guiDuyet, danhDauDaMoi, huyKhach, duyetKhach, xoaKhach } from "@/lib/actions";
+import { taoKhach, datThiepGiay, xacNhanKhach, guiDuyet, danhDauDaMoi, huyKhach, duyetKhach, xoaKhach, traVeNhap } from "@/lib/actions";
 import { NHAN_TRUONG, TRUONG_CHU, moTaDiCung, tenGoi, thieuThongTinMoi, type ThongTinThem } from "@/lib/khach";
 import { ChipLichSu } from "./ChipLichSu";
 import { HopChon, HopChonTatCa, ThanhHangLoat } from "./ThanhHangLoat";
@@ -423,6 +423,16 @@ function Dong({
                 {g.daGuiThiepGiay ? "Bỏ đánh dấu thiệp giấy" : "Đã gửi thiệp giấy"}
               </button>
               <span className="ml-auto flex gap-2">
+                {g.trangThai !== TRANG_THAI.NHAP && g.trangThai !== TRANG_THAI.DA_CHECKIN && (
+                  <button
+                    className="btn-ghost btn-sm"
+                    disabled={pending}
+                    title="Thu hồi vé để sales sửa lại rồi gửi duyệt. Số thứ tự và mã QR giữ nguyên."
+                    onClick={() => act(() => traVeNhap(g.id))}
+                  >
+                    Trả về nháp
+                  </button>
+                )}
                 {g.trangThai !== TRANG_THAI.DA_HUY && g.trangThai !== TRANG_THAI.DA_CHECKIN && (
                   <button
                     className="rounded-full border border-wine/30 px-3.5 py-1.5 text-xs text-wine hover:bg-wine/5"

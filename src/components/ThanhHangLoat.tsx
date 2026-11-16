@@ -11,6 +11,7 @@ const THAO_TAC: { loai: LoaiHangLoat; nhan: string; btc?: boolean; sales?: boole
   { loai: "THAM_DU", nhan: "Xác nhận tham dự (đủ số người)", sales: true, btc: true },
   { loai: "KHONG_THAM_DU", nhan: "Không tham dự", sales: true, btc: true },
   { loai: "DOI_SALES", nhan: "Đổi người phụ trách", btc: true },
+  { loai: "TRA_NHAP", nhan: "Trả về nháp để sales sửa", btc: true },
   { loai: "HUY", nhan: "Hủy thiệp", btc: true, nguyHiem: true },
   { loai: "XOA_NHAP", nhan: "Xóa nháp", sales: true, nguyHiem: true },
   { loai: "XOA", nhan: "Xóa khách", btc: true, nguyHiem: true },

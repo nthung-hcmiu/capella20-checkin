@@ -234,6 +234,21 @@ export async function huyKhach(id: string) {
   lamTuoi();
 }
 
+// BTC thu hoi ve de sales sua lai: khach ve Nhap, giu nguyen so thu tu va ma QR.
+// Sales sua xong gui duyet, BTC duyet lai thi thiep cu dung tiep. Trong luc cho, QR van quet duoc nhung le tan thay canh bao chua phat hanh.
+const TRA_NHAP_DATA = {
+  trangThai: TRANG_THAI.NHAP, lyDoChoDuyet: null, phatHanhLuc: null, soNguoiXacNhan: null, xacNhanLuc: null, xacNhanBoi: null,
+};
+const DUOC_TRA_NHAP = { notIn: [TRANG_THAI.NHAP, TRANG_THAI.DA_CHECKIN] as string[] };
+export async function traVeNhap(id: string): Promise<KetQua> {
+  await batBuocQuyen(["ADMIN"]);
+  const r = await prisma.guest.updateMany({ where: { id, trangThai: DUOC_TRA_NHAP }, data: TRA_NHAP_DATA });
+  lamTuoi();
+  return r.count
+    ? { ok: true, thongBao: "Đã trả về Nháp. Sales sửa xong gửi duyệt lại, số thứ tự và mã QR giữ nguyên." }
+    : { ok: false, thongBao: "Khách đang là Nháp hoặc đã check in, không trả về nháp được." };
+}
+
 export async function phatHanh(id: string) {
   await duyetKhach(id);
 }
@@ -610,9 +625,9 @@ export async function xoaLichSu(nam: number): Promise<KetQua> {
 
 export type LoaiHangLoat =
   | "DUYET" | "GUI_DUYET" | "DA_GUI_ONLINE" | "DA_GUI_GIAY" | "THAM_DU" | "KHONG_THAM_DU"
-  | "DOI_SALES" | "HUY" | "XOA" | "XOA_NHAP";
+  | "DOI_SALES" | "TRA_NHAP" | "HUY" | "XOA" | "XOA_NHAP";
 
-const CHI_BTC: LoaiHangLoat[] = ["DUYET", "DOI_SALES", "HUY", "XOA"];
+const CHI_BTC: LoaiHangLoat[] = ["DUYET", "DOI_SALES", "TRA_NHAP", "HUY", "XOA"];
 
 // Ap dung mot thao tac cho nhieu khach. Khach khong phu hop (sai trang thai, khong thuoc sales) duoc bo qua.
 export async function thaoTacHangLoat(ids: string[], loai: LoaiHangLoat, giaTri?: string): Promise<KetQua> {
@@ -672,6 +687,10 @@ export async function thaoTacHangLoat(ids: string[], loai: LoaiHangLoat, giaTri?
       viec = `chuyển cho ${ten} phụ trách`;
       break;
     }
+    case "TRA_NHAP":
+      n = (await prisma.guest.updateMany({ where: { ...pham, trangThai: DUOC_TRA_NHAP }, data: TRA_NHAP_DATA })).count;
+      viec = "trả về Nháp";
+      break;
     case "HUY":
       n = (await prisma.guest.updateMany({
         where: { ...pham, trangThai: { notIn: [TRANG_THAI.DA_CHECKIN, TRANG_THAI.DA_HUY] } },
