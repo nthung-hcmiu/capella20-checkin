@@ -63,6 +63,11 @@ const NHOM = [
   { key: "daXN", nhan: "Đã xác nhận", tt: [TRANG_THAI.THAM_DU, TRANG_THAI.KHONG_THAM_DU, TRANG_THAI.DA_CHECKIN, TRANG_THAI.VANG_MAT] as string[] },
 ];
 
+// Khach trung voi khach cua sales khac / trung trong danh sach cua chinh minh
+const trungSalesKhac = (g: SalesGuest) => g.trung.some((x) => x.salesOwner !== g.toi);
+const trungCuaToi = (g: SalesGuest) => g.trung.some((x) => x.salesOwner === g.toi);
+type LocTrung = "" | "khac" | "toi";
+
 export function SalesPortal({
   guests,
   venues,
@@ -76,16 +81,18 @@ export function SalesPortal({
 }) {
   const [q, setQ] = useState("");
   const [nhom, setNhom] = useState(NHOM.some((n) => n.key === nhomDau) ? nhomDau! : "tatCa");
+  const [trung, setTrung] = useState<LocTrung>("");
   const ds = useMemo(() => {
     const s = boDau(q);
     const tt = NHOM.find((n) => n.key === nhom)?.tt;
     return guests.filter(
       (g) =>
         (!tt || tt.includes(g.trangThai)) &&
+        (!trung || (trung === "khac" ? trungSalesKhac(g) : trungCuaToi(g))) &&
         (!s || boDau(g.hoTen).includes(s) || boDau(g.congTy || "").includes(s) || (g.sdt || "").includes(q.trim()) || String(g.soThuTu).includes(q.trim()))
     );
-  }, [guests, q, nhom]);
-  const loc = { q, setQ, nhom, setNhom };
+  }, [guests, q, nhom, trung]);
+  const loc = { q, setQ, nhom, setNhom, trung, setTrung };
 
   return (
     <>
@@ -99,7 +106,7 @@ export function SalesPortal({
   );
 }
 
-type Loc = { q: string; setQ: (s: string) => void; nhom: string; setNhom: (s: string) => void };
+type Loc = { q: string; setQ: (s: string) => void; nhom: string; setNhom: (s: string) => void; trung: LocTrung; setTrung: (s: LocTrung) => void };
 type ViewProps = { guests: SalesGuest[]; ds: SalesGuest[]; venues: SalesVenue[]; venuesSua: { id: string; ten: string }[]; loc: Loc };
 
 function ChipNhom({ guests, loc }: { guests: SalesGuest[]; loc: Loc }) {
@@ -117,6 +124,32 @@ function ChipNhom({ guests, loc }: { guests: SalesGuest[]; loc: Loc }) {
           </button>
         );
       })}
+    </>
+  );
+}
+
+// Loc khach trung: bam de chi xem khach trung, bam lan nua de bo loc. Ket hop duoc voi nhom trang thai.
+function ChipTrung({ guests, loc }: { guests: SalesGuest[]; loc: Loc }) {
+  const ds: [LocTrung, string, number][] = [
+    ["khac", "Trùng với sales khác", guests.filter(trungSalesKhac).length],
+    ["toi", "Trùng trong danh sách của tôi", guests.filter(trungCuaToi).length],
+  ];
+  return (
+    <>
+      {ds
+        .filter(([k, , so]) => k === "khac" || so > 0 || loc.trung === k)
+        .map(([k, nhan, so]) => (
+          <button
+            key={k}
+            onClick={() => loc.setTrung(loc.trung === k ? "" : k)}
+            aria-pressed={loc.trung === k}
+            className={`chip shrink-0 whitespace-nowrap border px-3 py-1.5 ${
+              loc.trung === k ? "border-wine bg-wine text-white" : so > 0 ? "border-wine/40 bg-wine/10 text-wine" : "border-transparent bg-white text-ink-muted"
+            }`}
+          >
+            {nhan} {so}
+          </button>
+        ))}
     </>
   );
 }
@@ -151,6 +184,10 @@ function DienThoai({ guests, ds, venues, venuesSua, loc }: ViewProps) {
           <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1">
             <ChipNhom guests={guests} loc={loc} />
           </div>
+          {/* Hang rieng de khong bi khuat sau hang cuon ngang */}
+          <div className="flex flex-wrap gap-1.5">
+            <ChipTrung guests={guests} loc={loc} />
+          </div>
           <div className="flex gap-2">
             <input className="input" placeholder="Tìm tên, công ty hoặc SĐT..." value={loc.q} onChange={(e) => loc.setQ(e.target.value)} />
             <a href="/in-qr" target="_blank" className="btn-ghost shrink-0 px-3 text-xs">
@@ -160,12 +197,13 @@ function DienThoai({ guests, ds, venues, venuesSua, loc }: ViewProps) {
           <GuiDuyetLoat ids={guests.filter((g) => g.trangThai === TRANG_THAI.NHAP).map((g) => g.id)} />
           {ds.length === 0 && <p className="py-6 text-center text-sm text-ink-muted">Không có khách trong nhóm này.</p>}
           {ds.map((g) => (
-            <div key={g.id} className="card p-4">
+            <div key={g.id} className={`card p-4 ${g.trung.length ? "border-2 border-wine/50 bg-wine/5" : ""}`}>
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-mono text-xs text-ink-muted">{g.soThuTu}</span>
                     <span className="font-medium text-ink">{tenGoi(g)}</span>
+                    {g.trung.length > 0 && <span className="chip bg-wine text-white">Trùng</span>}
                     <ChipLichSu ls={g.lichSu} />
                     {g.isVip && <span className="chip bg-brand/15 text-brand-deep">VIP</span>}
                   </div>
@@ -200,7 +238,7 @@ function MayTinh({ guests, ds, venues, venuesSua, loc }: ViewProps) {
   const [moThem, setMoThem] = useState(false);
   // Tick chon khach de thao tac hang loat; doi bo loc thi bo chon
   const [chon, setChon] = useState<Set<string>>(new Set());
-  useEffect(() => setChon(new Set()), [loc.q, loc.nhom]);
+  useEffect(() => setChon(new Set()), [loc.q, loc.nhom, loc.trung]);
   const doiChon = (id: string) =>
     setChon((s) => {
       const m = new Set(s);
@@ -242,6 +280,7 @@ function MayTinh({ guests, ds, venues, venuesSua, loc }: ViewProps) {
           onChange={(e) => loc.setQ(e.target.value)}
         />
         <ChipNhom guests={guests} loc={loc} />
+        <ChipTrung guests={guests} loc={loc} />
       </div>
 
       <ThanhHangLoat ids={[...chon]} laSales onXong={() => setChon(new Set())} />
@@ -290,7 +329,11 @@ function DongMayTinh({
   return (
     <>
       <tr
-        className={`cursor-pointer border-t border-ivory-deep ${chon ? "bg-brand/5" : mo ? "bg-ivory/60" : "hover:bg-ivory/50"}`}
+        className={`cursor-pointer border-t ${
+          g.trung.length
+            ? `border-wine/30 ${chon ? "bg-wine/15" : "bg-wine/[0.07] hover:bg-wine/[0.12]"}`
+            : `border-ivory-deep ${chon ? "bg-brand/5" : mo ? "bg-ivory/60" : "hover:bg-ivory/50"}`
+        }`}
         onClick={() => setMo((v) => !v)}
         tabIndex={0}
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setMo((v) => !v); } }}
@@ -304,6 +347,7 @@ function DongMayTinh({
         <td className="px-3 py-3">
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="font-medium text-ink">{tenGoi(g)}</span>
+            {g.trung.length > 0 && <span className="chip bg-wine text-white">Trùng</span>}
             <ChipLichSu ls={g.lichSu} />
           </div>
           {(g.chucVu || g.congTy) && <div className="text-xs text-ink-soft">{[g.chucVu, g.congTy].filter(Boolean).join(" · ")}</div>}
