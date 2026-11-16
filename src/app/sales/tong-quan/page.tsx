@@ -109,7 +109,7 @@ export default async function SalesTongQuan() {
                   <span className="text-sm text-ink">{r.doanhThu ? dinhDangTien(r.doanhThu) : "-"}</span>
                 </div>
                 <div className="mt-1 text-xs text-ink-muted">
-                  {r.soCongTy} công ty · {r.soKhach} khách · {r.xacNhan} xác nhận · {r.checkin} check in · {r.thiep} thiệp
+                  {r.soCongTy} công ty · {r.soKhach} khách · {r.xacNhan} xác nhận · {r.checkin} check in · {r.thiepGiay} thiệp giấy
                 </div>
               </div>
             ))}
@@ -124,7 +124,7 @@ export default async function SalesTongQuan() {
                   <th className="whitespace-nowrap px-3 py-3 text-right font-medium">Số khách</th>
                   <th className="whitespace-nowrap px-3 py-3 text-right font-medium">Xác nhận</th>
                   <th className="whitespace-nowrap px-3 py-3 text-right font-medium">Check in</th>
-                  <th className="px-5 py-3 text-right font-medium">Thiệp</th>
+                  <th className="px-5 py-3 text-right font-medium">Thiệp giấy</th>
                 </tr>
               </thead>
               <tbody>
@@ -141,7 +141,7 @@ export default async function SalesTongQuan() {
                     <td className="px-3 py-3 text-right">{r.soKhach}</td>
                     <td className="px-3 py-3 text-right">{r.xacNhan}</td>
                     <td className="px-3 py-3 text-right">{r.checkin}</td>
-                    <td className="px-5 py-3 text-right">{r.thiep}</td>
+                    <td className="px-5 py-3 text-right">{r.thiepGiay}</td>
                   </tr>
                 ))}
                 {dongVenue.length > 1 && (
@@ -152,7 +152,7 @@ export default async function SalesTongQuan() {
                     <td className="px-3 py-3 text-right">{tong.soKhach}</td>
                     <td className="px-3 py-3 text-right">{tong.xacNhan}</td>
                     <td className="px-3 py-3 text-right">{tong.checkin}</td>
-                    <td className="px-5 py-3 text-right">{tong.thiep}</td>
+                    <td className="px-5 py-3 text-right">{tong.thiepGiay}</td>
                   </tr>
                 )}
               </tbody>

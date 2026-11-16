@@ -14,7 +14,7 @@ export default async function QuotaPage() {
     select: {
       venueId: true, trangThai: true, congTy: true, maCorp: true, doanhThuDuKien: true,
       soNguoiMoi: true, soNguoiXacNhan: true, soNguoiDen: true, lyDoChoDuyet: true, salesOwner: true,
-      hoTen: true, soThuTu: true,
+      hoTen: true, soThuTu: true, isVip: true,
     },
   });
   const soLieu = tongHopTheoVenue(guests);

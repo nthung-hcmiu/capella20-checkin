@@ -16,8 +16,9 @@ const TRUONG: { key: Truong; nhan: string; batBuoc?: boolean; phu?: boolean; don
   { key: "venue", nhan: "Đơn vị (venue)", dongNghia: ["don vi", "venue", "chi nhanh", "nha hang", "dia diem", "co so", "sanh", "trung tam"] },
   { key: "soNguoiMoi", nhan: "Số lượng người tham dự", dongNghia: ["so luong nguoi tham du", "so nguoi moi", "so nguoi duoc moi", "so nguoi tham du", "so nguoi", "so khach", "so luong", "sl"] },
   { key: "sales", nhan: "Người phụ trách tiếp khách", dongNghia: ["ho va ten nguoi phu trach tiep khach", "nguoi phu trach tiep khach", "sales phu trach", "nguoi phu trach", "sales", "sale", "nhan vien phu trach", "phu trach", "nhan vien", "nv"] },
-  { key: "diCungTen", nhan: "Tên khách thứ 2", dongNghia: ["ten khach thu 2", "khach thu 2", "ten nguoi di cung", "nguoi di cung", "khach di cung"] },
-  { key: "diCungChucVu", nhan: "Chức vụ khách thứ 2", dongNghia: ["chuc vu khach thu 2", "chuc vu nguoi di cung", "chuc vu khach di cung"] },
+  { key: "diCungDanhXung", nhan: "Danh xưng khách thứ 2", dongNghia: ["danh xung khach thu 2", "danh xung khach di cung", "danh xung khach di kem", "danh xung nguoi di cung"] },
+  { key: "diCungTen", nhan: "Tên khách thứ 2", dongNghia: ["ten khach thu 2", "khach thu 2", "ten nguoi di cung", "nguoi di cung", "khach di cung", "ten khach di kem", "khach di kem"] },
+  { key: "diCungChucVu", nhan: "Chức vụ khách thứ 2", dongNghia: ["chuc vu khach thu 2", "chuc vu nguoi di cung", "chuc vu khach di cung", "chuc vu khach di kem"] },
   { key: "vip", nhan: "Phân loại khách VIP", dongNghia: ["phan loai khach vip", "khach vip", "vip", "hang khach"] },
   { key: "danhXung", nhan: "Danh xưng", phu: true, dongNghia: ["danh xung", "xung ho", "gioi tinh"] },
   { key: "chucVu", nhan: "Chức vụ", phu: true, dongNghia: ["chuc vu", "chuc danh", "position", "title"] },
@@ -96,13 +97,13 @@ function taiFileMau() {
   const tieuDe = [
     "STT", "Đơn vị", "Mã CORP Netsuite", "Company Name",
     "Lĩnh vực", "Danh xưng", "Tên khách mời", "Chức vụ", "Số điện thoại", "Địa chỉ", "Số lượng người tham dự",
-    "Tên khách thứ 2", "Chức vụ khách thứ 2", "Phân loại khách",
+    "Danh xưng khách thứ 2", "Tên khách thứ 2", "Chức vụ khách thứ 2", "Phân loại khách",
     "Phân loại khách VIP", "Doanh thu dự kiến", "Round 2: Đã gửi thiệp giấy",
     "Họ và tên người phụ trách tiếp khách", "Ghi chú",
   ];
   const mau = [
-    ["1", "Gallery Hall", "COR0000001", "CÔNG TY TNHH MẪU A", "Công Nghệ/Viễn Thông", "Ông", "Nguyễn Văn An", "Giám đốc", "0901234567", "12 Nguyễn Huệ, P. Bến Nghé, Q.1, TP.HCM", "1", "", "", "Khách cũ", "VIP", "120.000.000 đ", "", "Thu Hà", ""],
-    ["2", "Riverside Palace", "COR0000002", "CÔNG TY CP MẪU B", "Event/Media Agency", "Bà", "Trần Thị Bình", "Trưởng phòng", "0912345678", "45 Lê Lợi, P. Bến Thành, Q.1, TP.HCM", "2", "Lê Văn Cường", "Phó phòng", "Khách tiềm năng", "THƯỜNG", "80.000.000 đ", "", "Minh Quân", "Mời 2 người thì điền tên và chức vụ khách thứ 2"],
+    ["1", "Gallery Hall", "COR0000001", "CÔNG TY TNHH MẪU A", "Công Nghệ/Viễn Thông", "Ông", "Nguyễn Văn An", "Giám đốc", "0901234567", "12 Nguyễn Huệ, P. Bến Nghé, Q.1, TP.HCM", "1", "", "", "", "Khách cũ", "VIP", "120.000.000 đ", "", "Thu Hà", ""],
+    ["2", "Riverside Palace", "COR0000002", "CÔNG TY CP MẪU B", "Event/Media Agency", "Bà", "Trần Thị Bình", "Trưởng phòng", "0912345678", "45 Lê Lợi, P. Bến Thành, Q.1, TP.HCM", "2", "Ông", "Lê Văn Cường", "Phó phòng", "Khách tiềm năng", "THƯỜNG", "80.000.000 đ", "", "Minh Quân", "Mời 2 người thì điền danh xưng, tên và chức vụ khách thứ 2"],
   ];
   const csv = "﻿" + [tieuDe, ...mau].map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(",")).join("\r\n");
   const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
@@ -574,7 +575,7 @@ export function ImportManager({
           <li>Cột VIP ghi VIP, x, có hoặc 1 là khách VIP (THƯỜNG là khách thường). Khách VIP và venue hết quota được gắn cảnh báo để BTC xem khi duyệt.</li>
           <li>Venue ghi tên ngắn như “Riverside”, “Claris” vẫn nhận được.</li>
           <li>Phân loại khách gồm Khách cũ, Khách tiềm năng và Đối tác (file cũ ghi Netsuite, Contact mới vẫn tự đổi). Lĩnh vực theo danh sách cố định của app.</li>
-          <li>Mời 2 người thì điền Tên khách thứ 2 và Chức vụ khách thứ 2. Thiếu thì vẫn nhập được nhưng phải bổ sung trên app trước khi gửi duyệt.</li>
+          <li>Mời 2 người thì điền Danh xưng, Tên và Chức vụ khách thứ 2, vì mỗi người nhận một thiệp riêng. Thiếu thì vẫn nhập được nhưng phải bổ sung trên app trước khi gửi duyệt.</li>
           {laSales ? (
             <li>Khách nhập vào đều do bạn phụ trách. Dòng ghi người phụ trách là sales khác sẽ bị bỏ qua (file gộp của venue nên để BTC nhập). Mỗi lần tối đa 500 dòng.</li>
           ) : (

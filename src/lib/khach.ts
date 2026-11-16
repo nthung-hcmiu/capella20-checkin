@@ -77,8 +77,10 @@ export function chuanLinhVuc(s: string | null | undefined): string | null {
   return String(s).trim();
 }
 
-// Khach di cung tren cung mot thiep (nguoi thu 2 tro di): bat buoc ten va chuc vu
+// Khach di cung tren cung mot ve (nguoi thu 2 tro di): bat buoc danh xung, ten va chuc vu,
+// vi moi nguoi nhan mot thiep rieng ghi dung ten minh
 export interface NguoiDiCung {
+  danhXung?: string;
   hoTen: string;
   chucVu: string;
 }
@@ -86,15 +88,19 @@ export function docDiCung(s: string | null | undefined): NguoiDiCung[] {
   if (!s) return [];
   try {
     const v = JSON.parse(s);
-    return Array.isArray(v) ? v.map((x) => ({ hoTen: String(x?.hoTen ?? ""), chucVu: String(x?.chucVu ?? "") })) : [];
+    return Array.isArray(v)
+      ? v.map((x) => ({ danhXung: String(x?.danhXung ?? ""), hoTen: String(x?.hoTen ?? ""), chucVu: String(x?.chucVu ?? "") }))
+      : [];
   } catch {
     return [];
   }
 }
 // Giu dung so nguoi di cung theo so nguoi moi, cat khoang trang
 export function lamSachDiCung(ds: NguoiDiCung[] | undefined, soNguoiMoi: number): NguoiDiCung[] {
-  const lam = (x: string) => String(x ?? "").trim().replace(/\s+/g, " ");
-  return (ds || []).slice(0, Math.max(0, soNguoiMoi - 1)).map((x) => ({ hoTen: lam(x.hoTen), chucVu: lam(x.chucVu) }));
+  const lam = (x: string | undefined) => String(x ?? "").trim().replace(/\s+/g, " ");
+  return (ds || [])
+    .slice(0, Math.max(0, soNguoiMoi - 1))
+    .map((x) => ({ danhXung: lam(x.danhXung), hoTen: lam(x.hoTen), chucVu: lam(x.chucVu) }));
 }
 export function ghiDiCung(ds: NguoiDiCung[]): string | null {
   const co = ds.filter((x) => x.hoTen || x.chucVu);
@@ -114,13 +120,17 @@ export function thieuThongTinMoi(g: {
   const ds = docDiCung(g.khachDiCung);
   for (let i = 0; i < g.soNguoiMoi - 1; i++) {
     if (!ds[i]?.hoTen?.trim() || !ds[i]?.chucVu?.trim()) return `Thiếu tên hoặc chức vụ khách thứ ${i + 2}`;
+    if (!ds[i]?.danhXung?.trim()) return `Thiếu danh xưng khách thứ ${i + 2}`;
   }
   return null;
 }
 export function moTaDiCung(s: string | null | undefined): string {
   return docDiCung(s)
     .filter((x) => x.hoTen)
-    .map((x) => (x.chucVu ? `${x.hoTen} (${x.chucVu})` : x.hoTen))
+    .map((x) => {
+      const ten = [x.danhXung, x.hoTen].filter(Boolean).join(" ");
+      return x.chucVu ? `${ten} (${x.chucVu})` : ten;
+    })
     .join("; ");
 }
 

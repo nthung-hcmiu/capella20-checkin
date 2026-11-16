@@ -103,9 +103,19 @@ export function SoNguoiDiCung({
       </div>
       {soDiCung > 0 && (
         <div className="col-span-full space-y-2 rounded-xl border border-brand/20 bg-ivory/50 p-3">
-          <div className="text-xs text-ink-soft">Mời {so} người: điền tên và chức vụ của từng khách đi cùng.</div>
+          <div className="text-xs text-ink-soft">
+            Mời {so} người: điền danh xưng, tên và chức vụ của từng khách đi cùng. Mỗi người nhận một thiệp riêng ghi đúng tên mình.
+          </div>
           {Array.from({ length: soDiCung }, (_, i) => (
-            <div key={i} className={nhoGon ? "space-y-2" : "grid gap-2 sm:grid-cols-2"}>
+            <div key={i} className={nhoGon ? "space-y-2" : "grid gap-2 sm:grid-cols-[120px_1fr_1fr]"}>
+              <select name={`dcDanhXung_${i}`} className="input" defaultValue={diCungDau[i]?.danhXung || ""} required aria-label={`Danh xưng khách thứ ${i + 2}`}>
+                <option value="">Danh xưng *</option>
+                {DANH_XUNG.map((x) => (
+                  <option key={x} value={x}>
+                    {x}
+                  </option>
+                ))}
+              </select>
               <input
                 name={`dcTen_${i}`}
                 className="input"
@@ -132,7 +142,11 @@ export function docDiCungForm(fd: FormData): NguoiDiCung[] {
   const ds: NguoiDiCung[] = [];
   for (let i = 0; i < 9; i++) {
     if (!fd.has(`dcTen_${i}`)) break;
-    ds.push({ hoTen: String(fd.get(`dcTen_${i}`) || ""), chucVu: String(fd.get(`dcChucVu_${i}`) || "") });
+    ds.push({
+      danhXung: String(fd.get(`dcDanhXung_${i}`) || ""),
+      hoTen: String(fd.get(`dcTen_${i}`) || ""),
+      chucVu: String(fd.get(`dcChucVu_${i}`) || ""),
+    });
   }
   return ds;
 }

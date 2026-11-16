@@ -23,6 +23,10 @@ export function maCorpThat(maCorp: string | null | undefined): string | null {
 // Nhan su noi bo Capella (ban lanh dao, sales, marketing) khong phai khach cua sales nao,
 // nen khong xet "cung cong ty" / "trung cong ty giua cac sales" cho nhom nay
 const laNoiBo = (cty: string | null) => !!cty && /^capella( |$)/.test(cty);
+export const laNoiBoCapella = (congTy: string | null | undefined) => laNoiBo(khoaCty(congTy));
+// Thiep giay: moi khach mot thiep, tru sales va marketing noi bo Capella (chi can thiep online).
+// Ban lanh dao Capella (noi bo, VIP) van nhan thiep giay.
+export const canThiepGiay = (g: { congTy: string | null | undefined; isVip?: boolean | null }) => !laNoiBoCapella(g.congTy) || !!g.isVip;
 
 function cacKhoa(g: { maCorp?: string | null; congTy?: string | null }): string[] {
   const cty = khoaCty(g.congTy);

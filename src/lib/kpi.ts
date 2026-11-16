@@ -1,12 +1,14 @@
 // Tong hop so lieu theo venue de so voi KPI: thiep, cong ty, khach, doanh thu du kien
 import { CHIEM_QUOTA, TRANG_THAI } from "./constants";
 import { boDau, docTien } from "./format";
+import { canThiepGiay } from "./congTy";
 
 export interface KhachKpi {
   venueId: string;
   trangThai: string;
   congTy: string | null;
   maCorp: string | null;
+  isVip?: boolean | null;
   doanhThuDuKien: string | null;
   soNguoiMoi: number;
   soNguoiXacNhan: number | null;
@@ -14,7 +16,8 @@ export interface KhachKpi {
 }
 
 export interface SoLieuVenue {
-  thiep: number; // so thiep con hieu luc (chiem quota)
+  thiep: number; // so dong khach con hieu luc (chiem quota)
+  thiepGiay: number; // so thiep giay can in: moi nguoi mot thiep, tru sales va marketing noi bo Capella
   soCongTy: number;
   soKhach: number; // so nguoi duoc moi con hieu luc, dung de so voi quota
   doanhThu: number;
@@ -30,7 +33,7 @@ export function khoaCongTy(g: { congTy: string | null; maCorp: string | null }):
 }
 
 export function rong(): SoLieuVenue {
-  return { thiep: 0, soCongTy: 0, soKhach: 0, doanhThu: 0, xacNhan: 0, checkin: 0 };
+  return { thiep: 0, thiepGiay: 0, soCongTy: 0, soKhach: 0, doanhThu: 0, xacNhan: 0, checkin: 0 };
 }
 
 // Doanh thu tinh mot lan cho moi cong ty (lay gia tri lon nhat neu nhieu khach cung cong ty ghi)
@@ -43,6 +46,7 @@ export function tongHopTheoVenue(guests: KhachKpi[]): Map<string, SoLieuVenue> {
     if (CHIEM_QUOTA.includes(g.trangThai)) {
       r.thiep++;
       r.soKhach += g.soNguoiMoi;
+      if (canThiepGiay(g)) r.thiepGiay += g.soNguoiMoi;
     }
     if (g.trangThai === TRANG_THAI.THAM_DU || g.trangThai === TRANG_THAI.DA_CHECKIN) r.xacNhan += g.soNguoiXacNhan ?? g.soNguoiMoi;
     if (g.trangThai === TRANG_THAI.DA_CHECKIN) r.checkin += g.soNguoiDen ?? g.soNguoiXacNhan ?? g.soNguoiMoi;
@@ -64,7 +68,7 @@ export function tongHopTheoVenue(guests: KhachKpi[]): Map<string, SoLieuVenue> {
 
 export function cong(a: SoLieuVenue, b: SoLieuVenue): SoLieuVenue {
   return {
-    thiep: a.thiep + b.thiep, soCongTy: a.soCongTy + b.soCongTy, soKhach: a.soKhach + b.soKhach,
+    thiep: a.thiep + b.thiep, thiepGiay: a.thiepGiay + b.thiepGiay, soCongTy: a.soCongTy + b.soCongTy, soKhach: a.soKhach + b.soKhach,
     doanhThu: a.doanhThu + b.doanhThu, xacNhan: a.xacNhan + b.xacNhan, checkin: a.checkin + b.checkin,
   };
 }

@@ -222,6 +222,10 @@ export default async function Dashboard({ searchParams }: { searchParams: { khon
             <p className="text-xs text-ink-muted">
               Thực tế so với KPI. Doanh thu dự kiến cộng theo công ty (mỗi công ty tính một lần), không tính khách đã hủy.
             </p>
+            <p className="mt-0.5 text-xs text-ink-muted">
+              Thiệp giấy: mỗi khách một thiệp, kể cả khách đi kèm, không tính sales và marketing nội bộ Capella. Thiệp online: mỗi người một thiệp,
+              bằng cột Số khách.
+            </p>
           </div>
           <Link href="/admin/quota" className="text-xs font-medium text-brand hover:underline">
             Xem quota và KPI →
@@ -238,7 +242,7 @@ export default async function Dashboard({ searchParams }: { searchParams: { khon
                 <th className="px-3 py-3 text-right font-medium">Số khách</th>
                 <th className="px-3 py-3 text-right font-medium">Xác nhận</th>
                 <th className="px-3 py-3 text-right font-medium">Check in</th>
-                <th className="px-6 py-3 text-right font-medium">Thiệp</th>
+                <th className="px-6 py-3 text-right font-medium">Thiệp giấy</th>
               </tr>
             </thead>
             <tbody>
@@ -257,7 +261,8 @@ export default async function Dashboard({ searchParams }: { searchParams: { khon
                   <td className="px-3 py-3 text-right">{r.xacNhan}</td>
                   <td className="px-3 py-3 text-right">{r.checkin}</td>
                   <td className="px-6 py-3 text-right">
-                    {r.thiep}
+                    {r.thiepGiay}
+                    {r.soKhach > r.thiepGiay && <div className="text-[11px] text-ink-muted">{r.soKhach - r.thiepGiay} nội bộ không cần</div>}
                   </td>
                 </tr>
               ))}
@@ -269,7 +274,10 @@ export default async function Dashboard({ searchParams }: { searchParams: { khon
                 <td className="px-3 py-3 text-right">{tongVenue.xacNhan}</td>
                 <td className="px-3 py-3 text-right">{tongVenue.checkin}</td>
                 <td className="px-6 py-3 text-right">
-                  {tongVenue.thiep}
+                  {tongVenue.thiepGiay}
+                  {tongVenue.soKhach > tongVenue.thiepGiay && (
+                    <div className="text-[11px] font-normal text-ink-muted">{tongVenue.soKhach - tongVenue.thiepGiay} nội bộ không cần</div>
+                  )}
                 </td>
               </tr>
             </tbody>
