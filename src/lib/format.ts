@@ -60,6 +60,15 @@ export function docTien(raw: string | null | undefined): number {
   return so ? parseInt(so, 10) : 0;
 }
 
+// Doanh thu ghi day du, co dau cham ngan: "349955000" hay "1,2 ty" -> "349.955.000 đ" / "1.200.000.000 đ".
+// Chuoi khong doc ra so thi giu nguyen.
+export function hienTien(raw: string | null | undefined): string {
+  const s = String(raw ?? "").trim();
+  if (!s) return "";
+  const n = docTien(s);
+  return n > 0 ? String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " đ" : s;
+}
+
 // Hien thi tien gon: 1,25 tỷ / 950 triệu / 12.000.000 đ
 export function dinhDangTien(n: number): string {
   if (!n) return "0";

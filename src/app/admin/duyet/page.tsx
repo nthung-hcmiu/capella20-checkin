@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { locPhamVi, yeuCauTrang } from "@/lib/auth";
 import { TRANG_THAI } from "@/lib/constants";
+import { hienTien } from "@/lib/format";
 import { ApproveQueue, ChoDuyetItem } from "@/components/ApproveQueue";
 import { taiBoKhop } from "@/lib/lichSu";
 import { CHON_CONG_TY, choBtc, moTaChoBtc, taoBoCongTy, taoBoTrung } from "@/lib/congTy";
@@ -47,7 +48,7 @@ export default async function DuyetPage() {
       thieu: thieuThongTinMoi({ sdt: g.sdt, diaChi: g.diaChi, chucVu: g.chucVu, soNguoiMoi: g.soNguoiMoi, khachDiCung: g.khachDiCung }),
       salesOwner: g.salesOwner,
       canhBao,
-      doanhThuDuKien: g.doanhThuDuKien,
+      doanhThuDuKien: hienTien(g.doanhThuDuKien) || null,
       isVip: g.isVip,
       xungDot: khac
         ? {

@@ -8,7 +8,7 @@ import { HopChon, HopChonTatCa, ThanhHangLoat } from "./ThanhHangLoat";
 import type { LichSu } from "@/lib/lichSu";
 import { moTaChoSales, moTaKhachTrung, moTaTrung, type CongTySales, type KhachTrung } from "@/lib/congTy";
 import { FormKhach, OThongTin, SoNguoiDiCung, docDiCungForm, docThem } from "./FormKhach";
-import { che4SoCuoi, boDau, dinhDangGio } from "@/lib/format";
+import { che4SoCuoi, boDau, dinhDangGio, hienTien } from "@/lib/format";
 import { taoKhach, danhDauDaMoi, datThiepGiay, xacNhanKhach, guiDuyet, xoaNhap } from "@/lib/actions";
 import { DANH_XUNG, LINH_VUC, NHAN_TRUONG, PHAN_LOAI_KHACH, docDiCung, moTaDiCung, tenGoi, thieuThongTinMoi, type ThongTinThem } from "@/lib/khach";
 import { CHUA_PHAT_HANH, DUOC_XAC_NHAN, NHAN_CANH_BAO, SU_KIEN, TRANG_THAI } from "@/lib/constants";
@@ -213,7 +213,7 @@ function DienThoai({ guests, ds, venues, venuesSua, loc }: ViewProps) {
                   <div className="mt-0.5 text-xs text-ink-muted">
                     {che4SoCuoi(g.sdt)} · {g.venueTen} · mời {g.soNguoiMoi}
                     {g.trangThai === TRANG_THAI.THAM_DU && g.soNguoiXacNhan != null ? ` · tham dự ${g.soNguoiXacNhan}` : ""}
-                    {g.them.doanhThuDuKien ? ` · ${g.them.doanhThuDuKien}` : ""}
+                    {g.them.doanhThuDuKien ? ` · ${hienTien(g.them.doanhThuDuKien)}` : ""}
                   </div>
                   {g.khachDiCung && <div className="mt-0.5 text-xs text-ink-soft">Cùng: {moTaDiCung(g.khachDiCung)}</div>}
                   {g.congTyKhac && (
@@ -368,7 +368,7 @@ function DongMayTinh({
             {g.venueTen}
           </span>
         </td>
-        <td className="whitespace-nowrap px-3 py-3 text-right text-xs text-ink-soft">{g.them.doanhThuDuKien || "-"}</td>
+        <td className="whitespace-nowrap px-3 py-3 text-right text-xs text-ink-soft">{hienTien(g.them.doanhThuDuKien) || "-"}</td>
         <td className="px-3 py-3 text-center">
           <span className="text-ink">{g.soNguoiMoi}</span>
           <span className="text-ink-muted"> / {g.soNguoiXacNhan ?? "-"}</span>

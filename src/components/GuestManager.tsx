@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { StatusBadge } from "./StatusBadge";
 import { DUOC_XAC_NHAN, NHAN_CANH_BAO, NHAN_TRANG_THAI, TRANG_THAI } from "@/lib/constants";
-import { che4SoCuoi, boDau, dinhDangGio } from "@/lib/format";
+import { che4SoCuoi, boDau, dinhDangGio, hienTien } from "@/lib/format";
 import { taoKhach, datThiepGiay, xacNhanKhach, guiDuyet, danhDauDaMoi, huyKhach, duyetKhach, xoaKhach, traVeNhap } from "@/lib/actions";
 import { NHAN_TRUONG, TRUONG_CHU, docDiCung, moTaDiCung, tenGoi, thieuThongTinMoi, type ThongTinThem } from "@/lib/khach";
 import { ChipLichSu } from "./ChipLichSu";
@@ -348,7 +348,7 @@ function Dong({
             {g.venueTen}
           </span>
         </td>
-        <td className="whitespace-nowrap px-3 py-3 text-right text-xs text-ink-soft">{g.them.doanhThuDuKien || "-"}</td>
+        <td className="whitespace-nowrap px-3 py-3 text-right text-xs text-ink-soft">{hienTien(g.them.doanhThuDuKien) || "-"}</td>
         <td className="px-3 py-3 text-center">
           <span className="text-ink">{g.soNguoiMoi}</span>
           <span className="text-ink-muted"> / {g.soNguoiXacNhan ?? "-"}</span>

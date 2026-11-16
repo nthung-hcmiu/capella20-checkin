@@ -6,6 +6,7 @@ import { dongBoVenue, gieoDuLieu } from "../src/lib/seedData";
 import { damBaoMaKhoiTao, docCaiDat, ghiCaiDat } from "../src/lib/caiDat";
 import { PHIEN_BAN_KPI } from "../src/lib/constants";
 import { chuanLinhVuc, chuanPhanLoai } from "../src/lib/khach";
+import { hienTien } from "../src/lib/format";
 import { tenDangNhapCu, tenDangNhapGoiY } from "../src/lib/taiKhoan";
 
 const PHIEN_BAN_MAU = "2";
@@ -78,19 +79,21 @@ async function main() {
 
   // Phan loai khach chi con Khach cu / Khach tiem nang / Doi tac; linh vuc gop theo danh sach co dinh
   const canChuan = await prisma.guest.findMany({
-    where: { OR: [{ nguonKhach: { not: null } }, { linhVuc: { not: null } }] },
-    select: { id: true, nguonKhach: true, linhVuc: true },
+    where: { OR: [{ nguonKhach: { not: null } }, { linhVuc: { not: null } }, { doanhThuDuKien: { not: null } }] },
+    select: { id: true, nguonKhach: true, linhVuc: true, doanhThuDuKien: true },
   });
   let soChuan = 0;
   for (const g of canChuan) {
     const nguonKhach = g.nguonKhach ? chuanPhanLoai(g.nguonKhach) : null;
     const linhVuc = g.linhVuc ? chuanLinhVuc(g.linhVuc) : null;
-    if (nguonKhach !== g.nguonKhach || linhVuc !== g.linhVuc) {
-      await prisma.guest.update({ where: { id: g.id }, data: { nguonKhach, linhVuc } });
+    // Doanh thu ghi thong nhat co dau cham ngan: 349955000 -> 349.955.000 đ
+    const doanhThuDuKien = g.doanhThuDuKien ? hienTien(g.doanhThuDuKien) || null : null;
+    if (nguonKhach !== g.nguonKhach || linhVuc !== g.linhVuc || doanhThuDuKien !== g.doanhThuDuKien) {
+      await prisma.guest.update({ where: { id: g.id }, data: { nguonKhach, linhVuc, doanhThuDuKien } });
       soChuan++;
     }
   }
-  if (soChuan) console.log(`[capella] Chuan hoa phan loai khach / linh vuc: ${soChuan} khach.`);
+  if (soChuan) console.log(`[capella] Chuan hoa phan loai khach / linh vuc / doanh thu: ${soChuan} khach.`);
 
   // Doi ten dang nhap tao theo cong thuc cu (thuplm) sang cong thuc moi (plmthu), mot lan
   if (!(await docCaiDat(prisma, "doiTenDangNhap1"))) {

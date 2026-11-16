@@ -1,6 +1,6 @@
 // Thong tin khach theo mau danh sach cac nam truoc, va khoa chong trung khi khong co SDT
 
-import { boDau } from "./format";
+import { boDau, hienTien } from "./format";
 
 // Cac truong chu ngoai ho ten, SDT. Da bo "Thuoc don vi kinh doanh", "Phong ban", "Nhom khach moi", "Nhom khach" (cot CSDL van giu).
 export const TRUONG_CHU = [
@@ -154,6 +154,7 @@ export function lamSach(t: ThongTinThem): ThongTinThem {
     const s = v == null ? "" : String(v).trim().replace(/\s+/g, " ");
     r[k] = s || null;
   }
+  if (r.doanhThuDuKien) r.doanhThuDuKien = hienTien(r.doanhThuDuKien); // luu thong nhat dang 349.955.000 đ
   if (r.nguonKhach) r.nguonKhach = chuanPhanLoai(r.nguonKhach);
   if (r.linhVuc) r.linhVuc = chuanLinhVuc(r.linhVuc);
   return r;
