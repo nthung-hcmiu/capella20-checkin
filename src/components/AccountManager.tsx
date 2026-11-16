@@ -22,6 +22,7 @@ export interface TaiKhoanRow {
   coMatKhau: boolean;
   doiMatKhau: boolean;
   laToi: boolean;
+  thiepSo: number | null; // so thu tu cua khach trung ho ten (nguoi nay da co trong danh sach khach moi)
 }
 
 const THU_TU = ["ADMIN", "SALES", "LE_TAN"];
@@ -38,7 +39,7 @@ function matKhauNgauNhien(): string {
 
 export function AccountManager({ ds, quanTri, venues }: { ds: TaiKhoanRow[]; quanTri: boolean; venues: VenueOpt[] }) {
   const [kq, setKq] = useState<KetQua | null>(null);
-  const [moForm, setMoForm] = useState<"" | "mot" | "nhieu">("");
+  const [moForm, setMoForm] = useState<"" | "mot" | "nhieu" | "xuat">("");
   const soChuaCo = ds.filter((d) => !d.coMatKhau).length;
 
   return (
@@ -53,6 +54,9 @@ export function AccountManager({ ds, quanTri, venues }: { ds: TaiKhoanRow[]; qua
         </div>
         {quanTri && (
           <div className="flex flex-wrap gap-2">
+            <button className="btn-ghost" onClick={() => setMoForm((v) => (v === "xuat" ? "" : "xuat"))}>
+              {moForm === "xuat" ? "Đóng" : "Xuất làm khách mời"}
+            </button>
             <button className="btn-ghost" onClick={() => setMoForm((v) => (v === "nhieu" ? "" : "nhieu"))}>
               {moForm === "nhieu" ? "Đóng" : "Tạo nhiều tài khoản"}
             </button>
@@ -69,6 +73,7 @@ export function AccountManager({ ds, quanTri, venues }: { ds: TaiKhoanRow[]; qua
 
       {quanTri && moForm === "mot" && <FormThem venues={venues} onKq={setKq} onXong={() => setMoForm("")} />}
       {quanTri && moForm === "nhieu" && <FormNhieu venues={venues} />}
+      {quanTri && moForm === "xuat" && <XuatLamKhach ds={ds} />}
 
       {quanTri && soChuaCo > 0 && <MatKhauChung soChuaCo={soChuaCo} onKq={setKq} />}
 
@@ -96,6 +101,99 @@ export function AccountManager({ ds, quanTri, venues }: { ds: TaiKhoanRow[]; qua
           </div>
         );
       })}
+    </div>
+  );
+}
+
+// Xuat tai khoan sales / BTC thanh file dung mau nhap danh sach, de moi chinh ho lam khach du su kien.
+// File tao ngay tren trinh duyet tu du lieu trang nay, khong gui di dau.
+function XuatLamKhach({ ds }: { ds: TaiKhoanRow[] }) {
+  const ungVien = ds
+    .filter((t) => t.vaiTro === "SALES" || t.vaiTro === "ADMIN")
+    .sort((a, b) => Number(a.vaiTro !== "SALES") - Number(b.vaiTro !== "SALES") || (a.venueTen || "").localeCompare(b.venueTen || "", "vi") || a.hoTen.localeCompare(b.hoTen, "vi"));
+  // Mac dinh: moi tai khoan sales chua co trong danh sach khach moi
+  const [chon, setChon] = useState<Set<string>>(new Set(ungVien.filter((t) => t.vaiTro === "SALES" && t.thiepSo === null).map((t) => t.id)));
+  const [phuTrach, setPhuTrach] = useState("");
+  const doi = (id: string) =>
+    setChon((s) => {
+      const m = new Set(s);
+      if (m.has(id)) m.delete(id);
+      else m.add(id);
+      return m;
+    });
+  const dsChon = ungVien.filter((t) => chon.has(t.id));
+  const tai = () => {
+    const tieuDe = [
+      "STT", "Đơn vị", "Mã CORP Netsuite", "Company Name", "Lĩnh vực", "Danh xưng", "Tên khách mời", "Chức vụ", "Số điện thoại", "Địa chỉ",
+      "Số lượng người tham dự", "Danh xưng khách thứ 2", "Tên khách thứ 2", "Chức vụ khách thứ 2", "Phân loại khách", "Phân loại khách VIP",
+      "Doanh thu dự kiến", "Round 2: Đã gửi thiệp giấy", "Họ và tên người phụ trách tiếp khách", "Ghi chú",
+    ];
+    const dong = dsChon.map((t, i) => [
+      String(i + 1), "Holdings", "", "CAPELLA HOLDINGS", "", "", t.hoTen,
+      t.vaiTro === "SALES" ? (t.venueTen ? `Sales, ${t.venueTen}` : "Sales") : "",
+      "", "", "1", "", "", "", "", "THƯỜNG", "", "", phuTrach.trim(), "Nội bộ Capella, không cần thiệp giấy.",
+    ]);
+    const csv = "﻿" + [tieuDe, ...dong].map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(",")).join("\r\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "sales-noi-bo-lam-khach-moi.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+  const nhom = (vt: string, tieuDe: string) => {
+    const d = ungVien.filter((t) => t.vaiTro === vt);
+    if (!d.length) return null;
+    return (
+      <div>
+        <div className="flex items-center gap-3 text-xs text-ink-muted">
+          <span className="font-medium uppercase tracking-wider">{tieuDe}</span>
+          <button className="underline" onClick={() => setChon((s) => new Set([...s, ...d.map((t) => t.id)]))}>
+            Chọn hết
+          </button>
+          <button className="underline" onClick={() => setChon((s) => new Set([...s].filter((id) => !d.some((t) => t.id === id))))}>
+            Bỏ hết
+          </button>
+        </div>
+        <div className="mt-2 grid gap-x-4 gap-y-1.5 sm:grid-cols-2 lg:grid-cols-3">
+          {d.map((t) => (
+            <label key={t.id} className="flex items-start gap-2 text-sm text-ink">
+              <input type="checkbox" className="mt-0.5 h-4 w-4 accent-brand" checked={chon.has(t.id)} onChange={() => doi(t.id)} />
+              <span>
+                {t.hoTen}
+                <span className="block text-[11px] text-ink-muted">
+                  {[t.venueTen, t.thiepSo !== null ? `đã có thiệp số ${t.thiepSo}` : "chưa có trong danh sách khách mời"].filter(Boolean).join(" · ")}
+                </span>
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
+    );
+  };
+  return (
+    <div className="card space-y-4 p-5">
+      <div>
+        <h2 className="font-display text-lg text-ink">Xuất tài khoản làm khách mời</h2>
+        <p className="mt-1 text-sm text-ink-muted">
+          Tick những người cần có thiệp dự sự kiện rồi tải file. File đúng mẫu Nhập danh sách: venue Holdings, công ty CAPELLA HOLDINGS, mỗi người 1 chỗ.
+          Người đã có trong danh sách khách mời được ghi rõ, tick lại sẽ bị app báo trùng khi nhập.
+        </p>
+      </div>
+      {nhom("SALES", "Sales")}
+      {nhom("ADMIN", "BTC")}
+      <div className="flex flex-wrap items-end gap-3">
+        <div>
+          <label className="label">Người phụ trách ghi trong file</label>
+          <input className="input w-64" value={phuTrach} onChange={(e) => setPhuTrach(e.target.value)} placeholder="Để trống: theo người nhập file" />
+        </div>
+        <button className="btn-brand" disabled={dsChon.length === 0} onClick={tai}>
+          Tải file {dsChon.length} người (.csv)
+        </button>
+      </div>
+      <p className="text-xs text-ink-muted">
+        Chức vụ của sales ghi sẵn theo venue, của BTC để trống. Mở file bổ sung chức vụ, danh xưng nếu cần, rồi vào Nhập danh sách để nhập.
+      </p>
     </div>
   );
 }
