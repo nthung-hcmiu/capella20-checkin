@@ -54,6 +54,7 @@ model Guest {
   daGuiThiepGiay Boolean   @default(false) // Round 2: thiep giay
   soGhe          String? // so ghe cho khach VIP, vd 10.01
   soNguoiDen     Int? // so nguoi thuc te den khi check in
+  nguoiDaDen     String? // nguoi nao tren ve da den, vd "1,2": 1 la khach chinh, 2 tro di la khach di kem quet ma rieng
   venueId        String
   venue          Venue     @relation(fields: [venueId], references: [id])
   soNguoiMoi     Int       @default(1) // so nguoi duoc moi

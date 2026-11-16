@@ -3,8 +3,9 @@ import QRCode from "qrcode";
 import { urlQR } from "@/lib/codes";
 
 // Tra ve anh PNG chua QR dieu huong toi trang thiep / check in
-export async function GET(_req: NextRequest, { params }: { params: { ma: string } }) {
-  const noiDung = urlQR(params.ma);
+export async function GET(req: NextRequest, { params }: { params: { ma: string } }) {
+  const k = parseInt(req.nextUrl.searchParams.get("k") || "", 10);
+  const noiDung = urlQR(params.ma, undefined, k >= 2 && k <= 10 ? k : null);
   const png = await QRCode.toBuffer(noiDung, {
     errorCorrectionLevel: "M",
     margin: 2,

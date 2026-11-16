@@ -6,7 +6,7 @@ import { StatusBadge } from "./StatusBadge";
 import { DUOC_XAC_NHAN, NHAN_CANH_BAO, NHAN_TRANG_THAI, TRANG_THAI } from "@/lib/constants";
 import { che4SoCuoi, boDau, dinhDangGio } from "@/lib/format";
 import { taoKhach, datThiepGiay, xacNhanKhach, guiDuyet, danhDauDaMoi, huyKhach, duyetKhach, xoaKhach, traVeNhap } from "@/lib/actions";
-import { NHAN_TRUONG, TRUONG_CHU, moTaDiCung, tenGoi, thieuThongTinMoi, type ThongTinThem } from "@/lib/khach";
+import { NHAN_TRUONG, TRUONG_CHU, docDiCung, moTaDiCung, tenGoi, thieuThongTinMoi, type ThongTinThem } from "@/lib/khach";
 import { ChipLichSu } from "./ChipLichSu";
 import { HopChon, HopChonTatCa, ThanhHangLoat } from "./ThanhHangLoat";
 import type { LichSu } from "@/lib/lichSu";
@@ -413,6 +413,15 @@ function Dong({
               <Link href={`/thiep/${g.maBiMat}`} target="_blank" className="btn-ghost btn-sm">
                 Trang thiệp
               </Link>
+              {docDiCung(g.khachDiCung)
+                .slice(0, Math.max(0, g.soNguoiMoi - 1))
+                .map((x, i) =>
+                  x.hoTen.trim() ? (
+                    <Link key={i} href={`/thiep/${g.maBiMat}?k=${i + 2}`} target="_blank" className="btn-ghost btn-sm" title={x.hoTen}>
+                      Thiệp khách thứ {i + 2}
+                    </Link>
+                  ) : null
+                )}
               <a href={`/api/qr/${g.maBiMat}`} target="_blank" className="btn-ghost btn-sm">
                 Xem QR
               </a>

@@ -95,6 +95,15 @@ export function docDiCung(s: string | null | undefined): NguoiDiCung[] {
     return [];
   }
 }
+// Khach di kem thu k tren ve (k = 2 la nguoi di kem dau tien). Chi tra ve khi nguoi do da co ten.
+export function khachDiKemThu(
+  g: { soNguoiMoi: number; khachDiCung: string | null | undefined },
+  k: number | null | undefined
+): NguoiDiCung | null {
+  if (!k || k < 2 || k > g.soNguoiMoi) return null;
+  const x = docDiCung(g.khachDiCung)[k - 2];
+  return x?.hoTen?.trim() ? x : null;
+}
 // Giu dung so nguoi di cung theo so nguoi moi, cat khoang trang
 export function lamSachDiCung(ds: NguoiDiCung[] | undefined, soNguoiMoi: number): NguoiDiCung[] {
   const lam = (x: string | undefined) => String(x ?? "").trim().replace(/\s+/g, " ");

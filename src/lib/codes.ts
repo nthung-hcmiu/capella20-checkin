@@ -42,11 +42,19 @@ export async function capSoThuTu(venueId: string): Promise<number> {
 }
 
 // Noi dung QR: URL dieu huong theo ngu canh
-export function urlQR(maBiMat: string, baseUrl?: string): string {
+// nguoi: 2 tro di la khach di kem tren cung ve, co link va ma QR rieng (.../q/MA?k=2). Khach chinh khong co k.
+export function urlQR(maBiMat: string, baseUrl?: string, nguoi?: number | null): string {
   const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
   const base =
     baseUrl || process.env.NEXT_PUBLIC_BASE_URL || (vercel ? `https://${vercel}` : "http://localhost:3000");
-  return `${base}/q/${maBiMat}`;
+  return `${base}/q/${maBiMat}${nguoi && nguoi >= 2 ? `?k=${nguoi}` : ""}`;
+}
+
+// Doc so thu tu nguoi tren ve tu chuoi quet duoc (?k=2). Khong co thi la khach chinh / ca ve.
+export function docNguoiTuQR(raw: string): number | null {
+  const khop = raw.match(/[?&]k=(\d{1,2})(?:&|$|#)/i);
+  const k = khop ? parseInt(khop[1], 10) : NaN;
+  return k >= 2 && k <= 10 ? k : null;
 }
 
 // Doc ma bi mat tu chuoi quet duoc (URL day du hoac ma tho)

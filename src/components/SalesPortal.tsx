@@ -10,7 +10,7 @@ import { moTaChoSales, moTaKhachTrung, moTaTrung, type CongTySales, type KhachTr
 import { FormKhach, OThongTin, SoNguoiDiCung, docDiCungForm, docThem } from "./FormKhach";
 import { che4SoCuoi, boDau, dinhDangGio } from "@/lib/format";
 import { taoKhach, danhDauDaMoi, datThiepGiay, xacNhanKhach, guiDuyet, xoaNhap } from "@/lib/actions";
-import { DANH_XUNG, LINH_VUC, NHAN_TRUONG, PHAN_LOAI_KHACH, moTaDiCung, tenGoi, thieuThongTinMoi, type ThongTinThem } from "@/lib/khach";
+import { DANH_XUNG, LINH_VUC, NHAN_TRUONG, PHAN_LOAI_KHACH, docDiCung, moTaDiCung, tenGoi, thieuThongTinMoi, type ThongTinThem } from "@/lib/khach";
 import { CHUA_PHAT_HANH, DUOC_XAC_NHAN, NHAN_CANH_BAO, SU_KIEN, TRANG_THAI } from "@/lib/constants";
 
 export interface SalesGuest {
@@ -474,7 +474,13 @@ function GuiDuyetLoat({ ids }: { ids: string[] }) {
 // Cac thao tac tren mot khach, dung chung cho the (dien thoai) va dong mo rong (may tinh)
 function HanhDong({ g, venuesSua }: { g: SalesGuest; venuesSua: { id: string; ten: string }[] }) {
   const [pending, start] = useTransition();
-  const [daChep, setDaChep] = useState(false);
+  // Nguoi vua duoc chep loi moi: 1 la khach chinh, 2 tro di la khach di kem
+  const [daChep, setDaChep] = useState<number | null>(null);
+  // Khach di kem da co ten: moi nguoi mot link thiep va ma QR rieng
+  const dsDiKem = docDiCung(g.khachDiCung)
+    .slice(0, Math.max(0, g.soNguoiMoi - 1))
+    .map((x, i) => ({ ...x, k: i + 2 }))
+    .filter((x) => x.hoTen.trim());
   const [moXN, setMoXN] = useState(false);
   const [sua, setSua] = useState(false);
   const [so, setSo] = useState(g.soNguoiXacNhan || g.soNguoiMoi);
@@ -485,19 +491,21 @@ function HanhDong({ g, venuesSua }: { g: SalesGuest; venuesSua: { id: string; te
   const daGuiOnline = daPhatHanh && g.trangThai !== TRANG_THAI.DA_PHAT_HANH;
   const duocSua = g.trangThai !== TRANG_THAI.DA_HUY;
 
-  const chepLoiMoi = async () => {
-    const goi = g.danhXung ? tenGoi(g) : `anh/chị ${g.hoTen}`;
-    const ai = g.danhXung ? g.danhXung.toLowerCase() : "anh/chị";
+  const chepLoiMoi = async (k = 1) => {
+    const nguoi = k >= 2 ? dsDiKem.find((x) => x.k === k) : null;
+    const nm = nguoi ? { danhXung: nguoi.danhXung || null, hoTen: nguoi.hoTen } : g;
+    const goi = nm.danhXung ? tenGoi(nm) : `anh/chị ${nm.hoTen}`;
+    const ai = nm.danhXung ? nm.danhXung.toLowerCase() : "anh/chị";
     const loi =
       `Kính gửi ${goi},\n` +
       `Capella trân trọng kính mời ${ai} đến dự Đêm tri ân khách hàng nhân dịp kỷ niệm 20 năm Capella, ` +
       `ngày ${SU_KIEN.ngay} tại ${SU_KIEN.diaDiem}.\n` +
-      `Thiệp mời online của ${ai}: ${g.linkThiep}\n` +
+      `Thiệp mời online của ${ai}: ${g.linkThiep}${nguoi ? `?k=${k}` : ""}\n` +
       `Khi đến sự kiện, ${ai} vui lòng đưa mã QR trong thiệp (hoặc thiệp giấy) cho lễ tân để check in. Số thứ tự thiệp: ${g.soThuTu}.`;
     try {
       await navigator.clipboard.writeText(loi);
-      setDaChep(true);
-      setTimeout(() => setDaChep(false), 2500);
+      setDaChep(k);
+      setTimeout(() => setDaChep(null), 2500);
     } catch {
       window.prompt("Sao chép lời mời:", loi);
     }
@@ -570,8 +578,8 @@ function HanhDong({ g, venuesSua }: { g: SalesGuest; venuesSua: { id: string; te
       {/* 1. Thiep online */}
       <div className="flex flex-wrap items-center gap-2">
         <span className={`w-24 shrink-0 text-xs ${daGuiOnline ? "text-sage" : "text-ink-muted"}`}>{daGuiOnline ? "✓ " : ""}Thiệp online</span>
-        <button className="btn-brand btn-sm" onClick={chepLoiMoi}>
-          {daChep ? "Đã chép, dán vào Zalo" : "Chép lời mời"}
+        <button className="btn-brand btn-sm" onClick={() => chepLoiMoi(1)}>
+          {daChep === 1 ? "Đã chép, dán vào Zalo" : "Chép lời mời"}
         </button>
         {g.trangThai === TRANG_THAI.DA_PHAT_HANH && (
           <button className="btn-ink btn-sm" disabled={pending} onClick={() => start(() => void danhDauDaMoi(g.id))}>
@@ -582,6 +590,18 @@ function HanhDong({ g, venuesSua }: { g: SalesGuest; venuesSua: { id: string; te
           Xem thiệp
         </a>
       </div>
+      {/* Thiep online rieng cua tung khach di kem: link va ma QR rieng, ghi dung ten nguoi do */}
+      {dsDiKem.map((x) => (
+        <div key={x.k} className="flex flex-wrap items-center gap-2">
+          <span className="w-24 shrink-0 text-xs text-ink-muted">Khách thứ {x.k}</span>
+          <button className="btn-brand btn-sm" onClick={() => chepLoiMoi(x.k)}>
+            {daChep === x.k ? "Đã chép, dán vào Zalo" : `Chép lời mời ${[x.danhXung, x.hoTen].filter(Boolean).join(" ")}`}
+          </button>
+          <a href={`/thiep/${g.maBiMat}?k=${x.k}`} target="_blank" className="btn-ghost btn-sm">
+            Xem thiệp
+          </a>
+        </div>
+      ))}
       {/* 2. Thiep giay */}
       <div className="flex flex-wrap items-center gap-2">
         <span className={`w-24 shrink-0 text-xs ${g.daGuiThiepGiay ? "text-sage" : "text-ink-muted"}`}>{g.daGuiThiepGiay ? "✓ " : ""}Thiệp giấy</span>

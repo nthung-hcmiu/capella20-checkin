@@ -28,6 +28,7 @@ interface KetQua {
   canhBao?: string | null;
   guest?: KhachGon;
   hetPhien?: boolean;
+  nguoiQuet?: { ten: string; chucVu: string } | null; // khach di kem quet ma rieng
 }
 interface Gan {
   hoTen: string;
@@ -73,7 +74,7 @@ export function CheckinApp({ ten, ca }: { ten: string; ca: string | null }) {
         setGan((g) =>
           [
             {
-              hoTen: data.guest!.hoTen,
+              hoTen: data.nguoiQuet?.ten || data.guest!.hoTen,
               soThuTu: data.guest!.soThuTu,
               gio: dinhDangGioNgan(new Date()),
               ok: data.ok,
@@ -394,11 +395,24 @@ function KetQuaCard({ kq, onDong }: { kq: KetQua; onDong: () => void }) {
         </div>
         {kq.guest && (
           <div className="px-6 py-5 text-center">
-            <div className="font-display text-2xl text-ink">{tenGoi(kq.guest)}</div>
-            {(kq.guest.chucVu || kq.guest.congTy) && (
-              <div className="mt-0.5 text-sm text-ink-soft">{[kq.guest.chucVu, kq.guest.congTy].filter(Boolean).join(" · ")}</div>
+            {kq.nguoiQuet ? (
+              <>
+                <div className="text-[11px] font-medium uppercase tracking-wider text-brand-deep">Khách đi kèm</div>
+                <div className="font-display text-2xl text-ink">{kq.nguoiQuet.ten}</div>
+                {(kq.nguoiQuet.chucVu || kq.guest.congTy) && (
+                  <div className="mt-0.5 text-sm text-ink-soft">{[kq.nguoiQuet.chucVu, kq.guest.congTy].filter(Boolean).join(" · ")}</div>
+                )}
+                <div className="mt-0.5 text-sm text-ink-soft">Cùng đoàn với {tenGoi(kq.guest)}</div>
+              </>
+            ) : (
+              <>
+                <div className="font-display text-2xl text-ink">{tenGoi(kq.guest)}</div>
+                {(kq.guest.chucVu || kq.guest.congTy) && (
+                  <div className="mt-0.5 text-sm text-ink-soft">{[kq.guest.chucVu, kq.guest.congTy].filter(Boolean).join(" · ")}</div>
+                )}
+                {kq.guest.diCung && <div className="mt-0.5 text-sm text-ink-soft">Cùng: {kq.guest.diCung}</div>}
+              </>
             )}
-            {kq.guest.diCung && <div className="mt-0.5 text-sm text-ink-soft">Cùng: {kq.guest.diCung}</div>}
             <div className="mt-1 text-sm text-ink-muted">
               <span className="font-mono">{kq.guest.soThuTu}</span> · {kq.guest.venue}
             </div>

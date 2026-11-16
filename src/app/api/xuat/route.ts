@@ -29,7 +29,7 @@ export async function GET() {
     "Danh xưng khách thứ 2", "Tên khách thứ 2", "Chức vụ khách thứ 2", "Phân loại khách",
     "Phân loại khách VIP", "Doanh thu dự kiến", "Round 1: Khách đã nhận thiệp online", "Round 2: Đã gửi thiệp giấy",
     "Họ và tên người phụ trách tiếp khách", "Ghi chú",
-    "Năm trước", "Số thứ tự thiệp", "Trạng thái", "Số người xác nhận", "Số người thực tế đến", "Giờ check in", "Mã thiệp", "Link thiệp",
+    "Năm trước", "Số thứ tự thiệp", "Trạng thái", "Số người xác nhận", "Số người thực tế đến", "Giờ check in", "Mã thiệp", "Link thiệp", "Link thiệp khách thứ 2",
   ];
   const daNhanOnline = ["DA_MOI", "THAM_DU", "KHONG_THAM_DU", "DA_CHECKIN", "VANG_MAT"];
   const dong = ds.map((g, i) => {
@@ -44,7 +44,7 @@ export async function GET() {
       o(boKhop.coDuLieu ? boKhop.khop(g)!.chiTiet : ""), o(g.soThuTu), o(NHAN_TRANG_THAI[g.trangThai] || g.trangThai), o(g.soNguoiXacNhan ?? ""),
       o(g.soNguoiDen ?? ""),
       o(g.checkinLuc ? g.checkinLuc.toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }) : ""),
-      o(g.maBiMat), o(urlQR(g.maBiMat)),
+      o(g.maBiMat), o(urlQR(g.maBiMat)), o(g.soNguoiMoi >= 2 && dc[0]?.hoTen ? urlQR(g.maBiMat, undefined, 2) : ""),
     ].join(",");
   });
   const csv = "﻿" + [tieuDe.map(o).join(","), ...dong].join("\r\n");

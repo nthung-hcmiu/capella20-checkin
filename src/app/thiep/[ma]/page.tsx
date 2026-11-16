@@ -3,7 +3,7 @@ import { Brand } from "@/components/Brand";
 import { prisma } from "@/lib/db";
 import { SU_KIEN, TRANG_THAI } from "@/lib/constants";
 import { layNguoiDung } from "@/lib/auth";
-import { tenGoi } from "@/lib/khach";
+import { khachDiKemThu, tenGoi } from "@/lib/khach";
 import { urlQR } from "@/lib/codes";
 import { dinhDangGioNgan } from "@/lib/format";
 
@@ -11,7 +11,8 @@ export const dynamic = "force-dynamic";
 
 // Thiep online: khach xem thong tin su kien va dua ma QR nay cho le tan khi den.
 // Khach khong tu xac nhan; sales xac nhan tren he thong sau khi hoi khach.
-export default async function ThiepPage({ params }: { params: { ma: string } }) {
+// ?k=2: thiep rieng cua khach di kem tren cung ve, ghi ten nguoi do va ma QR rieng.
+export default async function ThiepPage({ params, searchParams }: { params: { ma: string }; searchParams: { k?: string } }) {
   let ma = params.ma.toUpperCase();
   if (ma === "DEMO") {
     // Xem mau thiep cua mot khach that: chi BTC
@@ -41,7 +42,17 @@ export default async function ThiepPage({ params }: { params: { ma: string } }) 
     );
   }
 
-  const qrSvg = await QRCode.toString(urlQR(guest.maBiMat), {
+  // Khach di kem: k hop le va nguoi do da co ten; khong thi hien thiep cua khach chinh
+  const kXin = parseInt(String(searchParams.k || ""), 10);
+  const diKem = khachDiKemThu(guest, kXin);
+  const k = diKem ? kXin : null;
+  const nguoiMoi = diKem ? { danhXung: diKem.danhXung || null, hoTen: diKem.hoTen } : guest;
+  const chucVuMoi = diKem ? diKem.chucVu : guest.chucVu;
+  // Ai da den: ve check in kieu cu (khong ghi tung nguoi) thi coi nhu ca ve da den
+  const daDen = (guest.nguoiDaDen || "").split(",").filter(Boolean);
+  const nguoiNayDaDen = guest.trangThai === TRANG_THAI.DA_CHECKIN && (daDen.length === 0 || daDen.includes(String(k ?? 1)));
+
+  const qrSvg = await QRCode.toString(urlQR(guest.maBiMat, undefined, k), {
     type: "svg",
     errorCorrectionLevel: "M",
     margin: 1,
@@ -52,10 +63,11 @@ export default async function ThiepPage({ params }: { params: { ma: string } }) 
     <Khung>
       <div className="text-center">
         <div className="text-[11px] uppercase tracking-[0.3em] text-brand-deep">Trân trọng kính mời</div>
-        <h1 className="mt-3 font-display text-2xl text-ink">{tenGoi(guest)}</h1>
-        {(guest.chucVu || guest.congTy) && (
-          <p className="mt-1 text-sm text-ink-muted">{[guest.chucVu, guest.congTy].filter(Boolean).join(" · ")}</p>
+        <h1 className="mt-3 font-display text-2xl text-ink">{tenGoi(nguoiMoi)}</h1>
+        {(chucVuMoi || guest.congTy) && (
+          <p className="mt-1 text-sm text-ink-muted">{[chucVuMoi, guest.congTy].filter(Boolean).join(" · ")}</p>
         )}
+        {diKem && <p className="mt-1 text-xs text-ink-muted">Cùng đoàn với {tenGoi(guest)}</p>}
         <div className="mx-auto mt-4 deco-line w-28" />
         <p className="mt-4 text-sm leading-relaxed text-ink-soft">
           Đến dự Đêm tri ân khách hàng nhân dịp kỷ niệm <b>20 năm Capella</b>.
@@ -67,7 +79,7 @@ export default async function ThiepPage({ params }: { params: { ma: string } }) 
       </div>
 
       <div className="mt-6 hairline pt-6 text-center">
-        {guest.trangThai === TRANG_THAI.DA_CHECKIN ? (
+        {nguoiNayDaDen ? (
           <div className="rounded-xl bg-sage/10 p-5">
             <div className="font-display text-lg text-ink">Quý khách đã check in</div>
             {guest.checkinLuc && (
@@ -88,14 +100,19 @@ export default async function ThiepPage({ params }: { params: { ma: string } }) 
             </div>
             <p className="mx-auto mt-4 max-w-xs text-xs leading-relaxed text-ink-muted">
               Vui lòng đưa mã QR này (hoặc thiệp giấy có QR) cho lễ tân tại quầy đón khách. Không quét được thì đọc số thứ tự thiệp.
+              {diKem ? " Đây là mã riêng của quý khách, dùng được cả khi đến trước hoặc sau người cùng đoàn." : ""}
             </p>
-            <a href={`/api/qr/${guest.maBiMat}`} download={`capella20-qr-${guest.soThuTu}.png`} className="btn-ghost btn-sm mt-4">
+            <a
+              href={`/api/qr/${guest.maBiMat}${k ? `?k=${k}` : ""}`}
+              download={`capella20-qr-${guest.soThuTu}${k ? `-${k}` : ""}.png`}
+              className="btn-ghost btn-sm mt-4"
+            >
               Lưu ảnh mã QR
             </a>
           </>
         )}
 
-        {guest.trangThai === TRANG_THAI.THAM_DU && guest.soNguoiXacNhan != null && (
+        {!diKem && guest.trangThai === TRANG_THAI.THAM_DU && guest.soNguoiXacNhan != null && (
           <p className="mt-4 text-xs text-sage">Capella đã ghi nhận quý khách tham dự, {guest.soNguoiXacNhan} người.</p>
         )}
         <p className="mt-4 text-[11px] text-ink-muted">Cần thay đổi, quý khách vui lòng liên hệ nhân viên Capella đã gửi thiệp.</p>
