@@ -69,6 +69,13 @@ function moTaKhachTrungVoi(g: { soThuTu: number; hoTen: string; salesOwner: stri
   return `khách số ${g.soThuTu}, ${g.hoTen}, ${g.salesOwner === toi ? "của bạn" : `sales ${g.salesOwner}`}`;
 }
 
+// Trang mo tu truoc ban cap nhat chua co o Danh xung cua khach di cung: nhac tai lai trang
+function nhacTaiLai(thieu: string) {
+  return thieu.startsWith("Thiếu danh xưng khách")
+    ? " Chọn danh xưng ở ô ngay trước tên khách đi cùng. Nếu không thấy ô này, tải lại trang (F5, hoặc kéo xuống để làm mới trên điện thoại) rồi nhập lại."
+    : "";
+}
+
 function moTaCanhBao(lyDo: string | null) {
   if (!lyDo) return "";
   return lyDo.split(",").map((x) => NHAN_CANH_BAO[x] || x).join(", ");
@@ -102,7 +109,7 @@ export async function taoKhach(input: {
   const khachDiCung = ghiDiCung(lamSachDiCung(input.diCung, soNguoiMoi));
   // Moi khach deu phai co ten va chuc vu, ke ca nguoi thu 2 tro di
   const thieu = thieuThongTinMoi({ sdt, diaChi: them.diaChi, chucVu: them.chucVu, soNguoiMoi, khachDiCung });
-  if (thieu) return { ok: false, thongBao: `${thieu}.` };
+  if (thieu) return { ok: false, thongBao: `${thieu}.${nhacTaiLai(thieu)}` };
 
   const venue = await prisma.venue.findUnique({ where: { id: input.venueId } });
   if (!venue) return { ok: false, thongBao: "Venue không hợp lệ." };
@@ -303,7 +310,7 @@ export async function suaKhach(
   const khachDiCung = ghiDiCung(lamSachDiCung(input.diCung, soNguoiMoi));
   // Sales: moi khach tren thiep deu phai co ten va chuc vu
   const thieu = thieuThongTinMoi({ sdt, diaChi: them.diaChi, chucVu: them.chucVu, soNguoiMoi, khachDiCung });
-  if (laSales && thieu) return { ok: false, thongBao: `${thieu}.` };
+  if (laSales && thieu) return { ok: false, thongBao: `${thieu}.${nhacTaiLai(thieu)}` };
 
   // Doi venue chi khi chua phat hanh ve: cap so thu tu moi theo dai cua venue moi
   let venueId = cu.venueId;
