@@ -665,15 +665,42 @@ export async function xoaLichSu(nam: number): Promise<KetQua> {
 
 export type LoaiHangLoat =
   | "DUYET" | "GUI_DUYET" | "DA_GUI_ONLINE" | "DA_GUI_GIAY" | "THAM_DU" | "KHONG_THAM_DU"
-  | "DOI_SALES" | "TRA_NHAP" | "HUY" | "XOA" | "XOA_NHAP";
+  | "DOI_SALES" | "TRA_NHAP" | "HUY" | "XOA" | "XOA_NHAP" | "VIP" | "BO_VIP";
 
-const CHI_BTC: LoaiHangLoat[] = ["DUYET", "DOI_SALES", "TRA_NHAP", "HUY", "XOA"];
+const CHI_BTC: LoaiHangLoat[] = ["DUYET", "DOI_SALES", "TRA_NHAP", "HUY", "XOA", "VIP", "BO_VIP"];
+// Phan loai khach VIP nhanh: chi Quan tri
+const CHI_QUAN_TRI: LoaiHangLoat[] = ["VIP", "BO_VIP"];
+
+// Doi co VIP cua mot nhom khach. Khach chua phat hanh thi cap nhat luon canh bao VIP de BTC thay khi duyet.
+async function doiVip(where: object, isVip: boolean): Promise<number> {
+  const ds = await prisma.guest.findMany({ where: { ...where, isVip: !isVip }, select: { id: true, trangThai: true, lyDoChoDuyet: true } });
+  for (const g of ds) {
+    const canhBao = (g.lyDoChoDuyet || "").split(",").filter((x) => x && x !== "VIP");
+    if (isVip) canhBao.push("VIP");
+    await prisma.guest.update({
+      where: { id: g.id },
+      data: { isVip, ...(CHUA_PHAT_HANH.includes(g.trangThai) ? { lyDoChoDuyet: canhBao.length ? canhBao.join(",") : null } : {}) },
+    });
+  }
+  return ds.length;
+}
+
+// Quan tri danh dau / bo danh dau VIP cho mot khach, khong can mo form sua
+export async function datVip(id: string, isVip: boolean): Promise<KetQua> {
+  await batBuocQuanTri();
+  const g = await prisma.guest.findUnique({ where: { id }, select: { hoTen: true } });
+  if (!g) return { ok: false, thongBao: "Không tìm thấy khách." };
+  await doiVip({ id }, isVip);
+  lamTuoi();
+  return { ok: true, thongBao: isVip ? `Đã xếp ${g.hoTen} vào khách VIP.` : `Đã bỏ VIP của ${g.hoTen}.` };
+}
 
 // Ap dung mot thao tac cho nhieu khach. Khach khong phu hop (sai trang thai, khong thuoc sales) duoc bo qua.
 export async function thaoTacHangLoat(ids: string[], loai: LoaiHangLoat, giaTri?: string): Promise<KetQua> {
   const u = await batBuocQuyen(["ADMIN", "SALES"]);
   const laSales = u.vaiTro === "SALES";
   if (laSales && CHI_BTC.includes(loai)) return { ok: false, thongBao: "Thao tác này chỉ BTC được làm." };
+  if (CHI_QUAN_TRI.includes(loai) && !u.quanTri) return { ok: false, thongBao: "Chỉ Quản trị được phân loại khách VIP." };
   if (!ids.length) return { ok: false, thongBao: "Chưa chọn khách nào." };
   if (ids.length > 2000) return { ok: false, thongBao: "Mỗi lần tối đa 2.000 khách." };
   if (loai === "GUI_DUYET") return guiDuyet(ids);
@@ -728,6 +755,14 @@ export async function thaoTacHangLoat(ids: string[], loai: LoaiHangLoat, giaTri?
       viec = `chuyển cho ${ten} phụ trách`;
       break;
     }
+    case "VIP":
+      n = await doiVip(pham, true);
+      viec = "xếp vào khách VIP";
+      break;
+    case "BO_VIP":
+      n = await doiVip(pham, false);
+      viec = "bỏ VIP";
+      break;
     case "TRA_NHAP":
       n = (await prisma.guest.updateMany({ where: { ...pham, trangThai: DUOC_TRA_NHAP }, data: TRA_NHAP_DATA })).count;
       viec = "trả về Nháp";

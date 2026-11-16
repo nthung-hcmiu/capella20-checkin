@@ -48,6 +48,7 @@ const HUONG_DAN: VaiTro[] = [
     luuY: [
       "Tạo tài khoản sales: Tài khoản > Tạo nhiều tài khoản > dán danh sách họ tên > chọn venue. Tên đăng nhập theo công thức chữ cái đầu họ và tên đệm + tên chính (Phạm Lê Minh Thư thành plmthu), mật khẩu tạm ngẫu nhiên chỉ hiện một lần.",
       "Giao venue cho BTC: Tài khoản > bấm nút Duyệt cạnh tên tài khoản BTC > tick các venue người đó được duyệt và sửa khách > Lưu phạm vi. Người đó chỉ thấy danh sách, hàng Chờ duyệt và số liệu của các venue đã tick (tick thêm ô xem mọi venue nếu vẫn cho xem hết). Khách họ tự phụ trách ở venue khác vẫn nằm trong Cổng Sales của họ.",
+      "Phân loại khách VIP (chỉ Quản trị): Danh sách khách > bấm vào khách > Xếp vào VIP hoặc Bỏ VIP. Nhiều khách một lúc: tick chọn rồi chọn Xếp vào khách VIP ở thanh thao tác. Bộ lọc VIP ở đầu danh sách để xem riêng khách VIP.",
       "Chỉ Quản trị được thêm hoặc sửa khách và lưu khi còn thiếu SĐT, địa chỉ, chức vụ hay thông tin khách đi cùng. BTC và sales phải điền đủ.",
       "Chỉ tài khoản Quản trị được tạo tài khoản, đặt mật khẩu cho người khác, xuất CSV và vào tab Dữ liệu. Tài khoản BTC khác chỉ xem danh sách tài khoản.",
       "Xóa toàn bộ danh sách không hoàn tác được. Luôn tải CSV sao lưu trước.",

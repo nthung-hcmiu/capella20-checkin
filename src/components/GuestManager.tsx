@@ -5,7 +5,7 @@ import Link from "next/link";
 import { StatusBadge } from "./StatusBadge";
 import { DUOC_XAC_NHAN, NHAN_CANH_BAO, NHAN_TRANG_THAI, TRANG_THAI } from "@/lib/constants";
 import { che4SoCuoi, boDau, dinhDangGio, hienTien } from "@/lib/format";
-import { taoKhach, datThiepGiay, xacNhanKhach, guiDuyet, danhDauDaMoi, huyKhach, duyetKhach, xoaKhach, traVeNhap } from "@/lib/actions";
+import { taoKhach, datThiepGiay, xacNhanKhach, guiDuyet, danhDauDaMoi, huyKhach, duyetKhach, xoaKhach, traVeNhap, datVip } from "@/lib/actions";
 import { NHAN_TRUONG, TRUONG_CHU, docDiCung, moTaDiCung, tenGoi, thieuThongTinMoi, type ThongTinThem } from "@/lib/khach";
 import { ChipLichSu } from "./ChipLichSu";
 import { HopChon, HopChonTatCa, ThanhHangLoat } from "./ThanhHangLoat";
@@ -72,6 +72,7 @@ export function GuestManager({
   const [ls, setLs] = useState("");
   const [ct, setCt] = useState("");
   const [tr, setTr] = useState("");
+  const [vip, setVip] = useState("");
   const [moForm, setMoForm] = useState(false);
   const [soHien, setSoHien] = useState(MOI_TRANG);
 
@@ -83,6 +84,8 @@ export function GuestManager({
       if (sl && g.salesOwner !== sl) return false;
       if (nh && (g.them.nguonKhach || "") !== nh) return false;
       if (ls && g.lichSu?.loai !== ls) return false;
+      if (vip === "vip" && !g.isVip) return false;
+      if (vip === "thuong" && g.isVip) return false;
       if (tr === "khach" && !g.trung.length) return false;
       if (tr === "congTy" && !g.congTyKhac?.nhieuSales) return false;
       if (tr === "tatCa" && !coTrung(g)) return false;
@@ -100,7 +103,7 @@ export function GuestManager({
       }
       return true;
     });
-  }, [guests, q, tt, vn, sl, nh, ls, ct, tr]);
+  }, [guests, q, tt, vn, sl, nh, ls, ct, tr, vip]);
   const soTrung = useMemo(
     () => ({
       khach: guests.filter((g) => g.trung.length).length,
@@ -112,12 +115,12 @@ export function GuestManager({
 
   const dsSales = useMemo(() => [...new Set(guests.map((g) => g.salesOwner))].sort(), [guests]);
   const dsNhom = useMemo(() => [...new Set(guests.map((g) => g.them.nguonKhach).filter(Boolean) as string[])].sort(), [guests]);
-  const coLoc = q || tt || vn || sl || nh || ls || ct || tr;
+  const coLoc = q || tt || vn || sl || nh || ls || ct || tr || vip;
   const coLichSu = guests.some((g) => g.lichSu);
 
   // Tick chon khach de thao tac hang loat; doi bo loc thi bo chon cho khoi nham
   const [chon, setChon] = useState<Set<string>>(new Set());
-  useEffect(() => setChon(new Set()), [q, tt, vn, sl, nh, ls, ct, tr]);
+  useEffect(() => setChon(new Set()), [q, tt, vn, sl, nh, ls, ct, tr, vip]);
   const doiChon = (id: string) =>
     setChon((s) => {
       const m = new Set(s);
@@ -205,6 +208,11 @@ export function GuestManager({
             <option value="moi">Khách mới</option>
           </select>
         )}
+        <select className="input w-auto" value={vip} onChange={(e) => setVip(e.target.value)}>
+          <option value="">VIP: tất cả</option>
+          <option value="vip">Chỉ khách VIP ({guests.filter((g) => g.isVip).length})</option>
+          <option value="thuong">Chỉ khách thường</option>
+        </select>
         <select className="input w-auto" value={ct} onChange={(e) => setCt(e.target.value)}>
           <option value="">Công ty: tất cả</option>
           <option value="nhieuSales">Nhiều sales cùng mời một công ty</option>
@@ -221,13 +229,13 @@ export function GuestManager({
           <option value="khach">Trùng người: SĐT, hoặc tên và công ty ({soTrung.khach})</option>
         </select>
         {coLoc && (
-          <button className="btn-ghost btn-sm" onClick={() => { setQ(""); setTt(""); setVn(""); setSl(""); setNh(""); setLs(""); setCt(""); setTr(""); }}>
+          <button className="btn-ghost btn-sm" onClick={() => { setQ(""); setTt(""); setVn(""); setSl(""); setNh(""); setLs(""); setCt(""); setTr(""); setVip(""); }}>
             Xóa bộ lọc
           </button>
         )}
       </div>
 
-      <ThanhHangLoat ids={[...chon]} laSales={false} salesTeam={salesTeam} onXong={() => setChon(new Set())} />
+      <ThanhHangLoat ids={[...chon]} laSales={false} salesTeam={salesTeam} quanTri={quanTri} onXong={() => setChon(new Set())} />
 
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
@@ -433,6 +441,15 @@ function Dong({
               <button className="btn-ghost btn-sm" onClick={() => setSua((v) => !v)}>
                 {sua ? "Đóng sửa" : "Sửa thông tin"}
               </button>
+              {quanTri && (
+                <button
+                  className={g.isVip ? "btn-ghost btn-sm" : "rounded-full border border-brand/40 bg-brand/10 px-3.5 py-1.5 text-xs font-medium text-brand-deep hover:bg-brand/15"}
+                  disabled={pending}
+                  onClick={() => act(() => datVip(g.id, !g.isVip))}
+                >
+                  {g.isVip ? "Bỏ VIP" : "Xếp vào VIP"}
+                </button>
+              )}
               <button className="btn-ghost btn-sm" disabled={pending} onClick={() => act(() => datThiepGiay(g.id, !g.daGuiThiepGiay))}>
                 {g.daGuiThiepGiay ? "Bỏ đánh dấu thiệp giấy" : "Đã gửi thiệp giấy"}
               </button>

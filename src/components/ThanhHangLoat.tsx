@@ -3,13 +3,15 @@
 import { useState, useTransition } from "react";
 import { thaoTacHangLoat, type KetQua, type LoaiHangLoat } from "@/lib/actions";
 
-const THAO_TAC: { loai: LoaiHangLoat; nhan: string; btc?: boolean; sales?: boolean; nguyHiem?: boolean }[] = [
+const THAO_TAC: { loai: LoaiHangLoat; nhan: string; btc?: boolean; sales?: boolean; nguyHiem?: boolean; quanTri?: boolean }[] = [
   { loai: "GUI_DUYET", nhan: "Gửi duyệt", sales: true, btc: true },
   { loai: "DUYET", nhan: "Duyệt, phát hành vé", btc: true },
   { loai: "DA_GUI_ONLINE", nhan: "Đã gửi thiệp online", sales: true, btc: true },
   { loai: "DA_GUI_GIAY", nhan: "Đã gửi thiệp giấy", sales: true, btc: true },
   { loai: "THAM_DU", nhan: "Xác nhận tham dự (đủ số người)", sales: true, btc: true },
   { loai: "KHONG_THAM_DU", nhan: "Không tham dự", sales: true, btc: true },
+  { loai: "VIP", nhan: "Xếp vào khách VIP", btc: true, quanTri: true },
+  { loai: "BO_VIP", nhan: "Bỏ VIP", btc: true, quanTri: true },
   { loai: "DOI_SALES", nhan: "Đổi người phụ trách", btc: true },
   { loai: "TRA_NHAP", nhan: "Trả về nháp để sales sửa", btc: true },
   { loai: "HUY", nhan: "Hủy thiệp", btc: true, nguyHiem: true },
@@ -22,11 +24,13 @@ export function ThanhHangLoat({
   ids,
   laSales,
   salesTeam = [],
+  quanTri = false,
   onXong,
 }: {
   ids: string[];
   laSales: boolean;
   salesTeam?: string[];
+  quanTri?: boolean;
   onXong: () => void;
 }) {
   const [pending, start] = useTransition();
@@ -34,7 +38,7 @@ export function ThanhHangLoat({
   const [sales, setSales] = useState("");
   const [xacNhan, setXacNhan] = useState(false);
   const [kq, setKq] = useState<KetQua | null>(null);
-  const ds = THAO_TAC.filter((t) => (laSales ? t.sales : t.btc));
+  const ds = THAO_TAC.filter((t) => (laSales ? t.sales : t.btc) && (!t.quanTri || quanTri));
   const chon = ds.find((t) => t.loai === loai);
 
   const chay = () => {
