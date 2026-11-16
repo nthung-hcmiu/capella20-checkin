@@ -1,6 +1,7 @@
 // Tim cac khach khac cung cong ty (theo ma CORP hoac ten cong ty da chuan hoa), de sales va BTC
 // biet mot cong ty dang duoc moi bao nhieu nguoi, boi nhung sales nao
 import { TRANG_THAI } from "./constants";
+import { khoaTen } from "./khach";
 import { khoaCty } from "./lichSu";
 
 export interface KhachCty {
@@ -60,10 +61,11 @@ export function taoBoCongTy(guests: KhachCty[]) {
   return { timKhac, them };
 }
 
-// Mo ta cho sales: chi so luong, khong lo ten khach cua sales khac
+// Mo ta cho sales: so luong va ten cac sales khac cung moi cong ty nay (de lien he nhau), khong lo ten khach
 export interface CongTySales {
   cuaToi: number;
   salesKhac: number;
+  tenSalesKhac: string[];
   tongNguoi: number; // tong so nguoi duoc moi cua cong ty, ke ca khach nay
 }
 export function choSales(khac: KhachCty[], toi: string, soNguoiNay: number): CongTySales | null {
@@ -71,12 +73,13 @@ export function choSales(khac: KhachCty[], toi: string, soNguoiNay: number): Con
   return {
     cuaToi: khac.filter((x) => x.salesOwner === toi).length,
     salesKhac: khac.filter((x) => x.salesOwner !== toi).length,
+    tenSalesKhac: [...new Set(khac.filter((x) => x.salesOwner !== toi).map((x) => x.salesOwner))].sort(),
     tongNguoi: soNguoiNay + khac.reduce((s, x) => s + x.soNguoiMoi, 0),
   };
 }
 export function moTaChoSales(c: CongTySales | null): string | null {
   if (!c) return null;
-  const phan = [c.cuaToi ? `${c.cuaToi} của bạn` : "", c.salesKhac ? `${c.salesKhac} của sales khác` : ""].filter(Boolean).join(", ");
+  const phan = [c.cuaToi ? `${c.cuaToi} của bạn` : "", c.salesKhac ? `${c.salesKhac} của sales ${c.tenSalesKhac.join(", ")}` : ""].filter(Boolean).join(", ");
   return `Công ty này đã có ${c.cuaToi + c.salesKhac} khách khác được mời (${phan}), tổng ${c.tongNguoi} người.`;
 }
 
@@ -105,3 +108,50 @@ export function moTaChoBtc(c: CongTyBtc | null): string | null {
 export const CHON_CONG_TY = {
   id: true, hoTen: true, congTy: true, maCorp: true, salesOwner: true, soThuTu: true, soNguoiMoi: true, trangThai: true,
 } as const;
+
+// Khach trung (cung SDT, hoac cung ten va cong ty): sales duoc xem ten khach trung va sales dang phu trach
+// de lien he nhau xu ly, khong can cho BTC
+export interface KhachTrung {
+  loai: "TRUNG_SDT" | "TRUNG_TEN";
+  hoTen: string;
+  soThuTu: number;
+  salesOwner: string;
+}
+type KhachDoiChieu = { id: string; hoTen: string; sdt: string | null; maCorp: string | null; congTy: string | null; salesOwner: string; soThuTu: number; trangThai: string };
+export function taoBoTrung(guests: KhachDoiChieu[]) {
+  const theoSdt = new Map<string, KhachDoiChieu[]>();
+  const theoTen = new Map<string, KhachDoiChieu[]>();
+  const ghi = (m: Map<string, KhachDoiChieu[]>, k: string | null, g: KhachDoiChieu) => {
+    if (!k) return;
+    const ds = m.get(k) || [];
+    ds.push(g);
+    m.set(k, ds);
+  };
+  for (const g of guests) {
+    if (g.trangThai === TRANG_THAI.DA_HUY) continue;
+    ghi(theoSdt, g.sdt, g);
+    ghi(theoTen, khoaTen(g.hoTen, g.maCorp, g.congTy), g);
+  }
+  return (g: { id?: string; hoTen: string; sdt: string | null; maCorp?: string | null; congTy?: string | null }): KhachTrung[] => {
+    const kq = new Map<string, KhachTrung>();
+    const them = (ds: KhachDoiChieu[] | undefined, loai: KhachTrung["loai"]) => {
+      for (const x of ds || []) {
+        if (x.id === g.id || kq.has(x.id)) continue;
+        kq.set(x.id, { loai, hoTen: x.hoTen, soThuTu: x.soThuTu, salesOwner: x.salesOwner });
+      }
+    };
+    if (g.sdt) them(theoSdt.get(g.sdt), "TRUNG_SDT");
+    const k = khoaTen(g.hoTen, g.maCorp, g.congTy);
+    if (k) them(theoTen.get(k), "TRUNG_TEN");
+    return [...kq.values()].sort((a, b) => a.soThuTu - b.soThuTu);
+  };
+}
+// "Trung SDT voi khach Nguyen Van A (so 1020) cua sales Tran B"
+export function moTaKhachTrung(x: KhachTrung, toi?: string): string {
+  const cua = toi && x.salesOwner === toi ? "của bạn" : `của sales ${x.salesOwner}`;
+  return `${x.loai === "TRUNG_SDT" ? "Trùng SĐT" : "Trùng tên và công ty"} với khách ${x.hoTen} (số ${x.soThuTu}) ${cua}`;
+}
+export function moTaTrung(ds: KhachTrung[] | null | undefined, toi?: string): string | null {
+  if (!ds?.length) return null;
+  return ds.slice(0, 5).map((x) => moTaKhachTrung(x, toi)).join("; ") + (ds.length > 5 ? "; ..." : "");
+}

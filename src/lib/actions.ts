@@ -70,6 +70,11 @@ async function tinhCanhBao(
   return { lyDo: ds.length ? ds.join(",") : null, trung };
 }
 
+// "khach so 1020, Nguyen Van A, sales Tran B": sales cung duoc xem de lien he nhau xu ly khach trung
+function moTaKhachTrungVoi(g: { soThuTu: number; hoTen: string; salesOwner: string }, toi: string) {
+  return `khách số ${g.soThuTu}, ${g.hoTen}, ${g.salesOwner === toi ? "của bạn" : `sales ${g.salesOwner}`}`;
+}
+
 function moTaCanhBao(lyDo: string | null) {
   if (!lyDo) return "";
   return lyDo.split(",").map((x) => NHAN_CANH_BAO[x] || x).join(", ");
@@ -140,11 +145,11 @@ export async function taoKhach(input: {
   let note = "Đã lưu nháp. Kiểm tra lại rồi bấm Gửi duyệt.";
   if (lyDo) {
     note += ` Cảnh báo: ${moTaCanhBao(lyDo)}`;
-    // Sales khong xem duoc ten khach cua nguoi khac
-    if (trung && u.vaiTro === "ADMIN") note += ` (khách số ${trung.g.soThuTu}, ${trung.g.hoTen})`;
+    if (trung) note += ` (trùng với ${moTaKhachTrungVoi(trung.g, u.hoTen)})`;
     note += ".";
+    if (trung && u.vaiTro === "SALES" && trung.g.salesOwner !== u.hoTen) note += ` Liên hệ ${trung.g.salesOwner} để thống nhất ai mời khách này.`;
   }
-  // Bao cong ty nay da co khach khac duoc moi (sales chi thay so luong)
+  // Bao cong ty nay da co khach khac duoc moi (sales thay so luong va ten sales khac)
   const boCty = taoBoCongTy(await prisma.guest.findMany({ select: CHON_CONG_TY }));
   const khacCty = boCty.timKhac(moi);
   const salesMoi = moi.salesOwner;
@@ -165,9 +170,11 @@ export async function guiDuyet(ids: string[]): Promise<KetQua> {
   // Thieu ten / chuc vu (ke ca khach thu 2) thi chua gui duoc
   const du = ds.filter((g) => !thieuThongTinMoi(g));
   const thieu = ds.filter((g) => thieuThongTinMoi(g));
+  const dsTrung: string[] = [];
   for (const g of du) {
-    const { lyDo } = await tinhCanhBao(g, g.id);
+    const { lyDo, trung } = await tinhCanhBao(g, g.id);
     await prisma.guest.update({ where: { id: g.id }, data: { trangThai: TRANG_THAI.CHO_DUYET, lyDoChoDuyet: lyDo } });
+    if (trung) dsTrung.push(`${g.hoTen} trùng với ${moTaKhachTrungVoi(trung.g, u.hoTen)}`);
   }
   lamTuoi();
   if (!ds.length) return { ok: false, thongBao: "Không có khách nháp nào để gửi duyệt." };
@@ -178,6 +185,7 @@ export async function guiDuyet(ids: string[]): Promise<KetQua> {
     ok: du.length > 0,
     thongBao:
       `Đã gửi duyệt ${du.length} khách.` +
+      (dsTrung.length ? ` Khách trùng: ${dsTrung.slice(0, 5).join("; ")}${dsTrung.length > 5 ? "; ..." : ""}.` : "") +
       (thieu.length ? ` ${thieu.length} khách chưa gửi vì thiếu SĐT, địa chỉ, chức vụ hoặc thông tin khách thứ 2, bổ sung rồi gửi lại.` : ""),
   };
 }
@@ -324,9 +332,9 @@ export async function suaKhach(
   return trung
     ? {
         ok: true,
-        thongBao: laSales
-          ? `Đã lưu.${doiSo} Lưu ý: trùng với một khách đã có, BTC sẽ xem khi duyệt.`
-          : `Đã lưu.${doiSo} Lưu ý: trùng với khách số ${trung.g.soThuTu} (${trung.g.hoTen}).`,
+        thongBao:
+          `Đã lưu.${doiSo} Lưu ý: trùng với ${moTaKhachTrungVoi(trung.g, u.hoTen)}.` +
+          (laSales ? (trung.g.salesOwner !== u.hoTen ? ` Liên hệ ${trung.g.salesOwner} để thống nhất ai mời khách này.` : " BTC sẽ xem khi duyệt.") : ""),
       }
     : { ok: true, thongBao: `Đã lưu thông tin khách.${doiSo}` };
 }

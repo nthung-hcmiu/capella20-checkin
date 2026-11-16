@@ -120,8 +120,17 @@ export async function nhapDanhSach(
   const venueMacDinh = tuyChon.venueMacDinh ? venues.find((v) => v.id === tuyChon.venueMacDinh) : undefined;
   const venueSales = laSales && u.venueId ? venues.find((v) => v.id === u.venueId) : undefined;
   const conHieuLuc = daCo.filter((g) => g.trangThai !== TRANG_THAI.DA_HUY);
-  const sdtDaCo = new Set(conHieuLuc.map((g) => g.sdt).filter(Boolean) as string[]);
-  const tenDaCo = new Set(conHieuLuc.map((g) => khoaTen(g.hoTen, g.maCorp, g.congTy)).filter(Boolean) as string[]);
+  // Khoa trung -> khach dau tien dang giu khoa do, de bao ro trung voi ai, cua sales nao
+  type DaCo = { hoTen: string; soThuTu: number; salesOwner: string };
+  const sdtDaCo = new Map<string, DaCo>();
+  const tenDaCo = new Map<string, DaCo>();
+  for (const g of conHieuLuc) {
+    if (g.sdt && !sdtDaCo.has(g.sdt)) sdtDaCo.set(g.sdt, g);
+    const k = khoaTen(g.hoTen, g.maCorp, g.congTy);
+    if (k && !tenDaCo.has(k)) tenDaCo.set(k, g);
+  }
+  const voiAi = (x: DaCo | undefined) =>
+    x ? `khách ${x.hoTen} (số ${x.soThuTu}) ${laSales && x.salesOwner === u.hoTen ? "của bạn" : `của sales ${x.salesOwner}`}` : "khách đã có";
   const soDaDung = new Set(daCo.map((g) => g.soThuTu));
   const maDaDung = new Set(daCo.map((g) => g.maBiMat));
   const dangChiem: Record<string, number> = {};
@@ -229,6 +238,7 @@ export async function nhapDanhSach(
     if (vip) ds.push("VIP");
     if (venue.quota > 0 && (dangChiem[venue.id] || 0) + soNguoi > venue.quota) ds.push("HET_QUOTA");
     const trung = ds[0] === "TRUNG_SDT" || ds[0] === "TRUNG_TEN";
+    const trungVoi = ds[0] === "TRUNG_SDT" ? sdtDaCo.get(sdt!) : ds[0] === "TRUNG_TEN" ? tenDaCo.get(khoa!) : undefined;
     // Phat hanh ve thang chi khi khong trung; khach trung vao Cho duyet
     const trangThai: string = dich === TRANG_THAI.DA_PHAT_HANH && trung ? TRANG_THAI.CHO_DUYET : dich;
     const lyDo = trangThai !== TRANG_THAI.DA_PHAT_HANH && ds.length ? ds.join(",") : null;
@@ -240,14 +250,14 @@ export async function nhapDanhSach(
       return;
     }
 
-    if (sdt) sdtDaCo.add(sdt);
-    if (khoa) tenDaCo.add(khoa);
+    if (sdt && !sdtDaCo.has(sdt)) sdtDaCo.set(sdt, { hoTen, soThuTu, salesOwner });
+    if (khoa && !tenDaCo.has(khoa)) tenDaCo.set(khoa, { hoTen, soThuTu, salesOwner });
     if (CHIEM_QUOTA.includes(trangThai)) dangChiem[venue.id] = (dangChiem[venue.id] || 0) + soNguoi;
     kq.trangThai = trangThai;
     kq.soThuTu = soThuTu;
     if (ds.includes("HET_QUOTA")) canhBao.unshift(`${venue.ten} đã hết quota`);
-    if (ds[0] === "TRUNG_SDT") canhBao.unshift("Trùng SĐT với khách đã có, BTC sẽ xem khi duyệt");
-    if (ds[0] === "TRUNG_TEN") canhBao.unshift("Trùng tên và công ty với khách đã có, BTC sẽ xem khi duyệt");
+    if (ds[0] === "TRUNG_SDT") canhBao.unshift(`Trùng SĐT với ${voiAi(trungVoi)}, BTC sẽ xem khi duyệt`);
+    if (ds[0] === "TRUNG_TEN") canhBao.unshift(`Trùng tên và công ty với ${voiAi(trungVoi)}, BTC sẽ xem khi duyệt`);
     // Cong ty da co khach khac (trong CSDL hoac dong truoc cua file nay)
     const khacCty = boCty.timKhac({ maCorp: them.maCorp, congTy: them.congTy });
     if (khacCty.length) {

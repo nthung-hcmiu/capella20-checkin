@@ -6,7 +6,7 @@ import { StatusBadge } from "./StatusBadge";
 import { ChipLichSu } from "./ChipLichSu";
 import { HopChon, HopChonTatCa, ThanhHangLoat } from "./ThanhHangLoat";
 import type { LichSu } from "@/lib/lichSu";
-import { moTaChoSales, type CongTySales } from "@/lib/congTy";
+import { moTaChoSales, moTaKhachTrung, moTaTrung, type CongTySales, type KhachTrung } from "@/lib/congTy";
 import { FormKhach, OThongTin, SoNguoiDiCung, docDiCungForm, docThem } from "./FormKhach";
 import { che4SoCuoi, boDau, dinhDangGio } from "@/lib/format";
 import { taoKhach, danhDauDaMoi, datThiepGiay, xacNhanKhach, guiDuyet, xoaNhap } from "@/lib/actions";
@@ -41,6 +41,8 @@ export interface SalesGuest {
   them: ThongTinThem;
   lichSu: LichSu | null;
   congTyKhac: CongTySales | null;
+  trung: KhachTrung[];
+  toi: string; // ho ten sales dang xem
 }
 export interface SalesVenue {
   id: string;
@@ -176,9 +178,10 @@ function DienThoai({ guests, ds, venues, venuesSua, loc }: ViewProps) {
                   {g.khachDiCung && <div className="mt-0.5 text-xs text-ink-soft">Cùng: {moTaDiCung(g.khachDiCung)}</div>}
                   {g.congTyKhac && (
                     <div className={`mt-0.5 text-xs ${g.congTyKhac.salesKhac ? "text-wine" : "text-ink-muted"}`}>
-                      Cùng công ty: +{g.congTyKhac.cuaToi + g.congTyKhac.salesKhac} khách{g.congTyKhac.salesKhac ? `, ${g.congTyKhac.salesKhac} của sales khác` : ""}
+                      Cùng công ty: +{g.congTyKhac.cuaToi + g.congTyKhac.salesKhac} khách{g.congTyKhac.salesKhac ? `, ${g.congTyKhac.salesKhac} của sales ${g.congTyKhac.tenSalesKhac.join(", ")}` : ""}
                     </div>
                   )}
+                  <DongTrung g={g} />
                   {CHUA_PHAT_HANH.includes(g.trangThai) && thieuCua(g) && <div className="mt-1 text-xs text-wine">{thieuCua(g)}</div>}
                 </div>
                 <StatusBadge trangThai={g.trangThai} />
@@ -306,9 +309,10 @@ function DongMayTinh({
           {(g.chucVu || g.congTy) && <div className="text-xs text-ink-soft">{[g.chucVu, g.congTy].filter(Boolean).join(" · ")}</div>}
           <div className="text-xs text-ink-muted">{che4SoCuoi(g.sdt)}</div>
           {g.khachDiCung && <div className="text-xs text-ink-soft">Cùng: {moTaDiCung(g.khachDiCung)}</div>}
+          <DongTrung g={g} />
           {g.congTyKhac && (
                     <div className={`text-xs ${g.congTyKhac.salesKhac ? "text-wine" : "text-ink-muted"}`}>
-                      Cùng công ty: +{g.congTyKhac.cuaToi + g.congTyKhac.salesKhac} khách{g.congTyKhac.salesKhac ? `, ${g.congTyKhac.salesKhac} của sales khác` : ""}
+                      Cùng công ty: +{g.congTyKhac.cuaToi + g.congTyKhac.salesKhac} khách{g.congTyKhac.salesKhac ? `, ${g.congTyKhac.salesKhac} của sales ${g.congTyKhac.tenSalesKhac.join(", ")}` : ""}
                     </div>
                   )}
         </td>
@@ -360,6 +364,19 @@ function DongMayTinh({
   );
 }
 
+// Khach trung: ghi ro trung voi khach nao, cua sales nao, de hai sales lien he nhau xu ly
+function DongTrung({ g }: { g: SalesGuest }) {
+  if (!g.trung.length) return null;
+  return (
+    <div className="mt-0.5 space-y-0.5 text-xs font-medium text-wine">
+      {g.trung.slice(0, 3).map((x) => (
+        <div key={x.soThuTu}>{moTaKhachTrung(x, g.toi)}</div>
+      ))}
+      {g.trung.length > 3 && <div>và {g.trung.length - 3} khách trùng khác, bấm vào dòng để xem</div>}
+    </div>
+  );
+}
+
 function ChiTiet({ g }: { g: SalesGuest }) {
   const gio = (d: string | null) => (d ? dinhDangGio(d) : null);
   const o: [string, React.ReactNode][] = [
@@ -373,6 +390,7 @@ function ChiTiet({ g }: { g: SalesGuest }) {
     ["Xác nhận lúc", gio(g.xacNhanLuc)],
     ["Check in", g.checkinLuc ? `${gio(g.checkinLuc)}${g.soNguoiDen ? `, ${g.soNguoiDen} người` : ""}` : null],
     ["Năm trước", g.lichSu?.chiTiet ?? null],
+    ["Khách trùng", moTaTrung(g.trung, g.toi)],
     ["Cùng công ty", moTaChoSales(g.congTyKhac)],
     ["Ghi chú", g.ghiChu],
   ];
