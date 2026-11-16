@@ -15,11 +15,21 @@ export interface KhachCty {
   trangThai: string;
 }
 
+// Ma CORP that phai co chu so va du dai; "N/A", "0", "Bo sung MST" la o dien tam, khong dung de gop cong ty
+export function maCorpThat(maCorp: string | null | undefined): string | null {
+  const t = (maCorp || "").trim().toUpperCase();
+  return t.length >= 4 && /\d/.test(t) ? t : null;
+}
+// Nhan su noi bo Capella (ban lanh dao, sales, marketing) khong phai khach cua sales nao,
+// nen khong xet "cung cong ty" / "trung cong ty giua cac sales" cho nhom nay
+const laNoiBo = (cty: string | null) => !!cty && /^capella( |$)/.test(cty);
+
 function cacKhoa(g: { maCorp?: string | null; congTy?: string | null }): string[] {
-  const ds: string[] = [];
-  const corp = (g.maCorp || "").trim().toUpperCase();
-  if (corp) ds.push(`corp:${corp}`);
   const cty = khoaCty(g.congTy);
+  if (laNoiBo(cty)) return [];
+  const ds: string[] = [];
+  const corp = maCorpThat(g.maCorp);
+  if (corp) ds.push(`corp:${corp}`);
   if (cty) ds.push(`cty:${cty}`);
   return ds;
 }
@@ -126,7 +136,7 @@ export function khoaTenManh(hoTen: string, maCorp?: string | null, congTy?: stri
   const ten = tenNguoi(hoTen);
   if (!ten) return [];
   const ds: string[] = [];
-  const corp = (maCorp || "").trim().toUpperCase();
+  const corp = maCorpThat(maCorp);
   if (corp) ds.push(`${ten}|corp:${corp}`);
   const cty = khoaCty(congTy);
   if (cty) ds.push(`${ten}|cty:${cty}`);
