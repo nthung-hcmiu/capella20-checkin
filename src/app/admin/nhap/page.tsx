@@ -10,11 +10,11 @@ export default async function NhapPage() {
   await yeuCauTrang(["ADMIN"], "/admin/nhap");
   const [venues, sales] = await Promise.all([
     prisma.venue.findMany({ orderBy: { thuTu: "asc" }, select: { id: true, ten: true } }),
-    prisma.staffUser.findMany({ where: { vaiTro: "SALES" }, select: { hoTen: true }, orderBy: { hoTen: "asc" } }),
+    prisma.staffUser.findMany({ where: { vaiTro: { in: ["SALES", "ADMIN"] } }, select: { hoTen: true }, orderBy: { hoTen: "asc" } }),
   ]);
   return (
     <div className="space-y-6">
-      <ImportManager venues={venues} salesTeam={sales.map((s) => s.hoTen)} />
+      <ImportManager venues={venues} salesTeam={[...new Set(sales.map((s) => s.hoTen))]} />
       <CapNhatPhuTrach venues={venues} />
     </div>
   );

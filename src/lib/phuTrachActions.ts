@@ -44,7 +44,7 @@ export async function capNhatPhuTrach(
       where: { trangThai: { not: TRANG_THAI.DA_HUY }, ...locPhamVi(u), ...(tuyChon.venueId ? { AND: [{ venueId: tuyChon.venueId }] } : {}) },
       select: { id: true, soThuTu: true, hoTen: true, congTy: true, maCorp: true, salesOwner: true },
     }),
-    prisma.staffUser.findMany({ where: { vaiTro: "SALES" }, select: { hoTen: true } }),
+    prisma.staffUser.findMany({ where: { vaiTro: { in: ["SALES", "ADMIN"] } }, select: { hoTen: true } }),
   ]);
   // Ten sales trong file -> ho ten tai khoan (khong phan biet dau, hoa thuong)
   const timSales = (t: string) => sales.find((s) => boDau(s.hoTen) === boDau(t))?.hoTen ?? null;

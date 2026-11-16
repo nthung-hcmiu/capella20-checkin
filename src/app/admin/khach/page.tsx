@@ -53,7 +53,7 @@ export default async function KhachPage() {
   const venueOpts: VenueOpt[] = venues.filter((v) => !u.phamViXem || u.phamViXem.includes(v.id)).map((v) => ({ id: v.id, ten: v.ten, code: v.code }));
 
   const salesTeam = await prisma.staffUser.findMany({
-    where: { vaiTro: "SALES" },
+    where: { vaiTro: { in: ["SALES", "ADMIN"] } }, // BTC phu trach khach cung tinh nhu sales
     select: { hoTen: true },
     orderBy: { hoTen: "asc" },
   });
@@ -62,7 +62,7 @@ export default async function KhachPage() {
     <GuestManager
       guests={rows}
       venues={venueOpts}
-      salesTeam={salesTeam.map((s) => s.hoTen)}
+      salesTeam={[...new Set(salesTeam.map((s) => s.hoTen))]}
       quanTri={u.quanTri}
     />
   );

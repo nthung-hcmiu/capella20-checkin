@@ -93,7 +93,7 @@ export async function nhapDanhSach(
 
   const [venues, salesAcc, daCo] = await Promise.all([
     prisma.venue.findMany(),
-    prisma.staffUser.findMany({ where: { vaiTro: "SALES" }, select: { hoTen: true } }),
+    prisma.staffUser.findMany({ where: { vaiTro: { in: ["SALES", "ADMIN"] } }, select: { hoTen: true } }), // BTC phu trach khach cung tinh nhu sales
     prisma.guest.findMany({ select: { id: true, salesOwner: true, sdt: true, hoTen: true, maCorp: true, congTy: true, trangThai: true, soThuTu: true, venueId: true, maBiMat: true, soNguoiMoi: true } }),
   ]);
 

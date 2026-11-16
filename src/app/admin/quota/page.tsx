@@ -26,16 +26,17 @@ export default async function QuotaPage() {
   });
   const theoSales = tongHopTheoVenue(guests.map((g) => ({ ...g, venueId: g.salesOwner })));
   const demTT = (ten: string, tt: string[]) => guests.filter((g) => g.salesOwner === ten && tt.includes(g.trangThai)).length;
-  const dongSales = (ten: string, venueId: string | null, coTk: boolean) => {
+  // loai: SALES (tai khoan sales), BTC (tai khoan BTC phu trach khach, tinh nhu sales), KHONG (chua co tai khoan)
+  const dongSales = (ten: string, venueId: string | null, loai: "SALES" | "BTC" | "KHONG") => {
     const r = theoSales.get(ten) || rong();
     return {
-      ten, venueId, coTk, ...r,
+      ten, venueId, loai, coTk: loai === "SALES", ...r,
       nhap: demTT(ten, [TRANG_THAI.NHAP]),
       choDuyet: demTT(ten, [TRANG_THAI.CHO_DUYET]),
       coVe: demTT(ten, DA_PHAT_HANH_VE),
     };
   };
-  const dsSales = salesTk.map((t) => dongSales(t.hoTen, t.venueId, true));
+  const dsSales = salesTk.map((t) => dongSales(t.hoTen, t.venueId, "SALES"));
   // Sales cung la nguoi du su kien: doi chieu ho ten tai khoan voi danh sach khach moi (khong tinh khach da huy)
   const khoaTen = (t: string) => boDau(t).replace(/\s+/g, " ").trim();
   const thiepTheoTen = new Map<string, number>();
@@ -46,9 +47,19 @@ export default async function QuotaPage() {
   }
   const thiepCua = (ten: string) => thiepTheoTen.get(khoaTen(ten)) ?? null;
   const salesChuaMoi = salesTk.filter((t) => thiepCua(t.hoTen) === null);
-  // Nguoi phu trach co khach nhung chua co tai khoan sales (vd BTC)
+  // Nguoi phu trach khong phai tai khoan sales: tai khoan BTC cung tinh nhu sales.
+  // Xep vao venue ho co nhieu khach nhat de cong vao tong cua venue do.
+  const btcTk = new Set((await prisma.staffUser.findMany({ where: { vaiTro: "ADMIN" }, select: { hoTen: true } })).map((t) => t.hoTen));
+  const venueChinh = (ten: string): string | null => {
+    const dem = new Map<string, number>();
+    for (const g of guests) {
+      if (g.salesOwner !== ten || g.trangThai === TRANG_THAI.DA_HUY) continue;
+      dem.set(g.venueId, (dem.get(g.venueId) || 0) + g.soNguoiMoi);
+    }
+    return [...dem.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+  };
   for (const [ten, r] of theoSales) {
-    if (r.thiep > 0 && !salesTk.some((t) => t.hoTen === ten)) dsSales.push(dongSales(ten, null, false));
+    if (r.thiep > 0 && !salesTk.some((t) => t.hoTen === ten)) dsSales.push(dongSales(ten, venueChinh(ten), btcTk.has(ten) ? "BTC" : "KHONG"));
   }
   const nhomVenue = [
     ...venues.map((v) => ({ id: v.id as string | null, ten: v.ten, mau: v.mauSac, quota: v.quota, mucTieuCongTy: v.mucTieuCongTy })),
@@ -191,7 +202,9 @@ export default async function QuotaPage() {
                     <tr key={`s-${v.id}-${d.ten}`} className="border-t border-ivory-deep">
                       <td className="px-5 py-2.5 pl-10 text-ink">
                         {d.ten}
-                        {!d.coTk && <span className="ml-2 text-[11px] text-ink-muted">chưa có tài khoản sales</span>}
+                        {d.loai === "BTC" && <span className="ml-2 text-[11px] text-ink-muted">tài khoản BTC</span>}
+                        {d.loai === "KHONG" && <span className="ml-2 text-[11px] text-ink-muted">chưa có tài khoản</span>}
+                        {d.loai === "BTC" && thiepCua(d.ten) !== null && <span className="ml-2 text-[11px] text-ink-muted">thiệp mời số {thiepCua(d.ten)}</span>}
                         {d.coTk &&
                           (thiepCua(d.ten) !== null ? (
                             <span className="ml-2 text-[11px] text-ink-muted">thiệp mời số {thiepCua(d.ten)}</span>
