@@ -25,7 +25,7 @@ export default async function SalesTongQuan() {
     { nhan: "Nháp chưa gửi duyệt", so: dem(TRANG_THAI.NHAP), href: "/sales?nhom=nhap" },
     { nhan: "Đang chờ BTC duyệt", so: dem(TRANG_THAI.CHO_DUYET), href: "/sales?nhom=choDuyet" },
     { nhan: "Cần gửi thiệp online", so: dem(TRANG_THAI.DA_PHAT_HANH), href: "/sales?nhom=canGui" },
-    { nhan: "Chưa gửi thiệp giấy", so: chuaGiay, href: "/in-qr?chuaGiay=1" },
+    { nhan: "Chưa gửi thiệp giấy", so: chuaGiay, href: "/sales" },
     { nhan: "Chờ xác nhận tham dự", so: dem(TRANG_THAI.DA_MOI), href: "/sales?nhom=choXN" },
   ];
 

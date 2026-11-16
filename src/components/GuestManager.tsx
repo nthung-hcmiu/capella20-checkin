@@ -153,7 +153,7 @@ export function GuestManager({
         </div>
       </div>
 
-      {moForm && <FormTao venues={venues} salesTeam={salesTeam} onXong={() => setMoForm(false)} />}
+      {moForm && <FormTao venues={venues} salesTeam={salesTeam} mienBatBuoc={quanTri} onXong={() => setMoForm(false)} />}
 
       <div className="card flex flex-wrap items-center gap-3 p-4">
         <input
@@ -251,7 +251,7 @@ export function GuestManager({
             </thead>
             <tbody>
               {locKq.slice(0, soHien).map((g) => (
-                <Dong key={g.id} g={g} salesTeam={salesTeam} venues={venues} chon={chon.has(g.id)} onChon={() => doiChon(g.id)} />
+                <Dong key={g.id} g={g} salesTeam={salesTeam} venues={venues} quanTri={quanTri} chon={chon.has(g.id)} onChon={() => doiChon(g.id)} />
               ))}
               {locKq.length === 0 && (
                 <tr>
@@ -276,8 +276,8 @@ export function GuestManager({
 }
 
 function Dong({
-  g, salesTeam, venues, chon, onChon,
-}: { g: GuestRow; salesTeam: string[]; venues: VenueOpt[]; chon: boolean; onChon: () => void }) {
+  g, salesTeam, venues, quanTri, chon, onChon,
+}: { g: GuestRow; salesTeam: string[]; venues: VenueOpt[]; quanTri: boolean; chon: boolean; onChon: () => void }) {
   const [pending, start] = useTransition();
   const [mo, setMo] = useState(false);
   const [sua, setSua] = useState(false);
@@ -410,6 +410,11 @@ function Dong({
                   )}
                 </span>
               )}
+              {!chuaPhatHanh && g.trangThai !== TRANG_THAI.DA_HUY && (
+                <a href={`/api/thiep-anh/${g.maBiMat}`} download={`thiep-capella20-${g.soThuTu}.png`} className="btn-ghost btn-sm">
+                  Tải thiệp
+                </a>
+              )}
               <Link href={`/thiep/${g.maBiMat}`} target="_blank" className="btn-ghost btn-sm">
                 Trang thiệp
               </Link>
@@ -470,7 +475,7 @@ function Dong({
               </span>
             </div>
             {tb && <div className="mt-3 rounded-xl bg-white px-4 py-2 text-sm text-ink-soft">{tb}</div>}
-            {sua && <FormKhach g={g} venues={venues} salesTeam={salesTeam} onXong={() => setSua(false)} />}
+            {sua && <FormKhach g={g} venues={venues} salesTeam={salesTeam} mienBatBuoc={quanTri} onXong={() => setSua(false)} />}
           </td>
         </tr>
       )}
@@ -514,7 +519,8 @@ function ChiTiet({ g, canhBao }: { g: GuestRow; canhBao: string[] }) {
   );
 }
 
-function FormTao({ venues, salesTeam, onXong }: { venues: VenueOpt[]; salesTeam: string[]; onXong: () => void }) {
+// mienBatBuoc: chi Quan tri duoc them khach khi con thieu truong bat buoc
+function FormTao({ venues, salesTeam, mienBatBuoc, onXong }: { venues: VenueOpt[]; salesTeam: string[]; mienBatBuoc: boolean; onXong: () => void }) {
   const [pending, start] = useTransition();
   const [kq, setKq] = useState<{ ok: boolean; msg: string } | null>(null);
 
@@ -545,9 +551,9 @@ function FormTao({ venues, salesTeam, onXong }: { venues: VenueOpt[]; salesTeam:
         </div>
         <div>
           <label className="label">
-            Số điện thoại <span className="text-wine">*</span>
+            Số điện thoại {!mienBatBuoc && <span className="text-wine">*</span>}
           </label>
-          <input name="sdt" inputMode="tel" className="input" placeholder="0901234567" required />
+          <input name="sdt" inputMode="tel" className="input" placeholder="0901234567" required={!mienBatBuoc} />
         </div>
         <div>
           <label className="label">Venue</label>
@@ -576,8 +582,8 @@ function FormTao({ venues, salesTeam, onXong }: { venues: VenueOpt[]; salesTeam:
             Khách VIP (cần BTC duyệt)
           </label>
         </div>
-        <OThongTin />
-        <SoNguoiDiCung />
+        <OThongTin mienBatBuoc={mienBatBuoc} />
+        <SoNguoiDiCung mienBatBuoc={mienBatBuoc} />
       </div>
       <div>
         <label className="label">Ghi chú</label>

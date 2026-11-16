@@ -48,6 +48,7 @@ const HUONG_DAN: VaiTro[] = [
     luuY: [
       "Tạo tài khoản sales: Tài khoản > Tạo nhiều tài khoản > dán danh sách họ tên > chọn venue. Tên đăng nhập theo công thức chữ cái đầu họ và tên đệm + tên chính (Phạm Lê Minh Thư thành plmthu), mật khẩu tạm ngẫu nhiên chỉ hiện một lần.",
       "Giao venue cho BTC: Tài khoản > bấm nút Duyệt cạnh tên tài khoản BTC > tick các venue người đó được duyệt và sửa khách > Lưu phạm vi. Người đó chỉ thấy danh sách, hàng Chờ duyệt và số liệu của các venue đã tick (tick thêm ô xem mọi venue nếu vẫn cho xem hết). Khách họ tự phụ trách ở venue khác vẫn nằm trong Cổng Sales của họ.",
+      "Chỉ Quản trị được thêm hoặc sửa khách và lưu khi còn thiếu SĐT, địa chỉ, chức vụ hay thông tin khách đi cùng. BTC và sales phải điền đủ.",
       "Chỉ tài khoản Quản trị được tạo tài khoản, đặt mật khẩu cho người khác, xuất CSV và vào tab Dữ liệu. Tài khoản BTC khác chỉ xem danh sách tài khoản.",
       "Xóa toàn bộ danh sách không hoàn tác được. Luôn tải CSV sao lưu trước.",
       "BTC cũng xác nhận thay khách và sửa thông tin được ngay trong dòng khách đã mở.",
@@ -67,7 +68,7 @@ const HUONG_DAN: VaiTro[] = [
           ["Cùng công ty", "Dòng \"Cùng công ty\" cho biết công ty đó đã có bao nhiêu khách khác được mời. Chữ đỏ là có sales khác cùng mời, kèm tên sales đó. Khách trùng SĐT hoặc trùng tên và công ty thì app ghi rõ trùng với khách nào, của sales nào, hai bên liên hệ nhau để thống nhất ai mời."],
           ["Lọc khách trùng", "Khách trùng người (cùng SĐT, hoặc cùng tên và công ty) và khách có công ty đang được sales khác cùng mời đều được tô nền đỏ, gắn nhãn Trùng hoặc Trùng công ty. Bấm nút \"Trùng với sales khác\" cạnh các nhóm trạng thái để chỉ xem những khách này, bấm lần nữa để bỏ lọc."],
           ["Nhập từ Excel", "Nhập danh sách > Tải file mẫu > điền > chọn file > Tiếp tục: kiểm tra file > Hoàn tất: lưu khách vào app. Mọi khách trong file do bạn phụ trách."],
-          ["Thiệp khách đi kèm", "Vé mời 2 người thì mỗi người một thiệp online riêng. Sau khi vé được phát hành, mở khách ra sẽ thấy thêm dòng Khách thứ 2 với nút Chép lời mời và Xem thiệp. Thiệp này ghi đúng tên khách đi kèm và có mã QR riêng, người đó đến trước hay sau khách chính đều check in được."],
+          ["Thiệp khách đi kèm", "Vé mời 2 người thì mỗi người một thiệp riêng. Sau khi vé được duyệt, mở khách ra sẽ thấy thêm dòng Khách thứ 2 với nút Tải thiệp. Thiệp này ghi đúng tên khách đi kèm và có mã QR riêng, người đó đến trước hay sau khách chính đều check in được."],
           ["Gửi duyệt", "Kiểm tra lại rồi bấm Gửi duyệt trên từng khách, hoặc Gửi duyệt tất cả. Nháp sai thì bấm Xóa nháp."],
           ["Chờ BTC", "BTC duyệt xong khách chuyển sang Đã phát hành vé, lúc đó mới gửi thiệp được."],
         ],
@@ -75,8 +76,8 @@ const HUONG_DAN: VaiTro[] = [
       {
         tieuDe: "Mỗi khách đã phát hành vé đi qua 3 bước",
         buoc: [
-          ["Gửi thiệp online", "Bấm Chép lời mời > dán vào Zalo gửi khách > bấm Đã gửi."],
-          ["Gửi thiệp giấy", "Bấm Tải QR (hoặc In QR ở đầu danh sách) > dán QR lên thiệp giấy > gửi khách > bấm Đã gửi."],
+          ["Gửi thiệp online", "Bấm Tải thiệp để lấy file hình (có sẵn mã QR check in) > tự gửi cho khách qua Zalo hoặc email > bấm Đã gửi."],
+          ["Gửi thiệp giấy", "Gửi thiệp giấy cho khách xong thì bấm Đã gửi thiệp giấy."],
           ["Xác nhận thay khách", "Sau khi hỏi khách: Xác nhận thay khách > chọn số người > Tham dự hoặc Không tham dự. Khách đổi ý thì Đổi xác nhận hoặc Bỏ xác nhận."],
         ],
       },
@@ -84,14 +85,15 @@ const HUONG_DAN: VaiTro[] = [
         tieuDe: "Theo dõi và chỉnh sửa",
         buoc: [
           ["Tổng quan", "Số khách, công ty, doanh thu dự kiến, người xác nhận, check in của riêng bạn, kèm danh sách việc cần làm."],
-          ["Sửa thông tin", "Mở khách > Sửa thông tin. Vé đã phát hành vẫn giữ nguyên số thứ tự, mã QR và venue; số người mời và VIP thì nhờ BTC đổi."],
+          ["Sửa thông tin", "Khách đang Nháp hoặc Chờ duyệt: mở khách > Sửa thông tin. Vé đã duyệt thì không tự sửa được: báo quản lý trả vé về nháp, sửa xong gửi duyệt lại. Số thứ tự và mã QR vẫn giữ nguyên."],
           ["Trên máy tính", "Khách của tôi hiện dạng bảng, bấm vào dòng để xem chi tiết và thao tác."],
         ],
       },
     ],
     luuY: [
-      "Khách không tự xác nhận. Thiệp online chỉ để xem thông tin và mã QR check in.",
-      "Khách hỏi cách vào cửa: đưa mã QR trong thiệp online hoặc trên thiệp giấy, hoặc đọc số thứ tự thiệp.",
+      "Khách không tự xác nhận. Sales hỏi khách rồi xác nhận thay trên app.",
+      "Khách hỏi cách vào cửa: đưa mã QR ở cuối file thiệp, hoặc đọc số thứ tự thiệp.",
+      "File thiệp có mã QR là vé vào cửa. Nhắc khách không đăng nguyên file lên mạng; muốn đăng thì cắt bỏ phần mã QR ở dưới.",
       "Lần đầu đăng nhập, đổi mật khẩu riêng. Quên mật khẩu thì nhờ Quản trị đặt lại.",
     ],
   },

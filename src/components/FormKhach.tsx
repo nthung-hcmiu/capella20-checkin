@@ -27,13 +27,16 @@ function OChon({ ten, nhan, ds, gt, batBuoc }: { ten: string; nhan: string; ds: 
 }
 
 // Cac o thong tin doanh nghiep dung chung cho them va sua
-export function OThongTin({ them, coDanhXung = true, coChucVu = true }: { them?: ThongTinThem; coDanhXung?: boolean; coChucVu?: boolean }) {
+// mienBatBuoc: Quan tri duoc luu khi con thieu truong bat buoc, nen form khong chan
+export function OThongTin({
+  them, coDanhXung = true, coChucVu = true, mienBatBuoc = false,
+}: { them?: ThongTinThem; coDanhXung?: boolean; coChucVu?: boolean; mienBatBuoc?: boolean }) {
   const o = (k: TruongChu, placeholder = "", batBuoc = false) => (
     <div key={k}>
       <label className="label">
-        {NHAN_TRUONG[k]} {batBuoc && <span className="text-wine">*</span>}
+        {NHAN_TRUONG[k]} {batBuoc && !mienBatBuoc && <span className="text-wine">*</span>}
       </label>
-      <input name={k} className="input" defaultValue={them?.[k] || ""} placeholder={placeholder} required={batBuoc} />
+      <input name={k} className="input" defaultValue={them?.[k] || ""} placeholder={placeholder} required={batBuoc && !mienBatBuoc} />
     </div>
   );
   return (
@@ -55,9 +58,9 @@ export function OThongTin({ them, coDanhXung = true, coChucVu = true }: { them?:
       {o("congTy", "CÔNG TY TNHH ...")}
       <div className="sm:col-span-2">
         <label className="label">
-          {NHAN_TRUONG.diaChi} <span className="text-wine">*</span>
+          {NHAN_TRUONG.diaChi} {!mienBatBuoc && <span className="text-wine">*</span>}
         </label>
-        <input name="diaChi" className="input" defaultValue={them?.diaChi || ""} placeholder="Số nhà, đường, phường, quận, thành phố" required />
+        <input name="diaChi" className="input" defaultValue={them?.diaChi || ""} placeholder="Số nhà, đường, phường, quận, thành phố" required={!mienBatBuoc} />
       </div>
       {o("maCorp", "COR0001234")}
       {o("doanhThuDuKien", "95.000.000 đ")}
@@ -78,11 +81,13 @@ export function SoNguoiDiCung({
   diCungDau = [],
   khoaSoNguoi = false,
   nhoGon = false,
+  mienBatBuoc = false,
 }: {
   soDau?: number;
   diCungDau?: NguoiDiCung[];
   khoaSoNguoi?: boolean;
   nhoGon?: boolean;
+  mienBatBuoc?: boolean;
 }) {
   const [so, setSo] = useState(soDau);
   const soDiCung = Math.max(0, Math.min(9, (so || 1) - 1));
@@ -108,7 +113,7 @@ export function SoNguoiDiCung({
           </div>
           {Array.from({ length: soDiCung }, (_, i) => (
             <div key={i} className={nhoGon ? "space-y-2" : "grid gap-2 sm:grid-cols-[120px_1fr_1fr]"}>
-              <select name={`dcDanhXung_${i}`} className="input" defaultValue={diCungDau[i]?.danhXung || ""} required aria-label={`Danh xưng khách thứ ${i + 2}`}>
+              <select name={`dcDanhXung_${i}`} className="input" defaultValue={diCungDau[i]?.danhXung || ""} required={!mienBatBuoc} aria-label={`Danh xưng khách thứ ${i + 2}`}>
                 <option value="">Danh xưng *</option>
                 {DANH_XUNG.map((x) => (
                   <option key={x} value={x}>
@@ -121,14 +126,14 @@ export function SoNguoiDiCung({
                 className="input"
                 placeholder={`Tên khách thứ ${i + 2} *`}
                 defaultValue={diCungDau[i]?.hoTen || ""}
-                required
+                required={!mienBatBuoc}
               />
               <input
                 name={`dcChucVu_${i}`}
                 className="input"
                 placeholder={`Chức vụ khách thứ ${i + 2} *`}
                 defaultValue={diCungDau[i]?.chucVu || ""}
-                required
+                required={!mienBatBuoc}
               />
             </div>
           ))}
@@ -172,12 +177,14 @@ export function FormKhach({
   venues,
   salesTeam,
   laSales = false,
+  mienBatBuoc = false,
   onXong,
 }: {
   g: KhachSua;
   venues: { id: string; ten: string }[];
   salesTeam?: string[];
   laSales?: boolean;
+  mienBatBuoc?: boolean;
   onXong: () => void;
 }) {
   const [pending, start] = useTransition();
@@ -215,9 +222,9 @@ export function FormKhach({
         </div>
         <div>
           <label className="label">
-            Số điện thoại <span className="text-wine">*</span>
+            Số điện thoại {!mienBatBuoc && <span className="text-wine">*</span>}
           </label>
-          <input name="sdt" className="input" defaultValue={g.sdt || ""} inputMode="tel" placeholder="0901234567" required />
+          <input name="sdt" className="input" defaultValue={g.sdt || ""} inputMode="tel" placeholder="0901234567" required={!mienBatBuoc} />
         </div>
         <div>
           <label className="label">Venue</label>
@@ -241,8 +248,8 @@ export function FormKhach({
             </select>
           </div>
         )}
-        <OThongTin them={g.them} />
-        <SoNguoiDiCung soDau={g.soNguoiMoi} diCungDau={docDiCung(g.khachDiCung)} khoaSoNguoi={khoaDuyet} />
+        <OThongTin them={g.them} mienBatBuoc={mienBatBuoc} />
+        <SoNguoiDiCung soDau={g.soNguoiMoi} diCungDau={docDiCung(g.khachDiCung)} khoaSoNguoi={khoaDuyet} mienBatBuoc={mienBatBuoc} />
         <div className="sm:col-span-2">
           <label className="label">Ghi chú</label>
           <input name="ghiChu" className="input" defaultValue={g.ghiChu || ""} />
@@ -252,6 +259,7 @@ export function FormKhach({
           Khách VIP
         </label>
       </div>
+      {mienBatBuoc && <p className="text-xs text-ink-muted">Quản trị lưu được cả khi còn thiếu SĐT, địa chỉ, chức vụ hoặc thông tin khách đi cùng.</p>}
       {kq && <div className={`rounded-xl px-4 py-2 text-sm ${kq.ok ? "bg-sage/10 text-sage" : "bg-wine/10 text-wine"}`}>{kq.msg}</div>}
       <div className="flex gap-2">
         <button type="submit" className="btn-brand btn-sm" disabled={pending}>

@@ -11,7 +11,7 @@ import { FormKhach, OThongTin, SoNguoiDiCung, docDiCungForm, docThem } from "./F
 import { che4SoCuoi, boDau, dinhDangGio, hienTien } from "@/lib/format";
 import { taoKhach, danhDauDaMoi, datThiepGiay, xacNhanKhach, guiDuyet, xoaNhap } from "@/lib/actions";
 import { DANH_XUNG, LINH_VUC, NHAN_TRUONG, PHAN_LOAI_KHACH, docDiCung, moTaDiCung, tenGoi, thieuThongTinMoi, type ThongTinThem } from "@/lib/khach";
-import { CHUA_PHAT_HANH, DUOC_XAC_NHAN, NHAN_CANH_BAO, SU_KIEN, TRANG_THAI } from "@/lib/constants";
+import { CHUA_PHAT_HANH, DUOC_XAC_NHAN, NHAN_CANH_BAO, TRANG_THAI } from "@/lib/constants";
 
 export interface SalesGuest {
   id: string;
@@ -192,9 +192,6 @@ function DienThoai({ guests, ds, venues, venuesSua, loc }: ViewProps) {
           </div>
           <div className="flex gap-2">
             <input className="input" placeholder="Tìm tên, công ty hoặc SĐT..." value={loc.q} onChange={(e) => loc.setQ(e.target.value)} />
-            <a href="/in-qr" target="_blank" className="btn-ghost shrink-0 px-3 text-xs">
-              In QR
-            </a>
           </div>
           <GuiDuyetLoat ids={guests.filter((g) => g.trangThai === TRANG_THAI.NHAP).map((g) => g.id)} />
           {ds.length === 0 && <p className="py-6 text-center text-sm text-ink-muted">Không có khách trong nhóm này.</p>}
@@ -261,9 +258,6 @@ function MayTinh({ guests, ds, venues, venuesSua, loc }: ViewProps) {
           <Link href="/sales/nhap" className="btn-ghost">
             Nhập từ Excel
           </Link>
-          <a href="/in-qr" target="_blank" className="btn-ghost">
-            In QR thiệp giấy
-          </a>
           <button className="btn-brand" onClick={() => setMoThem((v) => !v)}>
             {moThem ? "Đóng" : "+ Thêm khách"}
           </button>
@@ -474,9 +468,7 @@ function GuiDuyetLoat({ ids }: { ids: string[] }) {
 // Cac thao tac tren mot khach, dung chung cho the (dien thoai) va dong mo rong (may tinh)
 function HanhDong({ g, venuesSua }: { g: SalesGuest; venuesSua: { id: string; ten: string }[] }) {
   const [pending, start] = useTransition();
-  // Nguoi vua duoc chep loi moi: 1 la khach chinh, 2 tro di la khach di kem
-  const [daChep, setDaChep] = useState<number | null>(null);
-  // Khach di kem da co ten: moi nguoi mot link thiep va ma QR rieng
+  // Khach di kem da co ten: moi nguoi mot thiep rieng (file hinh) va ma QR rieng
   const dsDiKem = docDiCung(g.khachDiCung)
     .slice(0, Math.max(0, g.soNguoiMoi - 1))
     .map((x, i) => ({ ...x, k: i + 2 }))
@@ -489,27 +481,7 @@ function HanhDong({ g, venuesSua }: { g: SalesGuest; venuesSua: { id: string; te
   const daPhatHanh = !CHUA_PHAT_HANH.includes(g.trangThai);
   const duocXN = DUOC_XAC_NHAN.includes(g.trangThai);
   const daGuiOnline = daPhatHanh && g.trangThai !== TRANG_THAI.DA_PHAT_HANH;
-  const duocSua = g.trangThai !== TRANG_THAI.DA_HUY;
-
-  const chepLoiMoi = async (k = 1) => {
-    const nguoi = k >= 2 ? dsDiKem.find((x) => x.k === k) : null;
-    const nm = nguoi ? { danhXung: nguoi.danhXung || null, hoTen: nguoi.hoTen } : g;
-    const goi = nm.danhXung ? tenGoi(nm) : `anh/chị ${nm.hoTen}`;
-    const ai = nm.danhXung ? nm.danhXung.toLowerCase() : "anh/chị";
-    const loi =
-      `Kính gửi ${goi},\n` +
-      `Capella trân trọng kính mời ${ai} đến dự Đêm tri ân khách hàng nhân dịp kỷ niệm 20 năm Capella, ` +
-      `ngày ${SU_KIEN.ngay} tại ${SU_KIEN.diaDiem}.\n` +
-      `Thiệp mời online của ${ai}: ${g.linkThiep}${nguoi ? `?k=${k}` : ""}\n` +
-      `Khi đến sự kiện, ${ai} vui lòng đưa mã QR trong thiệp (hoặc thiệp giấy) cho lễ tân để check in. Số thứ tự thiệp: ${g.soThuTu}.`;
-    try {
-      await navigator.clipboard.writeText(loi);
-      setDaChep(k);
-      setTimeout(() => setDaChep(null), 2500);
-    } catch {
-      window.prompt("Sao chép lời mời:", loi);
-    }
-  };
+  // Ve da duyet thi sales khong tu sua: bao quan ly tra ve nhap
 
   const xn = (kq: "THAM_DU" | "KHONG_THAM_DU" | "DA_MOI") =>
     start(async () => {
@@ -518,7 +490,7 @@ function HanhDong({ g, venuesSua }: { g: SalesGuest; venuesSua: { id: string; te
       if (r.ok) setMoXN(false);
     });
 
-  const nutSua = duocSua && (
+  const nutSua = (
     <button className={sua ? "btn-ink btn-sm" : "btn-ghost btn-sm"} onClick={() => setSua((v) => !v)}>
       {sua ? "Đóng sửa" : "Sửa thông tin"}
     </button>
@@ -575,41 +547,32 @@ function HanhDong({ g, venuesSua }: { g: SalesGuest; venuesSua: { id: string; te
 
   return (
     <div className="mt-3 space-y-2 border-t border-ivory-deep pt-3">
-      {/* 1. Thiep online */}
+      {/* 1. Thiep online: sales tai file hinh ve roi tu gui cho khach */}
       <div className="flex flex-wrap items-center gap-2">
         <span className={`w-24 shrink-0 text-xs ${daGuiOnline ? "text-sage" : "text-ink-muted"}`}>{daGuiOnline ? "✓ " : ""}Thiệp online</span>
-        <button className="btn-brand btn-sm" onClick={() => chepLoiMoi(1)}>
-          {daChep === 1 ? "Đã chép, dán vào Zalo" : "Chép lời mời"}
-        </button>
+        <a href={`/api/thiep-anh/${g.maBiMat}`} download={`thiep-capella20-${g.soThuTu}.png`} className="btn-brand btn-sm">
+          Tải thiệp
+        </a>
         {g.trangThai === TRANG_THAI.DA_PHAT_HANH && (
           <button className="btn-ink btn-sm" disabled={pending} onClick={() => start(() => void danhDauDaMoi(g.id))}>
             Đã gửi
           </button>
         )}
-        <a href={`/thiep/${g.maBiMat}`} target="_blank" className="btn-ghost btn-sm">
-          Xem thiệp
-        </a>
       </div>
-      {/* Thiep online rieng cua tung khach di kem: link va ma QR rieng, ghi dung ten nguoi do */}
+      {/* Thiep rieng cua tung khach di kem: ghi dung ten nguoi do, ma QR rieng */}
       {dsDiKem.map((x) => (
         <div key={x.k} className="flex flex-wrap items-center gap-2">
           <span className="w-24 shrink-0 text-xs text-ink-muted">Khách thứ {x.k}</span>
-          <button className="btn-brand btn-sm" onClick={() => chepLoiMoi(x.k)}>
-            {daChep === x.k ? "Đã chép, dán vào Zalo" : `Chép lời mời ${[x.danhXung, x.hoTen].filter(Boolean).join(" ")}`}
-          </button>
-          <a href={`/thiep/${g.maBiMat}?k=${x.k}`} target="_blank" className="btn-ghost btn-sm">
-            Xem thiệp
+          <a href={`/api/thiep-anh/${g.maBiMat}?k=${x.k}`} download={`thiep-capella20-${g.soThuTu}-khach-${x.k}.png`} className="btn-brand btn-sm">
+            Tải thiệp {[x.danhXung, x.hoTen].filter(Boolean).join(" ")}
           </a>
         </div>
       ))}
-      {/* 2. Thiep giay */}
+      {/* 2. Thiep giay: chi xac nhan da gui */}
       <div className="flex flex-wrap items-center gap-2">
         <span className={`w-24 shrink-0 text-xs ${g.daGuiThiepGiay ? "text-sage" : "text-ink-muted"}`}>{g.daGuiThiepGiay ? "✓ " : ""}Thiệp giấy</span>
-        <a href={`/api/qr/${g.maBiMat}`} download={`qr-${g.soThuTu}.png`} className="btn-ghost btn-sm">
-          Tải QR
-        </a>
-        <button className="btn-ghost btn-sm" disabled={pending} onClick={() => start(() => void datThiepGiay(g.id, !g.daGuiThiepGiay))}>
-          {g.daGuiThiepGiay ? "Bỏ đánh dấu" : "Đã gửi"}
+        <button className={g.daGuiThiepGiay ? "btn-ghost btn-sm" : "btn-ink btn-sm"} disabled={pending} onClick={() => start(() => void datThiepGiay(g.id, !g.daGuiThiepGiay))}>
+          {g.daGuiThiepGiay ? "Bỏ đánh dấu đã gửi" : "Đã gửi thiệp giấy"}
         </button>
       </div>
       {/* 3. Xac nhan */}
@@ -654,10 +617,12 @@ function HanhDong({ g, venuesSua }: { g: SalesGuest; venuesSua: { id: string; te
           </div>
         </div>
       )}
-      {/* 4. Sua thong tin: khong anh huong ve da phat hanh */}
-      {duocSua && <div className="flex flex-wrap items-center gap-2"><span className="w-24 shrink-0 text-xs text-ink-muted">Thông tin</span>{nutSua}</div>}
+      {/* 4. Ve da duyet: sales khong tu sua thong tin */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="w-24 shrink-0 text-xs text-ink-muted">Thông tin</span>
+        <span className="text-xs text-ink-muted">Vé đã duyệt nên không sửa được. Cần đổi thông tin thì báo quản lý trả vé về nháp.</span>
+      </div>
       {tb && <p className="text-xs text-sage">{tb}</p>}
-      {formSua}
     </div>
   );
 }

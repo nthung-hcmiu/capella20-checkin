@@ -109,7 +109,8 @@ export async function taoKhach(input: {
   const khachDiCung = ghiDiCung(lamSachDiCung(input.diCung, soNguoiMoi));
   // Moi khach deu phai co ten va chuc vu, ke ca nguoi thu 2 tro di
   const thieu = thieuThongTinMoi({ sdt, diaChi: them.diaChi, chucVu: them.chucVu, soNguoiMoi, khachDiCung });
-  if (thieu) return { ok: false, thongBao: `${thieu}.${nhacTaiLai(thieu)}` };
+  // Chi Quan tri duoc luu khach con thieu truong bat buoc
+  if (thieu && !u.quanTri) return { ok: false, thongBao: `${thieu}.${nhacTaiLai(thieu)}` };
 
   const venue = await prisma.venue.findUnique({ where: { id: input.venueId } });
   if (!venue) return { ok: false, thongBao: "Venue không hợp lệ." };
@@ -297,6 +298,10 @@ export async function suaKhach(
   // BTC sua khach minh phu trach o venue ngoai pham vi thi theo luat cua sales
   const laSales = quyen === "SALES";
   if (laSales && cu.trangThai === TRANG_THAI.DA_HUY) return { ok: false, thongBao: "Thiệp đã hủy, liên hệ BTC nếu cần mời lại." };
+  // Ve da duyet: sales khong tu sua. Quan ly tra ve nhap, sales sua roi gui duyet lai.
+  if (laSales && !CHUA_PHAT_HANH.includes(cu.trangThai)) {
+    return { ok: false, thongBao: "Vé đã được duyệt nên không sửa được. Báo quản lý trả vé về nháp, sửa xong gửi duyệt lại." };
+  }
   const hoTen = input.hoTen?.trim().replace(/\s+/g, " ");
   if (!hoTen) return { ok: false, thongBao: "Thiếu họ tên." };
   const sdt = chuanHoaSdt(input.sdt) || null;
@@ -310,7 +315,8 @@ export async function suaKhach(
   const khachDiCung = ghiDiCung(lamSachDiCung(input.diCung, soNguoiMoi));
   // Sales: moi khach tren thiep deu phai co ten va chuc vu
   const thieu = thieuThongTinMoi({ sdt, diaChi: them.diaChi, chucVu: them.chucVu, soNguoiMoi, khachDiCung });
-  if (laSales && thieu) return { ok: false, thongBao: `${thieu}.${nhacTaiLai(thieu)}` };
+  // Chi Quan tri duoc luu khach con thieu truong bat buoc
+  if (thieu && !u.quanTri) return { ok: false, thongBao: `${thieu}.${nhacTaiLai(thieu)}` };
 
   // Doi venue chi khi chua phat hanh ve: cap so thu tu moi theo dai cua venue moi
   let venueId = cu.venueId;
