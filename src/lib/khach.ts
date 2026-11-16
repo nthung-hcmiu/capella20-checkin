@@ -36,7 +36,8 @@ export const LINH_VUC = [
   "Giải Trí/Tổ Chức Sự Kiện", "Event Agency", "Công Nghệ", "Làm Đẹp", "Du Lịch", "Giáo Dục / Đào Tạo",
   "Hàng Tiêu Dùng", "Chứng Khoán", "Điện Lạnh", "Điện Máy", "Hiệp Hội Doanh Nghiệp", "Đa Ngành",
   // Bo sung theo danh sach sales dang dung nam 2026
-  "Thực Phẩm/Đồ Uống", "Bảo Hiểm", "Dệt May/Thời Trang", "Môi Trường", "Vận Chuyển/Logistics", "Khác",
+  "Thực Phẩm/Đồ Uống", "Bảo Hiểm", "Dệt May/Thời Trang", "Môi Trường", "Vận Chuyển/Logistics",
+  "Y Tế/Dược Phẩm", "Thương Mại Điện Tử", "HR/Law", "An Ninh/Bảo Vệ", "Khác",
 ];
 const BIET_DANH_LINH_VUC: Record<string, string> = {
   agency: "Event Agency", // "Agency/To Chuc Su Kien" truoc "su kien"
@@ -53,6 +54,15 @@ const BIET_DANH_LINH_VUC: Record<string, string> = {
   "det may": "Dệt May/Thời Trang",
   "thoi trang": "Dệt May/Thời Trang",
   "bao hiem": "Bảo Hiểm",
+  "y te": "Y Tế/Dược Phẩm",
+  "duoc pham": "Y Tế/Dược Phẩm",
+  "thuong mai dien tu": "Thương Mại Điện Tử",
+  ecommerce: "Thương Mại Điện Tử",
+  "e-commerce": "Thương Mại Điện Tử",
+  "nhan su": "HR/Law",
+  "phap ly": "HR/Law",
+  "an ninh": "An Ninh/Bảo Vệ",
+  "bao ve": "An Ninh/Bảo Vệ",
 };
 export function chuanLinhVuc(s: string | null | undefined): string | null {
   const t = boDau(String(s ?? "")).replace(/\s*\/\s*/g, "/");
