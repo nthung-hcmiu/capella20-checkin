@@ -5,12 +5,12 @@ import { prisma } from "./db";
 import { CHIEM_QUOTA, CHUA_PHAT_HANH, DUOC_XAC_NHAN, NHAN_CANH_BAO, TRANG_THAI } from "./constants";
 import { capSoThuTu, sinhMaBiMatDuyNhat } from "./codes";
 import { chuanHoaSdt, sdtHopLe } from "./format";
-import { ghiDiCung, khoaTen, lamSach, lamSachDiCung, thieuThongTinMoi, type NguoiDiCung, type ThongTinThem } from "./khach";
+import { ghiDiCung, lamSach, lamSachDiCung, thieuThongTinMoi, type NguoiDiCung, type ThongTinThem } from "./khach";
 import { batBuocQuanTri, batBuocQuyen, bamMatKhau } from "./auth";
 import { gieoDuLieu } from "./seedData";
 import { chuanHoTen, tenDangNhapGoiY } from "./taiKhoan";
 import { taiBoKhop } from "./lichSu";
-import { CHON_CONG_TY, choBtc, choSales, moTaChoBtc, moTaChoSales, taoBoCongTy } from "./congTy";
+import { CHON_CONG_TY, choBtc, choSales, moTaChoBtc, moTaChoSales, taoBoCongTy, taoBoTrung } from "./congTy";
 import crypto from "crypto";
 
 function lamTuoi() {
@@ -28,24 +28,18 @@ export interface KetQuaTao extends KetQua {
   maBiMat?: string;
 }
 
-// Tim khach trung: theo SDT neu co, khong thi theo ten + ma CORP / cong ty
+// Tim khach trung: cung SDT, hoac cung ho ten va cung ma CORP / cong ty.
+// Dung chung bo doi chieu voi danh sach (congTy.ts) de noi nao cung bao giong nhau.
 async function timKhachTrung(
   k: { sdt: string | null; hoTen: string; maCorp?: string | null; congTy?: string | null },
   boQuaId?: string
 ) {
-  const khongTinh = { trangThai: { not: TRANG_THAI.DA_HUY }, ...(boQuaId ? { id: { not: boQuaId } } : {}) };
-  if (k.sdt) {
-    const g = await prisma.guest.findFirst({ where: { sdt: k.sdt, ...khongTinh } });
-    if (g) return { g, lyDo: "TRUNG_SDT" };
-  }
-  const khoa = khoaTen(k.hoTen, k.maCorp, k.congTy);
-  if (!khoa) return null;
-  const ungVien = await prisma.guest.findMany({
-    where: { ...khongTinh, OR: [k.maCorp ? { maCorp: k.maCorp } : {}, k.congTy ? { congTy: k.congTy } : {}].filter((o) => Object.keys(o).length) },
-    take: 200,
+  const tatCa = await prisma.guest.findMany({
+    where: { trangThai: { not: TRANG_THAI.DA_HUY }, ...(boQuaId ? { id: { not: boQuaId } } : {}) },
+    select: { ...CHON_CONG_TY, sdt: true },
   });
-  const g = ungVien.find((x) => khoaTen(x.hoTen, x.maCorp, x.congTy) === khoa);
-  return g ? { g, lyDo: "TRUNG_TEN" } : null;
+  const g = taoBoTrung(tatCa)(k)[0];
+  return g ? { g, lyDo: g.loai as string } : null;
 }
 
 // Tinh canh bao cho BTC khi duyet: trung SDT, trung ten cung cong ty, VIP, venue het quota.

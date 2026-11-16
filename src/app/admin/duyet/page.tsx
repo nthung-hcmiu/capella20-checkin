@@ -3,8 +3,8 @@ import { yeuCauTrang } from "@/lib/auth";
 import { TRANG_THAI } from "@/lib/constants";
 import { ApproveQueue, ChoDuyetItem } from "@/components/ApproveQueue";
 import { taiBoKhop } from "@/lib/lichSu";
-import { CHON_CONG_TY, choBtc, moTaChoBtc, taoBoCongTy } from "@/lib/congTy";
-import { khoaTen, moTaDiCung, tenGoi, thieuThongTinMoi } from "@/lib/khach";
+import { CHON_CONG_TY, choBtc, moTaChoBtc, taoBoCongTy, taoBoTrung } from "@/lib/congTy";
+import { moTaDiCung, tenGoi, thieuThongTinMoi } from "@/lib/khach";
 
 export const dynamic = "force-dynamic";
 
@@ -25,15 +25,11 @@ export default async function DuyetPage() {
 
   const boKhop = await taiBoKhop(prisma);
   const boCty = taoBoCongTy(await prisma.guest.findMany({ select: CHON_CONG_TY }));
+  const timTrung = taoBoTrung(conLai);
   const items: ChoDuyetItem[] = ds.map((g) => {
-    const khoa = khoaTen(g.hoTen, g.maCorp, g.congTy);
     const canhBao = (g.lyDoChoDuyet || "").split(",").filter(Boolean);
-    const khac =
-      canhBao.includes("TRUNG_SDT") && g.sdt
-        ? conLai.find((x) => x.id !== g.id && x.sdt === g.sdt)
-        : canhBao.includes("TRUNG_TEN") && khoa
-        ? conLai.find((x) => x.id !== g.id && khoaTen(x.hoTen, x.maCorp, x.congTy) === khoa)
-        : undefined;
+    const idTrung = canhBao.includes("TRUNG_SDT") || canhBao.includes("TRUNG_TEN") ? timTrung(g)[0]?.id : undefined;
+    const khac = idTrung ? conLai.find((x) => x.id === idTrung) : undefined;
     return {
       id: g.id,
       soThuTu: g.soThuTu,

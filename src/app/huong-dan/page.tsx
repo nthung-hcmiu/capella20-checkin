@@ -63,7 +63,7 @@ const HUONG_DAN: VaiTro[] = [
           ["Venue", "Tài khoản gắn với venue nào thì chỉ thêm và nhập khách cho venue đó."],
           ["Nhãn năm trước", "Cạnh tên khách có nhãn cho biết năm trước khách được mời chưa, có đến không. Bấm vào khách để xem chi tiết."],
           ["Cùng công ty", "Dòng \"Cùng công ty\" cho biết công ty đó đã có bao nhiêu khách khác được mời. Chữ đỏ là có sales khác cùng mời, kèm tên sales đó. Khách trùng SĐT hoặc trùng tên và công ty thì app ghi rõ trùng với khách nào, của sales nào, hai bên liên hệ nhau để thống nhất ai mời."],
-          ["Lọc khách trùng", "Khách trùng được tô nền đỏ và gắn nhãn Trùng. Bấm nút \"Trùng với sales khác\" cạnh các nhóm trạng thái để chỉ xem những khách này, bấm lần nữa để bỏ lọc."],
+          ["Lọc khách trùng", "Khách trùng người (cùng SĐT, hoặc cùng tên và công ty) và khách có công ty đang được sales khác cùng mời đều được tô nền đỏ, gắn nhãn Trùng hoặc Trùng công ty. Bấm nút \"Trùng với sales khác\" cạnh các nhóm trạng thái để chỉ xem những khách này, bấm lần nữa để bỏ lọc."],
           ["Nhập từ Excel", "Nhập danh sách > Tải file mẫu > điền > chọn file > Tiếp tục: kiểm tra file > Hoàn tất: lưu khách vào app. Mọi khách trong file do bạn phụ trách."],
           ["Gửi duyệt", "Kiểm tra lại rồi bấm Gửi duyệt trên từng khách, hoặc Gửi duyệt tất cả. Nháp sai thì bấm Xóa nháp."],
           ["Chờ BTC", "BTC duyệt xong khách chuyển sang Đã phát hành vé, lúc đó mới gửi thiệp được."],

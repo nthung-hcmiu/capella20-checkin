@@ -6,8 +6,8 @@ import { CHIEM_QUOTA, TRANG_THAI } from "./constants";
 import { boDau, chuanHoaSdt, sdtHopLe } from "./format";
 import { batBuocQuyen } from "./auth";
 import { taiBoKhop, type LichSu } from "./lichSu";
-import { choSales, moTaChoSales, taoBoCongTy } from "./congTy";
-import { LINH_VUC, PHAN_LOAI_KHACH, TRUONG_CHU, ghiDiCung, khoaTen, lamSach, thieuThongTinMoi, type ThongTinThem } from "./khach";
+import { choSales, khoaTenManh, moTaChoSales, taoBoCongTy } from "./congTy";
+import { LINH_VUC, PHAN_LOAI_KHACH, TRUONG_CHU, ghiDiCung, lamSach, thieuThongTinMoi, type ThongTinThem } from "./khach";
 
 export interface DongNhap extends ThongTinThem {
   hoTen: string;
@@ -121,13 +121,15 @@ export async function nhapDanhSach(
   const venueSales = laSales && u.venueId ? venues.find((v) => v.id === u.venueId) : undefined;
   const conHieuLuc = daCo.filter((g) => g.trangThai !== TRANG_THAI.DA_HUY);
   // Khoa trung -> khach dau tien dang giu khoa do, de bao ro trung voi ai, cua sales nao
-  type DaCo = { hoTen: string; soThuTu: number; salesOwner: string };
+  type DaCo = { hoTen: string; soThuTu: number; salesOwner: string; congTy?: string | null };
   const sdtDaCo = new Map<string, DaCo>();
   const tenDaCo = new Map<string, DaCo>();
+  const ghiTen = (g: DaCo & { maCorp?: string | null }) => {
+    for (const k of khoaTenManh(g.hoTen, g.maCorp, g.congTy)) if (!tenDaCo.has(k)) tenDaCo.set(k, g);
+  };
   for (const g of conHieuLuc) {
     if (g.sdt && !sdtDaCo.has(g.sdt)) sdtDaCo.set(g.sdt, g);
-    const k = khoaTen(g.hoTen, g.maCorp, g.congTy);
-    if (k && !tenDaCo.has(k)) tenDaCo.set(k, g);
+    ghiTen(g);
   }
   const voiAi = (x: DaCo | undefined) =>
     x ? `khách ${x.hoTen} (số ${x.soThuTu}) ${laSales && x.salesOwner === u.hoTen ? "của bạn" : `của sales ${x.salesOwner}`}` : "khách đã có";
@@ -186,7 +188,7 @@ export async function nhapDanhSach(
       return;
     }
     const them = lamSach(Object.fromEntries(TRUONG_CHU.map((k) => [k, r[k] ?? null])) as ThongTinThem);
-    const khoa = khoaTen(hoTen, them.maCorp, them.congTy);
+    const trungTen = khoaTenManh(hoTen, them.maCorp, them.congTy).map((k) => tenDaCo.get(k)).find(Boolean);
     kq.congTy = them.congTy;
     // Sales thuoc venue: moi dong deu vao venue cua sales, bo qua cot venue trong file
     const khopVenue = venueSales
@@ -234,11 +236,11 @@ export async function nhapDanhSach(
     // Canh bao cho BTC. Khach trung luon vao Cho duyet; con lai theo lua chon nhap.
     const ds: string[] = [];
     if (sdt && sdtDaCo.has(sdt)) ds.push("TRUNG_SDT");
-    else if (khoa && tenDaCo.has(khoa)) ds.push("TRUNG_TEN");
+    else if (trungTen) ds.push("TRUNG_TEN");
     if (vip) ds.push("VIP");
     if (venue.quota > 0 && (dangChiem[venue.id] || 0) + soNguoi > venue.quota) ds.push("HET_QUOTA");
     const trung = ds[0] === "TRUNG_SDT" || ds[0] === "TRUNG_TEN";
-    const trungVoi = ds[0] === "TRUNG_SDT" ? sdtDaCo.get(sdt!) : ds[0] === "TRUNG_TEN" ? tenDaCo.get(khoa!) : undefined;
+    const trungVoi = ds[0] === "TRUNG_SDT" ? sdtDaCo.get(sdt!) : ds[0] === "TRUNG_TEN" ? trungTen : undefined;
     // Phat hanh ve thang chi khi khong trung; khach trung vao Cho duyet
     const trangThai: string = dich === TRANG_THAI.DA_PHAT_HANH && trung ? TRANG_THAI.CHO_DUYET : dich;
     const lyDo = trangThai !== TRANG_THAI.DA_PHAT_HANH && ds.length ? ds.join(",") : null;
@@ -251,7 +253,7 @@ export async function nhapDanhSach(
     }
 
     if (sdt && !sdtDaCo.has(sdt)) sdtDaCo.set(sdt, { hoTen, soThuTu, salesOwner });
-    if (khoa && !tenDaCo.has(khoa)) tenDaCo.set(khoa, { hoTen, soThuTu, salesOwner });
+    ghiTen({ hoTen, soThuTu, salesOwner, congTy: them.congTy, maCorp: them.maCorp });
     if (CHIEM_QUOTA.includes(trangThai)) dangChiem[venue.id] = (dangChiem[venue.id] || 0) + soNguoi;
     kq.trangThai = trangThai;
     kq.soThuTu = soThuTu;

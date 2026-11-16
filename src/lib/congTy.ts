@@ -1,7 +1,7 @@
 // Tim cac khach khac cung cong ty (theo ma CORP hoac ten cong ty da chuan hoa), de sales va BTC
 // biet mot cong ty dang duoc moi bao nhieu nguoi, boi nhung sales nao
 import { TRANG_THAI } from "./constants";
-import { khoaTen } from "./khach";
+import { boDau, chuanHoaSdt } from "./format";
 import { khoaCty } from "./lichSu";
 
 export interface KhachCty {
@@ -109,13 +109,28 @@ export const CHON_CONG_TY = {
   id: true, hoTen: true, congTy: true, maCorp: true, salesOwner: true, soThuTu: true, soNguoiMoi: true, trangThai: true,
 } as const;
 
-// Khach trung (cung SDT, hoac cung ten va cong ty): sales duoc xem ten khach trung va sales dang phu trach
-// de lien he nhau xu ly, khong can cho BTC
+// Khach trung: sales duoc xem ten khach trung va sales dang phu trach de lien he nhau xu ly.
+//  TRUNG_SDT: cung SDT
+//  TRUNG_TEN: cung ho ten va cung ma CORP, hoac cung ho ten va cung cong ty (bo qua "Cong ty TNHH", "Vietnam"...)
 export interface KhachTrung {
+  id: string;
   loai: "TRUNG_SDT" | "TRUNG_TEN";
   hoTen: string;
+  congTy: string | null;
   soThuTu: number;
   salesOwner: string;
+}
+const tenNguoi = (s: string) => boDau(s || "").replace(/[^a-z ]/g, " ").replace(/\s+/g, " ").trim();
+// Mot khach co the co 2 khoa (theo ma CORP va theo ten cong ty); trung mot khoa la trung
+export function khoaTenManh(hoTen: string, maCorp?: string | null, congTy?: string | null): string[] {
+  const ten = tenNguoi(hoTen);
+  if (!ten) return [];
+  const ds: string[] = [];
+  const corp = (maCorp || "").trim().toUpperCase();
+  if (corp) ds.push(`${ten}|corp:${corp}`);
+  const cty = khoaCty(congTy);
+  if (cty) ds.push(`${ten}|cty:${cty}`);
+  return ds;
 }
 type KhachDoiChieu = { id: string; hoTen: string; sdt: string | null; maCorp: string | null; congTy: string | null; salesOwner: string; soThuTu: number; trangThai: string };
 export function taoBoTrung(guests: KhachDoiChieu[]) {
@@ -129,21 +144,22 @@ export function taoBoTrung(guests: KhachDoiChieu[]) {
   };
   for (const g of guests) {
     if (g.trangThai === TRANG_THAI.DA_HUY) continue;
-    ghi(theoSdt, g.sdt, g);
-    ghi(theoTen, khoaTen(g.hoTen, g.maCorp, g.congTy), g);
+    ghi(theoSdt, chuanHoaSdt(g.sdt) || null, g);
+    for (const k of khoaTenManh(g.hoTen, g.maCorp, g.congTy)) ghi(theoTen, k, g);
   }
+  // Ket qua xep theo do chac chan: trung SDT truoc, roi trung ten + cong ty
   return (g: { id?: string; hoTen: string; sdt: string | null; maCorp?: string | null; congTy?: string | null }): KhachTrung[] => {
     const kq = new Map<string, KhachTrung>();
     const them = (ds: KhachDoiChieu[] | undefined, loai: KhachTrung["loai"]) => {
-      for (const x of ds || []) {
+      for (const x of [...(ds || [])].sort((a, b) => a.soThuTu - b.soThuTu)) {
         if (x.id === g.id || kq.has(x.id)) continue;
-        kq.set(x.id, { loai, hoTen: x.hoTen, soThuTu: x.soThuTu, salesOwner: x.salesOwner });
+        kq.set(x.id, { id: x.id, loai, hoTen: x.hoTen, congTy: x.congTy, soThuTu: x.soThuTu, salesOwner: x.salesOwner });
       }
     };
-    if (g.sdt) them(theoSdt.get(g.sdt), "TRUNG_SDT");
-    const k = khoaTen(g.hoTen, g.maCorp, g.congTy);
-    if (k) them(theoTen.get(k), "TRUNG_TEN");
-    return [...kq.values()].sort((a, b) => a.soThuTu - b.soThuTu);
+    const sdt = chuanHoaSdt(g.sdt);
+    if (sdt) them(theoSdt.get(sdt), "TRUNG_SDT");
+    for (const k of khoaTenManh(g.hoTen, g.maCorp, g.congTy)) them(theoTen.get(k), "TRUNG_TEN");
+    return [...kq.values()];
   };
 }
 // "Trung SDT voi khach Nguyen Van A (so 1020) cua sales Tran B"

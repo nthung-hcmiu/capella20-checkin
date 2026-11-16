@@ -64,7 +64,9 @@ const NHOM = [
 ];
 
 // Khach trung voi khach cua sales khac / trung trong danh sach cua chinh minh
-const trungSalesKhac = (g: SalesGuest) => g.trung.some((x) => x.salesOwner !== g.toi);
+// Tinh ca truong hop cong ty dang duoc sales khac cung moi (khach khac nguoi nhung cung cong ty)
+const trungSalesKhac = (g: SalesGuest) => g.trung.some((x) => x.salesOwner !== g.toi) || (g.congTyKhac?.salesKhac ?? 0) > 0;
+const coTrung = (g: SalesGuest) => g.trung.length > 0 || trungSalesKhac(g);
 const trungCuaToi = (g: SalesGuest) => g.trung.some((x) => x.salesOwner === g.toi);
 type LocTrung = "" | "khac" | "toi";
 
@@ -197,13 +199,13 @@ function DienThoai({ guests, ds, venues, venuesSua, loc }: ViewProps) {
           <GuiDuyetLoat ids={guests.filter((g) => g.trangThai === TRANG_THAI.NHAP).map((g) => g.id)} />
           {ds.length === 0 && <p className="py-6 text-center text-sm text-ink-muted">Không có khách trong nhóm này.</p>}
           {ds.map((g) => (
-            <div key={g.id} className={`card p-4 ${g.trung.length ? "border-2 border-wine/50 bg-wine/5" : ""}`}>
+            <div key={g.id} className={`card p-4 ${coTrung(g) ? "border-2 border-wine/50 bg-wine/5" : ""}`}>
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-mono text-xs text-ink-muted">{g.soThuTu}</span>
                     <span className="font-medium text-ink">{tenGoi(g)}</span>
-                    {g.trung.length > 0 && <span className="chip bg-wine text-white">Trùng</span>}
+                    {coTrung(g) && <span className="chip bg-wine text-white">{g.trung.length ? "Trùng" : "Trùng công ty"}</span>}
                     <ChipLichSu ls={g.lichSu} />
                     {g.isVip && <span className="chip bg-brand/15 text-brand-deep">VIP</span>}
                   </div>
@@ -215,7 +217,7 @@ function DienThoai({ guests, ds, venues, venuesSua, loc }: ViewProps) {
                   </div>
                   {g.khachDiCung && <div className="mt-0.5 text-xs text-ink-soft">Cùng: {moTaDiCung(g.khachDiCung)}</div>}
                   {g.congTyKhac && (
-                    <div className={`mt-0.5 text-xs ${g.congTyKhac.salesKhac ? "text-wine" : "text-ink-muted"}`}>
+                    <div className={`mt-0.5 text-xs ${g.congTyKhac.salesKhac ? "font-medium text-wine" : "text-ink-muted"}`}>
                       Cùng công ty: +{g.congTyKhac.cuaToi + g.congTyKhac.salesKhac} khách{g.congTyKhac.salesKhac ? `, ${g.congTyKhac.salesKhac} của sales ${g.congTyKhac.tenSalesKhac.join(", ")}` : ""}
                     </div>
                   )}
@@ -330,7 +332,7 @@ function DongMayTinh({
     <>
       <tr
         className={`cursor-pointer border-t ${
-          g.trung.length
+          coTrung(g)
             ? `border-wine/30 ${chon ? "bg-wine/15" : "bg-wine/[0.07] hover:bg-wine/[0.12]"}`
             : `border-ivory-deep ${chon ? "bg-brand/5" : mo ? "bg-ivory/60" : "hover:bg-ivory/50"}`
         }`}
@@ -347,7 +349,7 @@ function DongMayTinh({
         <td className="px-3 py-3">
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="font-medium text-ink">{tenGoi(g)}</span>
-            {g.trung.length > 0 && <span className="chip bg-wine text-white">Trùng</span>}
+            {coTrung(g) && <span className="chip bg-wine text-white">{g.trung.length ? "Trùng" : "Trùng công ty"}</span>}
             <ChipLichSu ls={g.lichSu} />
           </div>
           {(g.chucVu || g.congTy) && <div className="text-xs text-ink-soft">{[g.chucVu, g.congTy].filter(Boolean).join(" · ")}</div>}
@@ -355,7 +357,7 @@ function DongMayTinh({
           {g.khachDiCung && <div className="text-xs text-ink-soft">Cùng: {moTaDiCung(g.khachDiCung)}</div>}
           <DongTrung g={g} />
           {g.congTyKhac && (
-                    <div className={`text-xs ${g.congTyKhac.salesKhac ? "text-wine" : "text-ink-muted"}`}>
+                    <div className={`text-xs ${g.congTyKhac.salesKhac ? "font-medium text-wine" : "text-ink-muted"}`}>
                       Cùng công ty: +{g.congTyKhac.cuaToi + g.congTyKhac.salesKhac} khách{g.congTyKhac.salesKhac ? `, ${g.congTyKhac.salesKhac} của sales ${g.congTyKhac.tenSalesKhac.join(", ")}` : ""}
                     </div>
                   )}
@@ -414,7 +416,7 @@ function DongTrung({ g }: { g: SalesGuest }) {
   return (
     <div className="mt-0.5 space-y-0.5 text-xs font-medium text-wine">
       {g.trung.slice(0, 3).map((x) => (
-        <div key={x.soThuTu}>{moTaKhachTrung(x, g.toi)}</div>
+        <div key={x.id}>{moTaKhachTrung(x, g.toi)}</div>
       ))}
       {g.trung.length > 3 && <div>và {g.trung.length - 3} khách trùng khác, bấm vào dòng để xem</div>}
     </div>

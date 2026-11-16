@@ -21,11 +21,25 @@ interface DongLichSu {
   soDen: number;
 }
 
-// Bo cac tu chung trong ten cong ty de "CONG TY TNHH ABC" khop "Cong ty ABC"
-const TU_CHUNG = new Set(["cong", "ty", "tnhh", "cp", "co", "phan", "mtv", "jsc", "ltd", "company", "limited", "tap", "doan"]);
+// Bo cac tu chung trong ten cong ty de "CONG TY TNHH GRAB" khop "Cong ty Grab" va "Grab Vietnam":
+// loai hinh doanh nghiep, ten nuoc, chi nhanh, va cac cum nganh chung hay bi viet tat (TM, DV, SX, XNK)
+const CUM_CHUNG = /\b(trach nhiem huu han|mot thanh vien|co phan|tap doan|chi nhanh|joint stock|thuong mai|dich vu|san xuat|xuat nhap khau)\b/g;
+const TU_CHUNG = new Set([
+  "cong", "ty", "cty", "tnhh", "cp", "mtv", "jsc", "ltd", "llc", "inc", "pte", "co", "corp", "corporation", "company", "limited", "group",
+  "cn", "tm", "dv", "sx", "xnk",
+]);
 export function khoaCty(congTy: string | null | undefined): string | null {
-  const t = boDau(congTy || "").replace(/[^a-z0-9 ]/g, " ").split(" ").filter((w) => w && !TU_CHUNG.has(w)).join(" ");
-  return t || null;
+  const goc = boDau(congTy || "").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+  if (!goc) return null;
+  const t = goc
+    .replace(CUM_CHUNG, " ")
+    .split(" ")
+    .filter((w) => w && !TU_CHUNG.has(w))
+    .join(" ")
+    // "Grab Vietnam" la "Grab"; ten bat dau bang Vietnam ("Vietnam Airlines") thi giu nguyen
+    .replace(/(\S)\s+(viet nam|vietnam|vn)(?=\s|$)/g, "$1");
+  // Ten chi gom tu chung (vd "Cong ty Dich vu Thuong mai") thi giu nguyen de khong gop nham
+  return t || goc;
 }
 function khoaCorp(maCorp: string | null | undefined): string | null {
   const t = (maCorp || "").trim().toUpperCase();
