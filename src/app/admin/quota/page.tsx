@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 import { yeuCauTrang } from "@/lib/auth";
 import { DA_PHAT_HANH_VE, TRANG_THAI } from "@/lib/constants";
-import { dinhDangTien } from "@/lib/format";
+import { boDau, dinhDangTien } from "@/lib/format";
 import { rong, tongHopTheoVenue } from "@/lib/kpi";
 
 export const dynamic = "force-dynamic";
@@ -13,6 +13,7 @@ export default async function QuotaPage() {
     select: {
       venueId: true, trangThai: true, congTy: true, maCorp: true, doanhThuDuKien: true,
       soNguoiMoi: true, soNguoiXacNhan: true, soNguoiDen: true, lyDoChoDuyet: true, salesOwner: true,
+      hoTen: true, soThuTu: true,
     },
   });
   const soLieu = tongHopTheoVenue(guests);
@@ -31,6 +32,16 @@ export default async function QuotaPage() {
     };
   };
   const dsSales = salesTk.map((t) => dongSales(t.hoTen, t.venueId, true));
+  // Sales cung la nguoi du su kien: doi chieu ho ten tai khoan voi danh sach khach moi (khong tinh khach da huy)
+  const khoaTen = (t: string) => boDau(t).replace(/\s+/g, " ").trim();
+  const thiepTheoTen = new Map<string, number>();
+  for (const g of guests) {
+    if (g.trangThai === TRANG_THAI.DA_HUY) continue;
+    const k = khoaTen(g.hoTen);
+    if (!thiepTheoTen.has(k)) thiepTheoTen.set(k, g.soThuTu);
+  }
+  const thiepCua = (ten: string) => thiepTheoTen.get(khoaTen(ten)) ?? null;
+  const salesChuaMoi = salesTk.filter((t) => thiepCua(t.hoTen) === null);
   // Nguoi phu trach co khach nhung chua co tai khoan sales (vd BTC)
   for (const [ten, r] of theoSales) {
     if (r.thiep > 0 && !salesTk.some((t) => t.hoTen === ten)) dsSales.push(dongSales(ten, null, false));
@@ -106,6 +117,19 @@ export default async function QuotaPage() {
             Mỗi sales đã mời bao nhiêu công ty, bao nhiêu khách. Số khách đếm theo người, không tính khách đã hủy, không tham dự hoặc vắng mặt.
             Phần trăm là tỷ trọng trên quota của venue.
           </p>
+          {salesTk.length > 0 &&
+            (salesChuaMoi.length > 0 ? (
+              <div className="mt-3 rounded-xl bg-wine/10 px-4 py-2.5 text-sm text-wine">
+                <span className="font-medium">
+                  {salesChuaMoi.length} / {salesTk.length} sales chưa có trong danh sách khách mời:
+                </span>{" "}
+                {salesChuaMoi.map((t) => t.hoTen).join(", ")}. App so theo họ tên tài khoản, tên khách ghi khác thì chưa nhận ra.
+              </div>
+            ) : (
+              <div className="mt-3 rounded-xl bg-sage/10 px-4 py-2.5 text-sm text-sage">
+                Cả {salesTk.length} sales có tài khoản đều đã có trong danh sách khách mời.
+              </div>
+            ))}
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -164,6 +188,12 @@ export default async function QuotaPage() {
                       <td className="px-5 py-2.5 pl-10 text-ink">
                         {d.ten}
                         {!d.coTk && <span className="ml-2 text-[11px] text-ink-muted">chưa có tài khoản sales</span>}
+                        {d.coTk &&
+                          (thiepCua(d.ten) !== null ? (
+                            <span className="ml-2 text-[11px] text-ink-muted">thiệp mời số {thiepCua(d.ten)}</span>
+                          ) : (
+                            <span className="ml-2 chip bg-wine/10 text-wine">chưa có trong danh sách khách mời</span>
+                          ))}
                       </td>
                       <td className={o}>{d.soCongTy}</td>
                       <td className={o}>
