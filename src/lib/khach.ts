@@ -31,45 +31,49 @@ export function chuanPhanLoai(s: string | null | undefined): string | null {
   return String(s).trim();
 }
 
-// Linh vuc: lay tu danh sach khach 2024, gop cac cach ghi khac nhau
+// Linh vuc: danh muc gon theo nganh cua khach doanh nghiep, moi nganh mot muc. "Khac" luon o cuoi.
 export const LINH_VUC = [
-  "Giải Trí/Tổ Chức Sự Kiện", "Event Agency", "Công Nghệ", "Làm Đẹp", "Du Lịch", "Giáo Dục / Đào Tạo",
-  "Hàng Tiêu Dùng", "Chứng Khoán", "Điện Lạnh", "Điện Máy", "Hiệp Hội Doanh Nghiệp", "Đa Ngành",
-  // Bo sung theo danh sach sales dang dung nam 2026
-  "Thực Phẩm/Đồ Uống", "Bảo Hiểm", "Dệt May/Thời Trang", "Môi Trường", "Vận Chuyển/Logistics",
-  "Y Tế/Dược Phẩm", "Thương Mại Điện Tử", "HR/Law", "An Ninh/Bảo Vệ", "Khác",
+  "Event/Media Agency", "Giải Trí/Thể Thao", "Công Nghệ/Viễn Thông", "Tài Chính/Ngân Hàng/Chứng Khoán", "Bảo Hiểm",
+  "Bất Động Sản/Xây Dựng", "Sản Xuất/Công Nghiệp", "Điện Máy/Điện Lạnh", "Ô Tô/Xe Máy", "Hàng Tiêu Dùng",
+  "Thực Phẩm/Đồ Uống", "Bán Lẻ/Thương Mại Điện Tử", "Dệt May/Thời Trang", "Làm Đẹp/Mỹ Phẩm", "Y Tế/Dược Phẩm",
+  "Giáo Dục/Đào Tạo", "Du Lịch/Khách Sạn", "Vận Chuyển/Logistics", "Năng Lượng/Môi Trường", "Nông Nghiệp/Thủy Sản",
+  "Tư Vấn/Nhân Sự/Pháp Lý", "An Ninh/Bảo Vệ", "Cơ Quan Nhà Nước", "Hiệp Hội/Tổ Chức", "Đa Ngành", "Khác",
 ];
-const BIET_DANH_LINH_VUC: Record<string, string> = {
-  agency: "Event Agency", // "Agency/To Chuc Su Kien" truoc "su kien"
-  "hiep hoi": "Hiệp Hội Doanh Nghiệp",
-  multidisciplinary: "Đa Ngành",
-  "giao duc": "Giáo Dục / Đào Tạo",
-  "dao tao": "Giáo Dục / Đào Tạo",
-  "su kien": "Giải Trí/Tổ Chức Sự Kiện",
-  "giai tri": "Giải Trí/Tổ Chức Sự Kiện",
-  logistics: "Vận Chuyển/Logistics",
-  "van chuyen": "Vận Chuyển/Logistics",
-  "thuc pham": "Thực Phẩm/Đồ Uống",
-  "do uong": "Thực Phẩm/Đồ Uống",
-  "det may": "Dệt May/Thời Trang",
-  "thoi trang": "Dệt May/Thời Trang",
-  "bao hiem": "Bảo Hiểm",
-  "y te": "Y Tế/Dược Phẩm",
-  "duoc pham": "Y Tế/Dược Phẩm",
-  "thuong mai dien tu": "Thương Mại Điện Tử",
-  ecommerce: "Thương Mại Điện Tử",
-  "e-commerce": "Thương Mại Điện Tử",
-  "nhan su": "HR/Law",
-  "phap ly": "HR/Law",
-  "an ninh": "An Ninh/Bảo Vệ",
-  "bao ve": "An Ninh/Bảo Vệ",
-};
+// Tu khoa (khong dau) -> muc trong danh muc. Dung de doi ten cu sang ten moi va nhan cach ghi tu do trong file.
+// Xet tu tren xuong, tu khoa cu the dat truoc tu khoa chung ("thuong mai dien tu" truoc "dien tu", "thuc pham" truoc "san xuat").
+const BIET_DANH_LINH_VUC: [string[], string][] = [
+  [["thuong mai dien tu", "ecommerce", "e-commerce", "ban le", "sieu thi", "retail"], "Bán Lẻ/Thương Mại Điện Tử"],
+  [["su kien", "agency", "event", "truyen thong", "quang cao", "media", "bao chi"], "Event/Media Agency"],
+  [["giai tri", "the thao", "nghe thuat", "am nhac", "dien anh"], "Giải Trí/Thể Thao"],
+  [["chung khoan", "ngan hang", "tai chinh", "fintech"], "Tài Chính/Ngân Hàng/Chứng Khoán"],
+  [["bao hiem"], "Bảo Hiểm"],
+  [["bat dong san", "xay dung", "kien truc", "noi that"], "Bất Động Sản/Xây Dựng"],
+  [["dien may", "dien lanh", "dien tu"], "Điện Máy/Điện Lạnh"],
+  [["o to", "xe may", "automotive"], "Ô Tô/Xe Máy"],
+  [["thuc pham", "do uong", "beverage", "wine", "f&b", "nha hang"], "Thực Phẩm/Đồ Uống"],
+  [["tieu dung", "fmcg"], "Hàng Tiêu Dùng"],
+  [["det may", "thoi trang", "may mac"], "Dệt May/Thời Trang"],
+  [["lam dep", "my pham", "tham my"], "Làm Đẹp/Mỹ Phẩm"],
+  [["y te", "duoc pham", "benh vien", "phong kham", "nha khoa"], "Y Tế/Dược Phẩm"],
+  [["giao duc", "dao tao", "dai hoc"], "Giáo Dục/Đào Tạo"],
+  [["du lich", "khach san", "lu hanh"], "Du Lịch/Khách Sạn"],
+  [["logistics", "van chuyen", "van tai", "giao nhan"], "Vận Chuyển/Logistics"],
+  [["nang luong", "moi truong"], "Năng Lượng/Môi Trường"],
+  [["nong nghiep", "thuy san"], "Nông Nghiệp/Thủy Sản"],
+  [["hr/law", "nhan su", "phap ly", "luat", "tu van", "kiem toan"], "Tư Vấn/Nhân Sự/Pháp Lý"],
+  [["an ninh", "bao ve"], "An Ninh/Bảo Vệ"],
+  [["co quan", "nha nuoc", "ban nganh"], "Cơ Quan Nhà Nước"],
+  [["hiep hoi"], "Hiệp Hội/Tổ Chức"],
+  [["da nganh", "multidisciplinary", "tap doan"], "Đa Ngành"],
+  [["san xuat", "cong nghiep", "co khi"], "Sản Xuất/Công Nghiệp"],
+  [["cong nghe", "vien thong", "phan mem"], "Công Nghệ/Viễn Thông"],
+];
 export function chuanLinhVuc(s: string | null | undefined): string | null {
-  const t = boDau(String(s ?? "")).replace(/\s*\/\s*/g, "/");
+  const t = boDau(String(s ?? "")).replace(/\s*\/\s*/g, "/").replace(/\s+/g, " ").trim();
   if (!t) return null;
-  const khop = LINH_VUC.find((l) => boDau(l).replace(/\s*\/\s*/g, "/") === t);
+  const khop = LINH_VUC.find((l) => boDau(l) === t);
   if (khop) return khop;
-  for (const [k, v] of Object.entries(BIET_DANH_LINH_VUC)) if (t.includes(k)) return v;
+  for (const [tuKhoa, muc] of BIET_DANH_LINH_VUC) if (tuKhoa.some((k) => t.includes(k))) return muc;
   return String(s).trim();
 }
 

@@ -101,8 +101,8 @@ function taiFileMau() {
     "Họ và tên người phụ trách tiếp khách", "Ghi chú",
   ];
   const mau = [
-    ["1", "Gallery Hall", "COR0000001", "CÔNG TY TNHH MẪU A", "Công Nghệ", "Ông", "Nguyễn Văn An", "Giám đốc", "0901234567", "12 Nguyễn Huệ, P. Bến Nghé, Q.1, TP.HCM", "1", "", "", "Khách cũ", "VIP", "120.000.000 đ", "", "Thu Hà", ""],
-    ["2", "Riverside Palace", "COR0000002", "CÔNG TY CP MẪU B", "Giải Trí/Tổ Chức Sự Kiện", "Bà", "Trần Thị Bình", "Trưởng phòng", "0912345678", "45 Lê Lợi, P. Bến Thành, Q.1, TP.HCM", "2", "Lê Văn Cường", "Phó phòng", "Khách tiềm năng", "THƯỜNG", "80.000.000 đ", "", "Minh Quân", "Mời 2 người thì điền tên và chức vụ khách thứ 2"],
+    ["1", "Gallery Hall", "COR0000001", "CÔNG TY TNHH MẪU A", "Công Nghệ/Viễn Thông", "Ông", "Nguyễn Văn An", "Giám đốc", "0901234567", "12 Nguyễn Huệ, P. Bến Nghé, Q.1, TP.HCM", "1", "", "", "Khách cũ", "VIP", "120.000.000 đ", "", "Thu Hà", ""],
+    ["2", "Riverside Palace", "COR0000002", "CÔNG TY CP MẪU B", "Event/Media Agency", "Bà", "Trần Thị Bình", "Trưởng phòng", "0912345678", "45 Lê Lợi, P. Bến Thành, Q.1, TP.HCM", "2", "Lê Văn Cường", "Phó phòng", "Khách tiềm năng", "THƯỜNG", "80.000.000 đ", "", "Minh Quân", "Mời 2 người thì điền tên và chức vụ khách thứ 2"],
   ];
   const csv = "﻿" + [tieuDe, ...mau].map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(",")).join("\r\n");
   const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
