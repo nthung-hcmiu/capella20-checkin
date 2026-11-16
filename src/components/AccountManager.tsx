@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { NHAN_VAI_TRO } from "@/lib/constants";
 import {
-  taoTaiKhoan, taoNhieuTaiKhoan, datMatKhau, datMatKhauChung, datVenueTaiKhoan, xoaTaiKhoan,
+  taoTaiKhoan, taoNhieuTaiKhoan, datMatKhau, datMatKhauChung, datVenueTaiKhoan, datPhamViBtc, xoaTaiKhoan,
   type KetQua, type TaiKhoanMoi,
 } from "@/lib/actions";
 import { chuanHoTen, tenDangNhapGoiY } from "@/lib/taiKhoan";
@@ -17,6 +17,8 @@ export interface TaiKhoanRow {
   ca: string | null;
   venueId: string | null;
   venueTen: string | null;
+  venueBtc: string[]; // BTC: cac venue duoc giao, rong = moi venue
+  xemTatCa: boolean;
   coMatKhau: boolean;
   doiMatKhau: boolean;
   laToi: boolean;
@@ -104,6 +106,12 @@ function Dong({ t, onKq, quanTri, venues }: { t: TaiKhoanRow; onKq: (k: KetQua) 
   const [mk, setMk] = useState("");
   const [batDoi, setBatDoi] = useState(true);
   const [xacNhanXoa, setXacNhanXoa] = useState(false);
+  // Pham vi venue cua tai khoan BTC (khong ap dung cho Quan tri)
+  const laBtcThuong = t.vaiTro === "ADMIN" && !t.quanTri;
+  const [moPv, setMoPv] = useState(false);
+  const [pv, setPv] = useState<string[]>(t.venueBtc);
+  const [xemHet, setXemHet] = useState(t.xemTatCa);
+  const tenPv = t.venueBtc.map((id) => venues.find((v) => v.id === id)?.ten).filter(Boolean).join(", ");
 
   return (
     <div className="border-t border-ivory-deep px-5 py-3 first:border-t-0">
@@ -118,6 +126,18 @@ function Dong({ t, onKq, quanTri, venues }: { t: TaiKhoanRow; onKq: (k: KetQua) 
             {t.ca ? ` · ${t.ca}` : ""}
           </div>
         </div>
+        {laBtcThuong &&
+          (quanTri ? (
+            <button
+              className={`rounded-full border px-3 py-1.5 text-xs ${t.venueBtc.length ? "border-brand/40 bg-brand/5 text-brand-deep" : "border-ink/15 bg-white text-ink-soft"}`}
+              onClick={() => { setPv(t.venueBtc); setXemHet(t.xemTatCa); setMoPv((v) => !v); }}
+              title="Giao venue cho tài khoản BTC này"
+            >
+              {t.venueBtc.length ? `Duyệt: ${tenPv}${t.xemTatCa ? " · xem mọi venue" : ""}` : "Duyệt: mọi venue"}
+            </button>
+          ) : (
+            <span className="chip bg-ivory-deep text-ink-soft">{t.venueBtc.length ? `Duyệt: ${tenPv}` : "Duyệt: mọi venue"}</span>
+          ))}
         {t.vaiTro === "SALES" &&
           (quanTri ? (
             <select
@@ -165,6 +185,47 @@ function Dong({ t, onKq, quanTri, venues }: { t: TaiKhoanRow; onKq: (k: KetQua) 
             </button>
           ))}
       </div>
+      {quanTri && laBtcThuong && moPv && (
+        <div className="mt-3 space-y-3 rounded-xl bg-ivory/60 p-3">
+          <div className="text-xs text-ink-soft">
+            Tick các venue {t.hoTen} được duyệt và sửa khách. Không tick venue nào thì tài khoản làm việc với mọi venue.
+          </div>
+          <div className="flex flex-wrap gap-x-4 gap-y-2">
+            {venues.map((v) => (
+              <label key={v.id} className="flex items-center gap-2 text-sm text-ink">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 accent-brand"
+                  checked={pv.includes(v.id)}
+                  onChange={(e) => setPv((ds) => (e.target.checked ? [...ds, v.id] : ds.filter((x) => x !== v.id)))}
+                />
+                {v.ten}
+              </label>
+            ))}
+          </div>
+          <label className={`flex items-center gap-2 text-xs ${pv.length ? "text-ink-soft" : "text-ink-muted"}`}>
+            <input type="checkbox" className="h-4 w-4 accent-brand" disabled={!pv.length} checked={pv.length > 0 && xemHet} onChange={(e) => setXemHet(e.target.checked)} />
+            Vẫn được xem danh sách và số liệu của mọi venue (chỉ duyệt, sửa ở venue đã tick)
+          </label>
+          <div className="flex gap-2">
+            <button
+              className="btn-brand btn-sm"
+              disabled={pending}
+              onClick={() =>
+                start(async () => {
+                  onKq(await datPhamViBtc(t.id, pv, xemHet));
+                  setMoPv(false);
+                })
+              }
+            >
+              {pending ? "Đang lưu..." : "Lưu phạm vi"}
+            </button>
+            <button className="btn-ghost btn-sm" onClick={() => setMoPv(false)}>
+              Đóng
+            </button>
+          </div>
+        </div>
+      )}
       {quanTri && mo && (
         <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl bg-ivory/60 p-3">
           <input

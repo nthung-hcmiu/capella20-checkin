@@ -18,17 +18,19 @@ export default async function InQRPage({
   const u = await yeuCauTrang(["SALES", "ADMIN"], "/in-qr");
   const laBTC = u.vaiTro === "ADMIN";
   const chuaGiay = searchParams.chuaGiay === "1";
+  // BTC duoc giao venue: chi in QR khach cua venue do, cong khach chinh minh phu trach
+  const xemBtc = u.phamViXem ? { OR: [{ venueId: { in: u.phamViXem } }, { salesOwner: u.hoTen }] } : {};
   const [venues, dsSales] = laBTC
     ? await Promise.all([
-        prisma.venue.findMany({ orderBy: { thuTu: "asc" }, select: { id: true, ten: true } }),
-        prisma.guest.findMany({ distinct: ["salesOwner"], select: { salesOwner: true }, orderBy: { salesOwner: "asc" } }),
+        prisma.venue.findMany({ where: u.phamViXem ? { id: { in: u.phamViXem } } : {}, orderBy: { thuTu: "asc" }, select: { id: true, ten: true } }),
+        prisma.guest.findMany({ where: xemBtc, distinct: ["salesOwner"], select: { salesOwner: true }, orderBy: { salesOwner: "asc" } }),
       ])
     : [[], []];
 
   const guests = await prisma.guest.findMany({
     where: {
       trangThai: { notIn: [TRANG_THAI.NHAP, TRANG_THAI.CHO_DUYET, TRANG_THAI.DA_HUY] },
-      ...(laBTC ? {} : { salesOwner: u.hoTen }),
+      ...(laBTC ? { AND: [xemBtc] } : { salesOwner: u.hoTen }),
       ...(laBTC && searchParams.venue ? { venueId: searchParams.venue } : {}),
       ...(laBTC && searchParams.sales ? { salesOwner: searchParams.sales } : {}),
       ...(chuaGiay ? { daGuiThiepGiay: false } : {}),

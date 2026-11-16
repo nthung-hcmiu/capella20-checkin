@@ -4,7 +4,7 @@
 // khop tung dong voi khach trong app theo ten + ma CORP / cong ty, dong khong co ten thi khop theo cong ty.
 import { revalidatePath } from "next/cache";
 import { prisma } from "./db";
-import { batBuocQuyen } from "./auth";
+import { batBuocQuyen, locPhamVi } from "./auth";
 import { TRANG_THAI } from "./constants";
 import { boDau } from "./format";
 import { khoaCty } from "./lichSu";
@@ -35,13 +35,13 @@ export async function capNhatPhuTrach(
   rows: DongPhuTrach[],
   tuyChon: { venueId?: string; dongBatDau: number; ghi: boolean }
 ): Promise<KetQuaPhuTrach> {
-  await batBuocQuyen(["ADMIN"]);
+  const u = await batBuocQuyen(["ADMIN"]);
   const rong: KetQuaPhuTrach = { ok: false, thongBao: "", ghi: false, tongDong: rows.length, doi: [], daDung: 0, khongThay: [], khongTaiKhoan: [], xungDot: [] };
   if (rows.length > 5000) return { ...rong, thongBao: "Mỗi lần tối đa 5.000 dòng." };
 
   const [khach, sales] = await Promise.all([
     prisma.guest.findMany({
-      where: { trangThai: { not: TRANG_THAI.DA_HUY }, ...(tuyChon.venueId ? { venueId: tuyChon.venueId } : {}) },
+      where: { trangThai: { not: TRANG_THAI.DA_HUY }, ...locPhamVi(u), ...(tuyChon.venueId ? { AND: [{ venueId: tuyChon.venueId }] } : {}) },
       select: { id: true, soThuTu: true, hoTen: true, congTy: true, maCorp: true, salesOwner: true },
     }),
     prisma.staffUser.findMany({ where: { vaiTro: "SALES" }, select: { hoTen: true } }),

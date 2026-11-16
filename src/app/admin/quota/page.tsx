@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { yeuCauTrang } from "@/lib/auth";
+import { locXem, yeuCauTrang } from "@/lib/auth";
 import { DA_PHAT_HANH_VE, TRANG_THAI } from "@/lib/constants";
 import { boDau, dinhDangTien } from "@/lib/format";
 import { rong, tongHopTheoVenue } from "@/lib/kpi";
@@ -7,9 +7,10 @@ import { rong, tongHopTheoVenue } from "@/lib/kpi";
 export const dynamic = "force-dynamic";
 
 export default async function QuotaPage() {
-  await yeuCauTrang(["ADMIN"], "/admin/quota");
-  const venues = await prisma.venue.findMany({ orderBy: { thuTu: "asc" } });
+  const u = await yeuCauTrang(["ADMIN"], "/admin/quota");
+  const venues = await prisma.venue.findMany({ where: u.phamViXem ? { id: { in: u.phamViXem } } : {}, orderBy: { thuTu: "asc" } });
   const guests = await prisma.guest.findMany({
+    where: locXem(u),
     select: {
       venueId: true, trangThai: true, congTy: true, maCorp: true, doanhThuDuKien: true,
       soNguoiMoi: true, soNguoiXacNhan: true, soNguoiDen: true, lyDoChoDuyet: true, salesOwner: true,
@@ -19,7 +20,10 @@ export default async function QuotaPage() {
   const soLieu = tongHopTheoVenue(guests);
 
   // Theo doi theo sales: moi sales da moi bao nhieu cong ty, bao nhieu khach (dung lai ham gom, khoa la ten sales)
-  const salesTk = await prisma.staffUser.findMany({ where: { vaiTro: "SALES" }, orderBy: { hoTen: "asc" } });
+  const salesTk = await prisma.staffUser.findMany({
+    where: { vaiTro: "SALES", ...(u.phamViXem ? { venueId: { in: u.phamViXem } } : {}) },
+    orderBy: { hoTen: "asc" },
+  });
   const theoSales = tongHopTheoVenue(guests.map((g) => ({ ...g, venueId: g.salesOwner })));
   const demTT = (ten: string, tt: string[]) => guests.filter((g) => g.salesOwner === ten && tt.includes(g.trangThai)).length;
   const dongSales = (ten: string, venueId: string | null, coTk: boolean) => {

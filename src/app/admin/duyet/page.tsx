@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { yeuCauTrang } from "@/lib/auth";
+import { locPhamVi, yeuCauTrang } from "@/lib/auth";
 import { TRANG_THAI } from "@/lib/constants";
 import { ApproveQueue, ChoDuyetItem } from "@/components/ApproveQueue";
 import { taiBoKhop } from "@/lib/lichSu";
@@ -9,9 +9,9 @@ import { moTaDiCung, tenGoi, thieuThongTinMoi } from "@/lib/khach";
 export const dynamic = "force-dynamic";
 
 export default async function DuyetPage() {
-  await yeuCauTrang(["ADMIN"], "/admin/duyet");
+  const u = await yeuCauTrang(["ADMIN"], "/admin/duyet");
   const ds = await prisma.guest.findMany({
-    where: { trangThai: TRANG_THAI.CHO_DUYET },
+    where: { trangThai: TRANG_THAI.CHO_DUYET, ...locPhamVi(u) },
     include: { venue: true },
     orderBy: { createdAt: "asc" },
   });

@@ -19,7 +19,33 @@ export interface NguoiDung {
   venueId: string | null;
   venueTen: string | null;
   doiMatKhau: boolean;
+  // BTC duoc giao mot so venue: chi duyet, sua khach cua cac venue nay. null = moi venue (Quan tri luon la null)
+  phamVi: string[] | null;
+  // Venue duoc xem tren danh sach va bao cao. null = moi venue
+  phamViXem: string[] | null;
 }
+
+type CoPhamVi = Pick<NguoiDung, "vaiTro" | "hoTen" | "phamVi" | "phamViXem">;
+// Quyen voi mot khach: "BTC" (duyet, sua moi thu), "SALES" (nguoi phu trach khach do), null (khong duoc dung).
+// BTC co pham vi venue van lam viec voi khach minh phu trach o venue khac, nhung chi o muc cua sales.
+export function quyenVoiKhach(u: CoPhamVi, g: { venueId: string; salesOwner: string }): "BTC" | "SALES" | null {
+  if (u.vaiTro === "ADMIN") {
+    if (!u.phamVi || u.phamVi.includes(g.venueId)) return "BTC";
+    return g.salesOwner === u.hoTen ? "SALES" : null;
+  }
+  if (u.vaiTro === "SALES") return g.salesOwner === u.hoTen ? "SALES" : null;
+  return null;
+}
+// Dieu kien loc Prisma tren bang Guest
+export const locPhamVi = (u: CoPhamVi) => (u.phamVi ? { venueId: { in: u.phamVi } } : {});
+export const locXem = (u: CoPhamVi) => (u.phamViXem ? { venueId: { in: u.phamViXem } } : {});
+export const locDuocDung = (u: CoPhamVi) =>
+  u.vaiTro === "SALES"
+    ? { salesOwner: u.hoTen }
+    : u.phamVi
+    ? { OR: [{ venueId: { in: u.phamVi } }, { salesOwner: u.hoTen }] }
+    : {};
+export const KHONG_QUYEN_KHACH = "Khách này không do bạn phụ trách, hoặc thuộc venue ngoài phạm vi của bạn.";
 
 export function bamMatKhau(matKhau: string): string {
   const salt = crypto.randomBytes(16).toString("hex");
@@ -71,9 +97,12 @@ export const layNguoiDung = cache(async (): Promise<NguoiDung | null> => {
   });
   if (!phien || phien.hetHan < new Date()) return null;
   const u = phien.user;
+  const dsVenueBtc = u.vaiTro === "ADMIN" && !u.quanTri ? (u.venueBtc || "").split(",").filter(Boolean) : [];
   return { id: u.id, username: u.username, hoTen: u.hoTen, vaiTro: u.vaiTro, quanTri: u.vaiTro === "ADMIN" && u.quanTri, ca: u.ca,
     venueId: u.vaiTro === "SALES" ? u.venueId : null, venueTen: u.vaiTro === "SALES" ? u.venue?.ten ?? null : null,
     doiMatKhau: u.doiMatKhau,
+    phamVi: dsVenueBtc.length ? dsVenueBtc : null,
+    phamViXem: dsVenueBtc.length && !u.xemTatCa ? dsVenueBtc : null,
   };
 });
 

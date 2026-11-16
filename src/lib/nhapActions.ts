@@ -201,7 +201,10 @@ export async function nhapDanhSach(
       return;
     }
     kq.venueTen = venue.ten;
+    // BTC duoc giao venue: khach o venue khac thi do chinh minh phu trach va phai cho nguoi co quyen duyet (nhu sales)
+    const ngoaiPhamVi = !!u.phamVi && !u.phamVi.includes(venue.id);
     const canhBao: string[] = [];
+    if (ngoaiPhamVi) canhBao.push(`${venue.ten} ngoài venue bạn được giao: khách do bạn phụ trách, chờ BTC của venue đó duyệt`);
     if (khopVenue && !khopVenue.chinhXac) canhBao.push(`Venue ghi "${r.venue.trim()}", đã hiểu là ${venue.ten}`);
 
     // Sales tu nhap: dong ghi nguoi phu trach la sales khac thi bo qua, tranh nhan khach cua nguoi khac
@@ -216,9 +219,9 @@ export async function nhapDanhSach(
       }
     }
     const salesKhop = laSales ? u.hoTen : timSales(r.sales);
-    const salesOwner = laSales ? u.hoTen : salesKhop || String(r.sales || "").trim() || tuyChon.salesMacDinh?.trim() || "BTC";
+    const salesOwner = laSales || ngoaiPhamVi ? u.hoTen : salesKhop || String(r.sales || "").trim() || tuyChon.salesMacDinh?.trim() || "BTC";
     kq.salesOwner = salesOwner;
-    if (!laSales && r.sales?.trim() && !salesKhop) canhBao.push("Sales chưa có tài khoản, sales đó sẽ không thấy khách này");
+    if (!laSales && !ngoaiPhamVi && r.sales?.trim() && !salesKhop) canhBao.push("Sales chưa có tài khoản, sales đó sẽ không thấy khách này");
 
     const soNguoiGoc = parseInt(String(r.soNguoiMoi ?? "").trim() || "1", 10);
     const soNguoi = Math.min(10, Math.max(1, Number.isFinite(soNguoiGoc) ? soNguoiGoc : 1));
@@ -242,7 +245,7 @@ export async function nhapDanhSach(
     const trung = ds[0] === "TRUNG_SDT" || ds[0] === "TRUNG_TEN";
     const trungVoi = ds[0] === "TRUNG_SDT" ? sdtDaCo.get(sdt!) : ds[0] === "TRUNG_TEN" ? trungTen : undefined;
     // Phat hanh ve thang chi khi khong trung; khach trung vao Cho duyet
-    const trangThai: string = dich === TRANG_THAI.DA_PHAT_HANH && trung ? TRANG_THAI.CHO_DUYET : dich;
+    const trangThai: string = dich === TRANG_THAI.DA_PHAT_HANH && (trung || ngoaiPhamVi) ? TRANG_THAI.CHO_DUYET : dich;
     const lyDo = trangThai !== TRANG_THAI.DA_PHAT_HANH && ds.length ? ds.join(",") : null;
 
     const soThuTu = capSo(venue.id);

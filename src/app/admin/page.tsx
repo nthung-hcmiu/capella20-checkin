@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { yeuCauTrang } from "@/lib/auth";
-import { CHIEM_QUOTA, CHISO, DA_PHAT_HANH_VE, TRANG_THAI, NHAN_TRANG_THAI, MAU_TRANG_THAI } from "@/lib/constants";
+import { locXem, yeuCauTrang } from "@/lib/auth";
+import { CHIEM_QUOTA, CHISO as CHISO_CHUNG, DA_PHAT_HANH_VE, TRANG_THAI, NHAN_TRANG_THAI, MAU_TRANG_THAI } from "@/lib/constants";
 import { dinhDangTien } from "@/lib/format";
 import { cong, rong, tongHopTheoVenue } from "@/lib/kpi";
 import { taiBoKhop } from "@/lib/lichSu";
@@ -16,15 +16,21 @@ function soNguoi(g: { soNguoiXacNhan: number | null; soNguoiMoi: number }) {
 }
 
 export default async function Dashboard({ searchParams }: { searchParams: { khongQuyen?: string } }) {
-  await yeuCauTrang(["ADMIN"], "/admin");
-  const guests = await prisma.guest.findMany({ include: { venue: true } });
+  const u = await yeuCauTrang(["ADMIN"], "/admin");
+  // BTC duoc giao venue chi thay so lieu cac venue do
+  const guests = await prisma.guest.findMany({ where: locXem(u), include: { venue: true } });
   // Doi chieu khach nam truoc: bao nhieu khach cu duoc moi lai, bao nhieu khach da den nam truoc chua duoc moi lai
   const boKhop = await taiBoKhop(prisma);
   const conHieuLuc = guests.filter((g) => g.trangThai !== TRANG_THAI.DA_HUY);
   const tkNamTruoc = boKhop.thongKe(conHieuLuc);
   const demLs: Record<string, number> = {};
   if (boKhop.coDuLieu) for (const g of conHieuLuc) { const l = boKhop.khop(g)!.loai; demLs[l] = (demLs[l] || 0) + 1; }
-  const venues = await prisma.venue.findMany({ orderBy: { thuTu: "asc" } });
+  const venues = await prisma.venue.findMany({ where: u.phamViXem ? { id: { in: u.phamViXem } } : {}, orderBy: { thuTu: "asc" } });
+  // Muc tieu: toan su kien theo con so chung; xem theo pham vi thi cong tu cac venue duoc giao
+  const tongQuotaXem = venues.reduce((t, v) => t + v.quota, 0);
+  const CHISO = u.phamViXem
+    ? { ...CHISO_CHUNG, tongKhachMucTieu: tongQuotaXem, tongCongTyMucTieu: venues.reduce((t, v) => t + v.mucTieuCongTy, 0), nguongXacNhan: Math.round(tongQuotaXem / (1 - CHISO_CHUNG.tyLeVang)) }
+    : CHISO_CHUNG;
 
   const demTrangThai: Record<string, number> = {};
   for (const g of guests) demTrangThai[g.trangThai] = (demTrangThai[g.trangThai] || 0) + 1;

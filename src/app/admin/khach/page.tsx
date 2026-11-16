@@ -18,7 +18,9 @@ export default async function KhachPage() {
   const boCty = taoBoCongTy(guests);
   // Trung tinh truc tiep tren toan bo khach, khong phu thuoc canh bao luu luc tao (khach tao truoc khong co canh bao)
   const timTrung = taoBoTrung(guests);
-  const rows: GuestRow[] = guests.map((g) => ({
+  // Doi chieu trung tren toan bo khach, nhung BTC duoc giao venue chi thay khach cua venue do
+  const duocXem = (g: { venueId: string }) => !u.phamViXem || u.phamViXem.includes(g.venueId);
+  const rows: GuestRow[] = guests.filter(duocXem).map((g) => ({
     lichSu: boKhop.coDuLieu ? boKhop.khop(g) : null,
     congTyKhac: g.trangThai === "DA_HUY" ? null : choBtc(boCty.timKhac(g), g.salesOwner, g.soNguoiMoi),
     trung: g.trangThai === "DA_HUY" ? [] : timTrung(g),
@@ -48,7 +50,7 @@ export default async function KhachPage() {
     them: Object.fromEntries(TRUONG_CHU.map((k) => [k, g[k] ?? null])),
   }));
 
-  const venueOpts: VenueOpt[] = venues.map((v) => ({ id: v.id, ten: v.ten, code: v.code }));
+  const venueOpts: VenueOpt[] = venues.filter((v) => !u.phamViXem || u.phamViXem.includes(v.id)).map((v) => ({ id: v.id, ten: v.ten, code: v.code }));
 
   const salesTeam = await prisma.staffUser.findMany({
     where: { vaiTro: "SALES" },

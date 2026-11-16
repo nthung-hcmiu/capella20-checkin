@@ -23,6 +23,8 @@ export default async function TaiKhoanPage() {
         ca: t.ca,
         venueId: t.venueId,
         venueTen: t.venue?.ten ?? null,
+        venueBtc: t.vaiTro === "ADMIN" && !t.quanTri ? (t.venueBtc || "").split(",").filter(Boolean) : [],
+        xemTatCa: t.xemTatCa,
         coMatKhau: t.matKhau.startsWith("scrypt$"),
         doiMatKhau: t.doiMatKhau,
         laToi: t.id === u.id,

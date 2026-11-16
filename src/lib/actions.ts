@@ -6,7 +6,7 @@ import { CHIEM_QUOTA, CHUA_PHAT_HANH, DUOC_XAC_NHAN, NHAN_CANH_BAO, TRANG_THAI }
 import { capSoThuTu, sinhMaBiMatDuyNhat } from "./codes";
 import { chuanHoaSdt, sdtHopLe } from "./format";
 import { ghiDiCung, lamSach, lamSachDiCung, thieuThongTinMoi, type NguoiDiCung, type ThongTinThem } from "./khach";
-import { batBuocQuanTri, batBuocQuyen, bamMatKhau } from "./auth";
+import { KHONG_QUYEN_KHACH, batBuocQuanTri, batBuocQuyen, bamMatKhau, locDuocDung, locPhamVi, quyenVoiKhach } from "./auth";
 import { gieoDuLieu } from "./seedData";
 import { chuanHoTen, tenDangNhapGoiY } from "./taiKhoan";
 import { taiBoKhop } from "./lichSu";
@@ -94,6 +94,8 @@ export async function taoKhach(input: {
   if (!hoTen || !input.venueId) {
     return { ok: false, thongBao: "Thiếu họ tên hoặc venue." };
   }
+  // BTC co pham vi venue: them khach o venue khac thi khach do chinh minh phu trach, nhu sales
+  const tuPhuTrach = u.vaiTro === "SALES" || (!!u.phamVi && !u.phamVi.includes(input.venueId));
   if (sdt && !sdtHopLe(sdt)) return { ok: false, thongBao: "Số điện thoại chưa đúng (cần 10 hoặc 11 số, bắt đầu bằng 0)." };
   const them = lamSach(input.them || {});
   const soNguoiMoi = Math.min(10, Math.max(1, input.soNguoiMoi || 1));
@@ -127,7 +129,7 @@ export async function taoKhach(input: {
       venueId: input.venueId,
       soNguoiMoi,
       khachDiCung,
-      salesOwner: u.vaiTro === "SALES" ? u.hoTen : input.salesOwner?.trim() || u.hoTen,
+      salesOwner: tuPhuTrach ? u.hoTen : input.salesOwner?.trim() || u.hoTen,
       isVip: !!input.isVip,
       ghiChu: input.ghiChu?.trim() || null,
       trangThai: TRANG_THAI.NHAP,
@@ -159,7 +161,7 @@ export async function taoKhach(input: {
 export async function guiDuyet(ids: string[]): Promise<KetQua> {
   const u = await batBuocQuyen(["ADMIN", "SALES"]);
   const ds = await prisma.guest.findMany({
-    where: { id: { in: ids }, trangThai: TRANG_THAI.NHAP, ...(u.vaiTro === "SALES" ? { salesOwner: u.hoTen } : {}) },
+    where: { id: { in: ids }, trangThai: TRANG_THAI.NHAP, ...locDuocDung(u) },
   });
   // Thieu ten / chuc vu (ke ca khach thu 2) thi chua gui duoc
   const du = ds.filter((g) => !thieuThongTinMoi(g));
@@ -189,7 +191,7 @@ export async function xoaNhap(id: string): Promise<KetQua> {
   const u = await batBuocQuyen(["ADMIN", "SALES"]);
   const g = await prisma.guest.findUnique({ where: { id } });
   if (!g) return { ok: false, thongBao: "Không tìm thấy khách." };
-  if (u.vaiTro === "SALES" && g.salesOwner !== u.hoTen) return { ok: false, thongBao: "Khách này không do bạn phụ trách." };
+  if (!quyenVoiKhach(u, g)) return { ok: false, thongBao: KHONG_QUYEN_KHACH };
   if (g.trangThai !== TRANG_THAI.NHAP) return { ok: false, thongBao: "Chỉ xóa được khách đang ở trạng thái Nháp." };
   await prisma.guest.delete({ where: { id } });
   lamTuoi();
@@ -198,9 +200,9 @@ export async function xoaNhap(id: string): Promise<KetQua> {
 
 // BTC duyet: nhap hoac cho duyet thanh da phat hanh ve
 export async function duyetKhach(id: string) {
-  await batBuocQuyen(["ADMIN"]);
+  const u = await batBuocQuyen(["ADMIN"]);
   await prisma.guest.updateMany({
-    where: { id, trangThai: { in: [TRANG_THAI.NHAP, TRANG_THAI.CHO_DUYET] } },
+    where: { id, trangThai: { in: [TRANG_THAI.NHAP, TRANG_THAI.CHO_DUYET] }, ...locPhamVi(u) },
     data: { trangThai: TRANG_THAI.DA_PHAT_HANH, lyDoChoDuyet: null, phatHanhLuc: new Date() },
   });
   lamTuoi();
@@ -208,9 +210,9 @@ export async function duyetKhach(id: string) {
 
 // Duyet cung luc moi khach cho duyet khong co canh bao
 export async function duyetKhongCanhBao(): Promise<KetQua> {
-  await batBuocQuyen(["ADMIN"]);
+  const u = await batBuocQuyen(["ADMIN"]);
   const r = await prisma.guest.updateMany({
-    where: { trangThai: TRANG_THAI.CHO_DUYET, OR: [{ lyDoChoDuyet: null }, { lyDoChoDuyet: "" }] },
+    where: { trangThai: TRANG_THAI.CHO_DUYET, OR: [{ lyDoChoDuyet: null }, { lyDoChoDuyet: "" }], ...locPhamVi(u) },
     data: { trangThai: TRANG_THAI.DA_PHAT_HANH, lyDoChoDuyet: null, phatHanhLuc: new Date() },
   });
   lamTuoi();
@@ -229,8 +231,8 @@ export async function chotVangMat(): Promise<KetQua> {
 }
 
 export async function huyKhach(id: string) {
-  await batBuocQuyen(["ADMIN"]);
-  await prisma.guest.update({ where: { id }, data: { trangThai: TRANG_THAI.DA_HUY } });
+  const u = await batBuocQuyen(["ADMIN"]);
+  await prisma.guest.updateMany({ where: { id, ...locPhamVi(u) }, data: { trangThai: TRANG_THAI.DA_HUY } });
   lamTuoi();
 }
 
@@ -241,12 +243,12 @@ const TRA_NHAP_DATA = {
 };
 const DUOC_TRA_NHAP = { notIn: [TRANG_THAI.NHAP, TRANG_THAI.DA_CHECKIN] as string[] };
 export async function traVeNhap(id: string): Promise<KetQua> {
-  await batBuocQuyen(["ADMIN"]);
-  const r = await prisma.guest.updateMany({ where: { id, trangThai: DUOC_TRA_NHAP }, data: TRA_NHAP_DATA });
+  const u = await batBuocQuyen(["ADMIN"]);
+  const r = await prisma.guest.updateMany({ where: { id, trangThai: DUOC_TRA_NHAP, ...locPhamVi(u) }, data: TRA_NHAP_DATA });
   lamTuoi();
   return r.count
     ? { ok: true, thongBao: "Đã trả về Nháp. Sales sửa xong gửi duyệt lại, số thứ tự và mã QR giữ nguyên." }
-    : { ok: false, thongBao: "Khách đang là Nháp hoặc đã check in, không trả về nháp được." };
+    : { ok: false, thongBao: "Không trả về nháp được: khách đang là Nháp, đã check in, hoặc thuộc venue ngoài phạm vi của bạn." };
 }
 
 export async function phatHanh(id: string) {
@@ -258,7 +260,7 @@ export async function danhDauDaMoi(id: string) {
   const u = await batBuocQuyen(["ADMIN", "SALES"]);
   const g = await prisma.guest.findUnique({ where: { id } });
   if (!g) return;
-  if (u.vaiTro === "SALES" && g.salesOwner !== u.hoTen) return;
+  if (!quyenVoiKhach(u, g)) return;
   if (g.trangThai !== TRANG_THAI.DA_PHAT_HANH) return;
   await prisma.guest.update({ where: { id }, data: { trangThai: TRANG_THAI.DA_MOI } });
   lamTuoi();
@@ -281,10 +283,12 @@ export async function suaKhach(
   }
 ): Promise<KetQua> {
   const u = await batBuocQuyen(["ADMIN", "SALES"]);
-  const laSales = u.vaiTro === "SALES";
   const cu = await prisma.guest.findUnique({ where: { id } });
   if (!cu) return { ok: false, thongBao: "Không tìm thấy khách." };
-  if (laSales && cu.salesOwner !== u.hoTen) return { ok: false, thongBao: "Khách này không do bạn phụ trách." };
+  const quyen = quyenVoiKhach(u, cu);
+  if (!quyen) return { ok: false, thongBao: KHONG_QUYEN_KHACH };
+  // BTC sua khach minh phu trach o venue ngoai pham vi thi theo luat cua sales
+  const laSales = quyen === "SALES";
   if (laSales && cu.trangThai === TRANG_THAI.DA_HUY) return { ok: false, thongBao: "Thiệp đã hủy, liên hệ BTC nếu cần mời lại." };
   const hoTen = input.hoTen?.trim().replace(/\s+/g, " ");
   if (!hoTen) return { ok: false, thongBao: "Thiếu họ tên." };
@@ -307,6 +311,9 @@ export async function suaKhach(
   if (input.venueId && input.venueId !== cu.venueId) {
     if (laSales && u.venueId && input.venueId !== u.venueId) {
       return { ok: false, thongBao: `Tài khoản của bạn chỉ mời khách cho ${u.venueTen || "venue được giao"}.` };
+    }
+    if (u.phamVi && !u.phamVi.includes(input.venueId) && !laSales) {
+      return { ok: false, thongBao: "Venue mới nằm ngoài phạm vi bạn được giao." };
     }
     if (!chuaPhatHanh) return { ok: false, thongBao: "Vé đã phát hành, không đổi venue được. Liên hệ BTC." };
     if (!(await prisma.venue.findUnique({ where: { id: input.venueId } }))) return { ok: false, thongBao: "Venue không hợp lệ." };
@@ -353,7 +360,7 @@ export async function xacNhanKhach(id: string, ketQua: "THAM_DU" | "KHONG_THAM_D
   const u = await batBuocQuyen(["ADMIN", "SALES"]);
   const g = await prisma.guest.findUnique({ where: { id } });
   if (!g) return { ok: false, thongBao: "Không tìm thấy khách." };
-  if (u.vaiTro === "SALES" && g.salesOwner !== u.hoTen) return { ok: false, thongBao: "Khách này không do bạn phụ trách." };
+  if (!quyenVoiKhach(u, g)) return { ok: false, thongBao: KHONG_QUYEN_KHACH };
   if (!DUOC_XAC_NHAN.includes(g.trangThai)) {
     return { ok: false, thongBao: g.trangThai === TRANG_THAI.DA_CHECKIN ? "Khách đã check in tại sự kiện." : "Thiệp chưa được BTC phát hành." };
   }
@@ -378,7 +385,7 @@ export async function xacNhanKhach(id: string, ketQua: "THAM_DU" | "KHONG_THAM_D
 export async function datThiepGiay(id: string, daGui: boolean) {
   const u = await batBuocQuyen(["ADMIN", "SALES"]);
   const g = await prisma.guest.findUnique({ where: { id } });
-  if (!g || (u.vaiTro === "SALES" && g.salesOwner !== u.hoTen)) return;
+  if (!g || !quyenVoiKhach(u, g)) return;
   await prisma.guest.update({ where: { id }, data: { daGuiThiepGiay: daGui } });
   lamTuoi();
 }
@@ -386,10 +393,10 @@ export async function datThiepGiay(id: string, daGui: boolean) {
 // ===== Xoa du lieu =====
 
 export async function xoaKhach(id: string): Promise<KetQua> {
-  await batBuocQuyen(["ADMIN"]);
-  await prisma.guest.delete({ where: { id } }).catch(() => null);
+  const u = await batBuocQuyen(["ADMIN"]);
+  const r = await prisma.guest.deleteMany({ where: { id, ...locPhamVi(u) } });
   lamTuoi();
-  return { ok: true, thongBao: "Đã xóa khách." };
+  return r.count ? { ok: true, thongBao: "Đã xóa khách." } : { ok: false, thongBao: KHONG_QUYEN_KHACH };
 }
 
 export async function xoaToanBoKhach(xacNhan: string): Promise<KetQua> {
@@ -562,6 +569,26 @@ export async function datVenueTaiKhoan(id: string, venueId: string | null): Prom
   return { ok: true, thongBao: `Đã cập nhật venue cho ${t.hoTen}.` };
 }
 
+// Giao venue cho tai khoan BTC: chi duyet va sua khach cua cac venue nay. Khong chon venue nao = moi venue.
+export async function datPhamViBtc(id: string, venueIds: string[], xemTatCa: boolean): Promise<KetQua> {
+  await batBuocQuanTri();
+  const t = await prisma.staffUser.findUnique({ where: { id } });
+  if (!t || t.vaiTro !== "ADMIN") return { ok: false, thongBao: "Chỉ giao venue cho tài khoản BTC." };
+  if (t.quanTri) return { ok: false, thongBao: "Tài khoản Quản trị luôn làm việc với mọi venue." };
+  const hopLe = await prisma.venue.findMany({ where: { id: { in: venueIds } }, orderBy: { thuTu: "asc" }, select: { id: true, ten: true } });
+  await prisma.staffUser.update({
+    where: { id },
+    data: { venueBtc: hopLe.length ? hopLe.map((v) => v.id).join(",") : null, xemTatCa: hopLe.length ? xemTatCa : false },
+  });
+  lamTuoi();
+  return {
+    ok: true,
+    thongBao: hopLe.length
+      ? `${t.hoTen} giờ chỉ duyệt và sửa khách của ${hopLe.map((v) => v.ten).join(", ")}${xemTatCa ? ", vẫn xem được mọi venue" : ""}. Có hiệu lực ngay ở lần tải trang kế tiếp.`
+      : `${t.hoTen} giờ làm việc với mọi venue.`,
+  };
+}
+
 // ===== Danh sach khach nam truoc =====
 
 export interface DongNamTruoc {
@@ -638,7 +665,8 @@ export async function thaoTacHangLoat(ids: string[], loai: LoaiHangLoat, giaTri?
   if (ids.length > 2000) return { ok: false, thongBao: "Mỗi lần tối đa 2.000 khách." };
   if (loai === "GUI_DUYET") return guiDuyet(ids);
 
-  const pham = { id: { in: ids }, ...(laSales ? { salesOwner: u.hoTen } : {}) };
+  // Thao tac cua BTC chi trong venue duoc giao; thao tac muc sales thi them ca khach minh phu trach
+  const pham = { id: { in: ids }, ...(CHI_BTC.includes(loai) ? locPhamVi(u) : locDuocDung(u)) };
   const daPhatHanh = { notIn: [TRANG_THAI.NHAP, TRANG_THAI.CHO_DUYET, TRANG_THAI.DA_HUY] };
   let n = 0;
   let viec = "";
