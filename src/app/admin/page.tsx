@@ -56,7 +56,7 @@ export default async function Dashboard({ searchParams }: { searchParams: { khon
     const m = new Map<string, { khach: number; dangKy: number; den: number; thiepDen: number }>();
     for (const g of guests) {
       if (!PIPELINE.includes(g.trangThai)) continue;
-      const k = khoa(g) || "Chưa phân nhóm";
+      const k = khoa(g) || "Chưa ghi ngành hàng";
       const r = m.get(k) || { khach: 0, dangKy: 0, den: 0, thiepDen: 0 };
       r.khach += g.soNguoiMoi;
       if ([TRANG_THAI.THAM_DU, TRANG_THAI.DA_CHECKIN].includes(g.trangThai as any)) r.dangKy += soNguoi(g);
@@ -68,7 +68,8 @@ export default async function Dashboard({ searchParams }: { searchParams: { khon
     }
     return [...m.entries()].sort((a, b) => b[1].khach - a[1].khach);
   };
-  const theoPhanLoai = doiSoat((g) => g.nguonKhach || "");
+  // Xep theo nganh hang (truong Linh vuc cua khach)
+  const theoNganh = doiSoat((g) => g.linhVuc || "");
   const theoSales = doiSoat((g) => g.salesOwner);
   const soCho = demTrangThai[TRANG_THAI.CHO_DUYET] || 0;
 
@@ -185,7 +186,7 @@ export default async function Dashboard({ searchParams }: { searchParams: { khon
         </div>
         <div className="hairline" />
         <div className="grid gap-px bg-ivory-deep lg:grid-cols-2">
-          <BangDoiSoat tieuDe="Theo phân loại khách" dong={theoPhanLoai} />
+          <BangDoiSoat tieuDe="Theo ngành hàng" dong={theoNganh} />
           <BangDoiSoat tieuDe="Theo người phụ trách" dong={theoSales} />
         </div>
       </div>
