@@ -73,6 +73,7 @@ export function GuestManager({
   const [ct, setCt] = useState("");
   const [tr, setTr] = useState("");
   const [vip, setVip] = useState("");
+  const [ng, setNg] = useState(""); // nganh hang (truong Linh vuc); "-" la chua ghi
   const [moForm, setMoForm] = useState(false);
   const [soHien, setSoHien] = useState(MOI_TRANG);
 
@@ -84,6 +85,7 @@ export function GuestManager({
       if (sl && g.salesOwner !== sl) return false;
       if (nh && (g.them.nguonKhach || "") !== nh) return false;
       if (ls && g.lichSu?.loai !== ls) return false;
+      if (ng === "-" ? !!g.them.linhVuc : ng && (g.them.linhVuc || "") !== ng) return false;
       if (vip === "vip" && !g.isVip) return false;
       if (vip === "thuong" && g.isVip) return false;
       if (tr === "khach" && !g.trung.length) return false;
@@ -103,7 +105,7 @@ export function GuestManager({
       }
       return true;
     });
-  }, [guests, q, tt, vn, sl, nh, ls, ct, tr, vip]);
+  }, [guests, q, tt, vn, sl, nh, ls, ct, tr, vip, ng]);
   const soTrung = useMemo(
     () => ({
       khach: guests.filter((g) => g.trung.length).length,
@@ -114,13 +116,20 @@ export function GuestManager({
   );
 
   const dsSales = useMemo(() => [...new Set(guests.map((g) => g.salesOwner))].sort(), [guests]);
+  // Nganh hang dang co trong danh sach, kem so dong cua tung nganh
+  const dsNganh = useMemo(() => {
+    const dem = new Map<string, number>();
+    for (const g of guests) if (g.them.linhVuc) dem.set(g.them.linhVuc, (dem.get(g.them.linhVuc) || 0) + 1);
+    return [...dem.entries()].sort((a, b) => a[0].localeCompare(b[0], "vi"));
+  }, [guests]);
+  const soChuaNganh = useMemo(() => guests.filter((g) => !g.them.linhVuc).length, [guests]);
   const dsNhom = useMemo(() => [...new Set(guests.map((g) => g.them.nguonKhach).filter(Boolean) as string[])].sort(), [guests]);
-  const coLoc = q || tt || vn || sl || nh || ls || ct || tr || vip;
+  const coLoc = q || tt || vn || sl || nh || ls || ct || tr || vip || ng;
   const coLichSu = guests.some((g) => g.lichSu);
 
   // Tick chon khach de thao tac hang loat; doi bo loc thi bo chon cho khoi nham
   const [chon, setChon] = useState<Set<string>>(new Set());
-  useEffect(() => setChon(new Set()), [q, tt, vn, sl, nh, ls, ct, tr, vip]);
+  useEffect(() => setChon(new Set()), [q, tt, vn, sl, nh, ls, ct, tr, vip, ng]);
   const doiChon = (id: string) =>
     setChon((s) => {
       const m = new Set(s);
@@ -209,6 +218,15 @@ export function GuestManager({
             <option value="moi">Khách mới</option>
           </select>
         )}
+        <select className="input w-auto" value={ng} onChange={(e) => setNg(e.target.value)} aria-label="Lọc theo ngành hàng">
+          <option value="">Mọi ngành hàng</option>
+          {dsNganh.map(([x, n]) => (
+            <option key={x} value={x}>
+              {x} ({n})
+            </option>
+          ))}
+          {soChuaNganh > 0 && <option value="-">Chưa ghi ngành hàng ({soChuaNganh})</option>}
+        </select>
         <select className="input w-auto" value={vip} onChange={(e) => setVip(e.target.value)}>
           <option value="">VIP: tất cả</option>
           <option value="vip">Chỉ khách VIP ({guests.filter((g) => g.isVip).length})</option>
@@ -230,7 +248,7 @@ export function GuestManager({
           <option value="khach">Trùng người: SĐT, hoặc tên và công ty ({soTrung.khach})</option>
         </select>
         {coLoc && (
-          <button className="btn-ghost btn-sm" onClick={() => { setQ(""); setTt(""); setVn(""); setSl(""); setNh(""); setLs(""); setCt(""); setTr(""); setVip(""); }}>
+          <button className="btn-ghost btn-sm" onClick={() => { setQ(""); setTt(""); setVn(""); setSl(""); setNh(""); setLs(""); setCt(""); setTr(""); setVip(""); setNg(""); }}>
             Xóa bộ lọc
           </button>
         )}
