@@ -108,7 +108,7 @@ export async function taoKhach(input: {
   const soNguoiMoi = Math.min(10, Math.max(1, input.soNguoiMoi || 1));
   const khachDiCung = ghiDiCung(lamSachDiCung(input.diCung, soNguoiMoi));
   // Moi khach deu phai co ten va chuc vu, ke ca nguoi thu 2 tro di
-  const thieu = thieuThongTinMoi({ sdt, diaChi: them.diaChi, chucVu: them.chucVu, soNguoiMoi, khachDiCung });
+  const thieu = thieuThongTinMoi({ sdt, diaChi: them.diaChi, chucVu: them.chucVu, soNguoiMoi, khachDiCung, linhVuc: them.linhVuc ?? null, congTy: them.congTy });
   // Chi Quan tri duoc luu khach con thieu truong bat buoc
   if (thieu && !u.quanTri) return { ok: false, thongBao: `${thieu}.${nhacTaiLai(thieu)}` };
 
@@ -314,7 +314,7 @@ export async function suaKhach(
   const isVip = khoaDuyet ? cu.isVip : input.isVip;
   const khachDiCung = ghiDiCung(lamSachDiCung(input.diCung, soNguoiMoi));
   // Sales: moi khach tren thiep deu phai co ten va chuc vu
-  const thieu = thieuThongTinMoi({ sdt, diaChi: them.diaChi, chucVu: them.chucVu, soNguoiMoi, khachDiCung });
+  const thieu = thieuThongTinMoi({ sdt, diaChi: them.diaChi, chucVu: them.chucVu, soNguoiMoi, khachDiCung, linhVuc: them.linhVuc !== undefined ? them.linhVuc : cu.linhVuc, congTy: them.congTy !== undefined ? them.congTy : cu.congTy });
   // Chi Quan tri duoc luu khach con thieu truong bat buoc
   if (thieu && !u.quanTri) return { ok: false, thongBao: `${thieu}.${nhacTaiLai(thieu)}` };
 

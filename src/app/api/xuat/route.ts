@@ -25,7 +25,7 @@ export async function GET() {
   // Thu tu cot theo mau danh sach cac nam truoc, roi den cac cot cua he thong
   const tieuDe = [
     "STT", "Đơn vị", "Mã CORP Netsuite", "Company Name",
-    "Lĩnh vực", "Danh xưng", "Tên khách mời", "Chức vụ", "Số điện thoại", "Địa chỉ", "Số thiệp",
+    "Ngành hàng", "Danh xưng", "Tên khách mời", "Chức vụ", "Số điện thoại", "Địa chỉ", "Số thiệp",
     "Danh xưng khách thứ 2", "Tên khách thứ 2", "Chức vụ khách thứ 2", "Phân loại khách",
     "Phân loại khách VIP", "Doanh thu dự kiến", "Round 1: Khách đã nhận thiệp online", "Round 2: Đã gửi thiệp giấy",
     "Họ và tên người phụ trách tiếp khách", "Ghi chú",

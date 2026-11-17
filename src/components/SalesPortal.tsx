@@ -52,7 +52,7 @@ export interface SalesVenue {
 }
 
 const thieuCua = (g: SalesGuest) =>
-  thieuThongTinMoi({ sdt: g.sdt, diaChi: g.them.diaChi, chucVu: g.chucVu, soNguoiMoi: g.soNguoiMoi, khachDiCung: g.khachDiCung });
+  thieuThongTinMoi({ sdt: g.sdt, diaChi: g.them.diaChi, chucVu: g.chucVu, soNguoiMoi: g.soNguoiMoi, khachDiCung: g.khachDiCung, linhVuc: g.them.linhVuc ?? null, congTy: g.congTy });
 
 const NHOM = [
   { key: "tatCa", nhan: "Tất cả", tt: null as string[] | null },
@@ -764,7 +764,7 @@ function ThemKhach({ venues, onXong, rong }: { venues: SalesVenue[]; onXong: () 
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="label">Lĩnh vực</label>
+          <label className="label">Ngành hàng <span className="text-wine">*</span></label>
           <select name="linhVuc" className="input" defaultValue="">
             <option value="">Chọn</option>
             {LINH_VUC.map((x) => (

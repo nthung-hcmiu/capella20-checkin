@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { yeuCauTrang } from "@/lib/auth";
 import { ImportManager } from "@/components/ImportManager";
 import { CapNhatPhuTrach } from "@/components/CapNhatPhuTrach";
+import { CapNhatNganh } from "@/components/CapNhatNganh";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -16,6 +17,7 @@ export default async function NhapPage() {
     <div className="space-y-6">
       <ImportManager venues={venues} salesTeam={[...new Set(sales.map((s) => s.hoTen))]} />
       <CapNhatPhuTrach venues={venues} />
+      <CapNhatNganh />
     </div>
   );
 }

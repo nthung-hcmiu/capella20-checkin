@@ -325,7 +325,7 @@ function Dong({
   };
   const canhBao = (g.lyDoChoDuyet || "").split(",").filter(Boolean);
   const chuaPhatHanh = g.trangThai === TRANG_THAI.NHAP || g.trangThai === TRANG_THAI.CHO_DUYET;
-  const thieu = thieuThongTinMoi({ sdt: g.sdt, diaChi: g.them.diaChi, chucVu: g.them.chucVu, soNguoiMoi: g.soNguoiMoi, khachDiCung: g.khachDiCung });
+  const thieu = thieuThongTinMoi({ sdt: g.sdt, diaChi: g.them.diaChi, chucVu: g.them.chucVu, soNguoiMoi: g.soNguoiMoi, khachDiCung: g.khachDiCung, linhVuc: g.them.linhVuc ?? null, congTy: g.them.congTy });
 
   return (
     <>

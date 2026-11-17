@@ -15,7 +15,7 @@ export const NHAN_TRUONG: Record<TruongChu, string> = {
   congTy: "Công ty",
   diaChi: "Địa chỉ",
   maCorp: "Mã CORP Netsuite",
-  linhVuc: "Lĩnh vực",
+  linhVuc: "Ngành hàng",
   nguonKhach: "Phân loại khách",
   doanhThuDuKien: "Doanh thu dự kiến",
 };
@@ -31,41 +31,43 @@ export function chuanPhanLoai(s: string | null | undefined): string | null {
   return String(s).trim();
 }
 
-// Linh vuc: danh muc gon theo nganh cua khach doanh nghiep, moi nganh mot muc. "Khac" luon o cuoi.
+// Nganh hang (truong Linh vuc): moi nganh mot muc, du lon de so sanh. "Khac" luon o cuoi.
+// Quy tac xep: theo nganh san pham cuoi cua cong ty. Hang Tieu Dung chi gom hang phi thuc pham;
+// San Xuat/Cong Nghiep chi danh cho cong nghiep B2B (co khi, bao bi, nhua, thep, linh kien).
 export const LINH_VUC = [
-  "Event/Media Agency", "Giải Trí/Thể Thao", "Công Nghệ/Viễn Thông", "Tài Chính/Ngân Hàng/Chứng Khoán", "Bảo Hiểm",
-  "Bất Động Sản/Xây Dựng", "Sản Xuất/Công Nghiệp", "Điện Máy/Điện Lạnh", "Ô Tô/Xe Máy", "Hàng Tiêu Dùng",
-  "Thực Phẩm/Đồ Uống", "Bán Lẻ/Thương Mại Điện Tử", "Dệt May/Thời Trang", "Làm Đẹp/Mỹ Phẩm", "Y Tế/Dược Phẩm",
-  "Giáo Dục/Đào Tạo", "Du Lịch/Khách Sạn", "Vận Chuyển/Logistics", "Năng Lượng/Môi Trường", "Nông Nghiệp/Thủy Sản",
-  "Tư Vấn/Nhân Sự/Pháp Lý", "An Ninh/Bảo Vệ", "Cơ Quan Nhà Nước", "Hiệp Hội/Tổ Chức", "Đa Ngành", "Khác",
+  "Tài Chính/Ngân Hàng/Chứng Khoán", "Bảo Hiểm", "Bất Động Sản/Xây Dựng", "Nội Thất/Vật Liệu Xây Dựng", "Công Nghệ/Viễn Thông",
+  "Điện Máy/Gia Dụng", "Ô Tô/Xe Máy", "Thực Phẩm/Đồ Uống", "Hàng Tiêu Dùng (Phi Thực Phẩm)", "Làm Đẹp/Mỹ Phẩm",
+  "Y Tế/Dược Phẩm", "Dệt May/Thời Trang/Trang Sức", "Bán Lẻ/Thương Mại Điện Tử", "Bán Hàng Đa Cấp", "Vận Chuyển/Logistics",
+  "Sản Xuất/Công Nghiệp", "Năng Lượng/Tài Nguyên/Hóa Chất", "Nông Nghiệp/Thủy Sản", "Du Lịch/Khách Sạn/Hàng Không", "Giáo Dục/Đào Tạo",
+  "Giải Trí/Nghệ Thuật/Thể Thao", "Event/Media Agency", "Dịch Vụ Doanh Nghiệp", "Khu Vực Công/Hiệp Hội/NGO", "Khác",
 ];
 // Tu khoa (khong dau) -> muc trong danh muc. Dung de doi ten cu sang ten moi va nhan cach ghi tu do trong file.
-// Xet tu tren xuong, tu khoa cu the dat truoc tu khoa chung ("thuong mai dien tu" truoc "dien tu", "thuc pham" truoc "san xuat").
+// Xet tu tren xuong, tu khoa cu the dat truoc tu khoa chung ("thuong mai dien tu" truoc "dien tu", "vat lieu" truoc "xay dung").
 const BIET_DANH_LINH_VUC: [string[], string][] = [
   [["thuong mai dien tu", "ecommerce", "e-commerce", "ban le", "sieu thi", "retail"], "Bán Lẻ/Thương Mại Điện Tử"],
+  [["da cap", "mlm", "ban hang truc tiep"], "Bán Hàng Đa Cấp"],
   [["su kien", "agency", "event", "truyen thong", "quang cao", "media", "bao chi"], "Event/Media Agency"],
-  [["giai tri", "the thao", "nghe thuat", "am nhac", "dien anh"], "Giải Trí/Thể Thao"],
+  [["giai tri", "the thao", "nghe thuat", "am nhac", "dien anh"], "Giải Trí/Nghệ Thuật/Thể Thao"],
   [["chung khoan", "ngan hang", "tai chinh", "fintech"], "Tài Chính/Ngân Hàng/Chứng Khoán"],
   [["bao hiem"], "Bảo Hiểm"],
-  [["bat dong san", "xay dung", "kien truc", "noi that"], "Bất Động Sản/Xây Dựng"],
-  [["dien may", "dien lanh", "dien tu"], "Điện Máy/Điện Lạnh"],
+  [["noi that", "vat lieu", "thiet bi ve sinh"], "Nội Thất/Vật Liệu Xây Dựng"],
+  [["bat dong san", "xay dung", "kien truc"], "Bất Động Sản/Xây Dựng"],
+  [["dien may", "dien lanh", "dien tu", "gia dung"], "Điện Máy/Gia Dụng"],
   [["o to", "xe may", "automotive"], "Ô Tô/Xe Máy"],
   [["thuc pham", "do uong", "beverage", "wine", "f&b", "nha hang"], "Thực Phẩm/Đồ Uống"],
-  [["tieu dung", "fmcg"], "Hàng Tiêu Dùng"],
-  [["det may", "thoi trang", "may mac"], "Dệt May/Thời Trang"],
+  [["tieu dung", "fmcg"], "Hàng Tiêu Dùng (Phi Thực Phẩm)"],
+  [["det may", "thoi trang", "may mac", "trang suc", "phu kien"], "Dệt May/Thời Trang/Trang Sức"],
   [["lam dep", "my pham", "tham my"], "Làm Đẹp/Mỹ Phẩm"],
   [["y te", "duoc pham", "benh vien", "phong kham", "nha khoa"], "Y Tế/Dược Phẩm"],
   [["giao duc", "dao tao", "dai hoc"], "Giáo Dục/Đào Tạo"],
-  [["du lich", "khach san", "lu hanh"], "Du Lịch/Khách Sạn"],
-  [["logistics", "van chuyen", "van tai", "giao nhan"], "Vận Chuyển/Logistics"],
-  [["nang luong", "moi truong"], "Năng Lượng/Môi Trường"],
-  [["nong nghiep", "thuy san"], "Nông Nghiệp/Thủy Sản"],
-  [["hr/law", "nhan su", "phap ly", "luat", "tu van", "kiem toan"], "Tư Vấn/Nhân Sự/Pháp Lý"],
-  [["an ninh", "bao ve"], "An Ninh/Bảo Vệ"],
-  [["co quan", "nha nuoc", "ban nganh"], "Cơ Quan Nhà Nước"],
-  [["hiep hoi"], "Hiệp Hội/Tổ Chức"],
-  [["da nganh", "multidisciplinary", "tap doan"], "Đa Ngành"],
-  [["san xuat", "cong nghiep", "co khi"], "Sản Xuất/Công Nghiệp"],
+  [["du lich", "khach san", "lu hanh", "hang khong"], "Du Lịch/Khách Sạn/Hàng Không"],
+  [["logistics", "van chuyen", "van tai", "giao nhan", "kho van"], "Vận Chuyển/Logistics"],
+  [["nang luong", "moi truong", "khoang san", "dau khi", "hoa chat", "tai nguyen"], "Năng Lượng/Tài Nguyên/Hóa Chất"],
+  [["nong nghiep", "thuy san", "phan bon", "bao ve thuc vat"], "Nông Nghiệp/Thủy Sản"],
+  [["hr/law", "nhan su", "phap ly", "luat", "tu van", "kiem toan", "an ninh", "bao ve", "dich vu doanh nghiep"], "Dịch Vụ Doanh Nghiệp"],
+  [["co quan", "nha nuoc", "ban nganh", "hiep hoi", "khu vuc cong", "lanh su", "phong thuong mai"], "Khu Vực Công/Hiệp Hội/NGO"],
+  [["da nganh", "multidisciplinary", "tap doan"], "Khác"],
+  [["san xuat", "cong nghiep", "co khi", "bao bi"], "Sản Xuất/Công Nghiệp"],
   [["cong nghe", "vien thong", "phan mem"], "Công Nghệ/Viễn Thông"],
 ];
 export function chuanLinhVuc(s: string | null | undefined): string | null {
@@ -116,16 +118,21 @@ export function ghiDiCung(ds: NguoiDiCung[]): string | null {
   return co.length ? JSON.stringify(co) : null;
 }
 // Thong tin bat buoc truoc khi gui duyet: SDT, dia chi, chuc vu, ten va chuc vu nguoi di cung
+// linhVuc: nganh hang bat buoc de bao cao theo nganh khong con nhom "chua ghi". Nhan su noi bo Capella duoc mien.
+// Noi goi khong truyen linhVuc (undefined) thi khong xet.
 export function thieuThongTinMoi(g: {
   sdt: string | null | undefined;
   diaChi: string | null | undefined;
   chucVu: string | null | undefined;
   soNguoiMoi: number;
   khachDiCung: string | null | undefined;
+  linhVuc?: string | null;
+  congTy?: string | null;
 }): string | null {
   if (!g.sdt?.trim()) return "Thiếu số điện thoại của khách";
   if (!g.diaChi?.trim()) return "Thiếu địa chỉ của khách";
   if (!g.chucVu?.trim()) return "Thiếu chức vụ của khách";
+  if (g.linhVuc !== undefined && !g.linhVuc?.trim() && !boDau(g.congTy || "").includes("capella")) return "Thiếu ngành hàng của khách";
   const ds = docDiCung(g.khachDiCung);
   for (let i = 0; i < g.soNguoiMoi - 1; i++) {
     if (!ds[i]?.hoTen?.trim() || !ds[i]?.chucVu?.trim()) return `Thiếu tên hoặc chức vụ khách thứ ${i + 2}`;

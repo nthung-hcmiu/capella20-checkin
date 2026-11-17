@@ -9,11 +9,13 @@ import {
 } from "@/lib/khach";
 
 // O chon tu danh sach co dinh; gia tri cu ngoai danh sach van giu duoc
-function OChon({ ten, nhan, ds, gt, batBuoc }: { ten: string; nhan: string; ds: string[]; gt?: string | null; batBuoc?: boolean }) {
+function OChon({ ten, nhan, ds, gt, batBuoc, sao }: { ten: string; nhan: string; ds: string[]; gt?: string | null; batBuoc?: boolean; sao?: boolean }) {
   const tuyChon = gt && !ds.includes(gt) ? [gt, ...ds] : ds;
   return (
     <div>
-      <label className="label">{nhan}</label>
+      <label className="label">
+        {nhan} {sao && <span className="text-wine">*</span>}
+      </label>
       <select name={ten} className="input" defaultValue={gt || ""} required={batBuoc}>
         <option value="">Chọn</option>
         {tuyChon.map((x) => (
@@ -64,7 +66,7 @@ export function OThongTin({
       </div>
       {o("maCorp", "COR0001234")}
       {o("doanhThuDuKien", "95.000.000 đ")}
-      <OChon ten="linhVuc" nhan={NHAN_TRUONG.linhVuc} ds={LINH_VUC} gt={them?.linhVuc} />
+      <OChon ten="linhVuc" nhan={NHAN_TRUONG.linhVuc} ds={LINH_VUC} gt={them?.linhVuc} sao={!mienBatBuoc} />
       <OChon ten="nguonKhach" nhan={NHAN_TRUONG.nguonKhach} ds={PHAN_LOAI_KHACH} gt={them?.nguonKhach} />
     </>
   );

@@ -47,6 +47,7 @@ const HUONG_DAN: VaiTro[] = [
     ],
     luuY: [
       "Cách gọi thống nhất trong báo cáo: mỗi khách một thiệp, kể cả khách đi kèm, nên số thiệp là số người được mời. Số công ty đếm riêng, một công ty có thể có nhiều thiệp. Thiệp giấy bằng số thiệp trừ sales và marketing nội bộ Capella.",
+      "Ngành hàng: bắt buộc chọn khi thêm khách (trừ nhân sự nội bộ Capella). Xếp theo ngành sản phẩm cuối của công ty; Hàng Tiêu Dùng chỉ gồm hàng phi thực phẩm; Sản Xuất/Công Nghiệp chỉ dành cho công nghiệp B2B. Rà lại hàng loạt: Xuất CSV > sửa cột Ngành hàng > Nhập danh sách > Cập nhật ngành hàng từ file.",
       "Tạo tài khoản sales: Tài khoản > Tạo nhiều tài khoản > dán danh sách họ tên > chọn venue. Tên đăng nhập theo công thức chữ cái đầu họ và tên đệm + tên chính (Phạm Lê Minh Thư thành plmthu), mật khẩu tạm ngẫu nhiên chỉ hiện một lần.",
       "Giao venue cho BTC: Tài khoản > bấm nút Duyệt cạnh tên tài khoản BTC > tick các venue người đó được duyệt và sửa khách > Lưu phạm vi. Người đó chỉ thấy danh sách, hàng Chờ duyệt và số liệu của các venue đã tick (tick thêm ô xem mọi venue nếu vẫn cho xem hết). Khách họ tự phụ trách ở venue khác vẫn nằm trong Cổng Sales của họ.",
       "Phân loại khách VIP (chỉ Quản trị): Danh sách khách > bấm vào khách > Xếp vào VIP hoặc Bỏ VIP. Nhiều khách một lúc: tick chọn rồi chọn Xếp vào khách VIP ở thanh thao tác. Bộ lọc VIP ở đầu danh sách để xem riêng khách VIP.",
@@ -64,7 +65,7 @@ const HUONG_DAN: VaiTro[] = [
       {
         tieuDe: "Lập khách",
         buoc: [
-          ["Thêm khách", "Khách của tôi > Thêm khách. Bắt buộc tên, SĐT, địa chỉ và chức vụ; mời 2 người thì điền cả danh xưng, tên và chức vụ khách thứ 2 (mỗi người nhận một thiệp riêng). Chọn lĩnh vực, phân loại khách (Khách cũ, Khách tiềm năng hoặc Đối tác), ghi doanh thu dự kiến. Khách mới lưu ở trạng thái Nháp."],
+          ["Thêm khách", "Khách của tôi > Thêm khách. Bắt buộc tên, SĐT, địa chỉ và chức vụ; mời 2 người thì điền cả danh xưng, tên và chức vụ khách thứ 2 (mỗi người nhận một thiệp riêng). Chọn ngành hàng (bắt buộc), phân loại khách (Khách cũ, Khách tiềm năng hoặc Đối tác), ghi doanh thu dự kiến. Khách mới lưu ở trạng thái Nháp."],
           ["Venue", "Tài khoản gắn với venue nào thì chỉ thêm và nhập khách cho venue đó."],
           ["Nhãn năm trước", "Cạnh tên khách có nhãn cho biết năm trước khách được mời chưa, có đến không. Bấm vào khách để xem chi tiết."],
           ["Cùng công ty", "Dòng \"Cùng công ty\" cho biết công ty đó đã có bao nhiêu khách khác được mời. Chữ đỏ là có sales khác cùng mời, kèm tên sales đó. Khách trùng SĐT hoặc trùng tên và công ty thì app ghi rõ trùng với khách nào, của sales nào, hai bên liên hệ nhau để thống nhất ai mời."],

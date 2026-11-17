@@ -45,7 +45,7 @@ export default async function DuyetPage() {
         const c = choBtc(boCty.timKhac(g), g.salesOwner, g.soNguoiMoi);
         return { congTyKhac: moTaChoBtc(c), nhieuSales: !!c?.nhieuSales };
       })(),
-      thieu: thieuThongTinMoi({ sdt: g.sdt, diaChi: g.diaChi, chucVu: g.chucVu, soNguoiMoi: g.soNguoiMoi, khachDiCung: g.khachDiCung }),
+      thieu: thieuThongTinMoi({ sdt: g.sdt, diaChi: g.diaChi, chucVu: g.chucVu, soNguoiMoi: g.soNguoiMoi, khachDiCung: g.khachDiCung, linhVuc: g.linhVuc, congTy: g.congTy }),
       salesOwner: g.salesOwner,
       canhBao,
       doanhThuDuKien: hienTien(g.doanhThuDuKien) || null,

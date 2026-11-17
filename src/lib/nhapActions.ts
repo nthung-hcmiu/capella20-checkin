@@ -231,10 +231,10 @@ export async function nhapDanhSach(
     // Khach thu 2: file chi co mot cap cot ten / chuc vu
     const khachDiCung =
       soNguoi >= 2 ? ghiDiCung([{ danhXung: String(r.diCungDanhXung || "").trim(), hoTen: String(r.diCungTen || "").trim(), chucVu: String(r.diCungChucVu || "").trim() }]) : null;
-    const thieu = thieuThongTinMoi({ sdt, diaChi: them.diaChi, chucVu: them.chucVu, soNguoiMoi: soNguoi, khachDiCung });
+    const thieu = thieuThongTinMoi({ sdt, diaChi: them.diaChi, chucVu: them.chucVu, soNguoiMoi: soNguoi, khachDiCung, linhVuc: them.linhVuc ?? null, congTy: them.congTy });
     if (thieu) canhBao.push(`${thieu}, bổ sung trên app trước khi gửi duyệt`);
     if (soNguoi > 2) canhBao.push("File chỉ nhập được khách thứ 2, người thứ 3 trở đi bổ sung trên app");
-    if (them.linhVuc && !LINH_VUC.includes(them.linhVuc)) canhBao.push(`Lĩnh vực "${them.linhVuc}" ngoài danh sách`);
+    if (them.linhVuc && !LINH_VUC.includes(them.linhVuc)) canhBao.push(`Ngành hàng "${them.linhVuc}" ngoài danh mục`);
     if (them.nguonKhach && !PHAN_LOAI_KHACH.includes(them.nguonKhach)) canhBao.push(`Phân loại khách "${them.nguonKhach}" không phải Khách cũ / Khách tiềm năng / Đối tác`);
 
     // Canh bao cho BTC. Khach trung luon vao Cho duyet; con lai theo lua chon nhap.

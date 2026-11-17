@@ -24,7 +24,7 @@ const TRUONG: { key: Truong; nhan: string; batBuoc?: boolean; phu?: boolean; don
   { key: "chucVu", nhan: "Chức vụ", phu: true, dongNghia: ["chuc vu", "chuc danh", "position", "title"] },
   { key: "congTy", nhan: "Company Name", phu: true, dongNghia: ["company name", "ten cong ty", "cong ty", "company", "doanh nghiep"] },
   { key: "maCorp", nhan: "Mã CORP Netsuite", phu: true, dongNghia: ["ma corp netsuite", "ma corp", "ma netsuite", "ma khach hang"] },
-  { key: "linhVuc", nhan: "Lĩnh vực", phu: true, dongNghia: ["linh vuc", "nganh nghe", "nganh"] },
+  { key: "linhVuc", nhan: "Lĩnh vực", phu: true, dongNghia: ["linh vuc", "nganh hang", "nganh nghe", "nganh"] },
   { key: "nguonKhach", nhan: "Phân loại khách", phu: true, dongNghia: ["phan loai khach", "nguon khach"] },
   { key: "doanhThuDuKien", nhan: "Doanh thu dự kiến", phu: true, dongNghia: ["doanh thu du kien", "doanh thu"] },
   { key: "thiepGiay", nhan: "Round 2: Đã gửi thiệp giấy", phu: true, dongNghia: ["round 2 da gui thiep giay", "da gui thiep giay", "thiep giay"] },
