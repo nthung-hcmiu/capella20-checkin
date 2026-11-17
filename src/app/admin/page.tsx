@@ -172,8 +172,8 @@ export default async function Dashboard({ searchParams }: { searchParams: { khon
       <div className="card overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-2 px-6 py-4">
           <div>
-            <h2 className="font-display text-lg text-ink">Đối soát đăng ký và thực tế</h2>
-            <p className="text-xs text-ink-muted">Chỉ tính thiệp đã phát hành. Tỷ lệ tham dự = người thực tế đến / người đã đăng ký.</p>
+            <h2 className="font-display text-lg text-ink">Đối soát xác nhận và thực tế</h2>
+            <p className="text-xs text-ink-muted">Chỉ tính thiệp đã phát hành. Tỷ lệ tham dự = người thực tế đến / người đã xác nhận tham dự.</p>
           </div>
           <div className="flex gap-2 text-xs">
             <span className="chip bg-sage/10 text-sage">Check in bằng QR: {soQR}</span>
@@ -347,7 +347,7 @@ function BangDoiSoat({ tieuDe, dong }: { tieuDe: string; dong: [string, { khach:
           <tr className="text-left text-xs uppercase tracking-wider text-ink-muted">
             <th className="px-5 py-3 font-medium">{tieuDe}</th>
             <th className="px-3 py-3 text-right font-medium">Thiệp</th>
-            <th className="px-3 py-3 text-right font-medium">Đăng ký</th>
+            <th className="px-3 py-3 text-right font-medium">Xác nhận</th>
             <th className="px-3 py-3 text-right font-medium">Thực tế</th>
             <th className="px-5 py-3 text-right font-medium">Tỷ lệ</th>
           </tr>
