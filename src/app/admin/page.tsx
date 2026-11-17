@@ -32,10 +32,11 @@ export default async function Dashboard({ searchParams }: { searchParams: { khon
     ? { ...CHISO_CHUNG, tongKhachMucTieu: tongQuotaXem, tongCongTyMucTieu: venues.reduce((t, v) => t + v.mucTieuCongTy, 0), nguongXacNhan: Math.round(tongQuotaXem / (1 - CHISO_CHUNG.tyLeVang)) }
     : CHISO_CHUNG;
 
+  // Moi khach mot thiep: moi con so deu dem theo thiep (so nguoi duoc moi, ke ca khach di kem)
   const demTrangThai: Record<string, number> = {};
-  for (const g of guests) demTrangThai[g.trangThai] = (demTrangThai[g.trangThai] || 0) + 1;
+  for (const g of guests) demTrangThai[g.trangThai] = (demTrangThai[g.trangThai] || 0) + g.soNguoiMoi;
+  const tongThiep = guests.reduce((s, g) => s + g.soNguoiMoi, 0);
 
-  const daPhatHanh = guests.filter((g) => PIPELINE.includes(g.trangThai)).length;
   // Nguoi da co ve con hieu luc (khong tinh khong tham du, vang mat)
   const nguoiPhatHanh = guests
     .filter((g) => PIPELINE.includes(g.trangThai) && CHIEM_QUOTA.includes(g.trangThai))
@@ -57,7 +58,7 @@ export default async function Dashboard({ searchParams }: { searchParams: { khon
       if (!PIPELINE.includes(g.trangThai)) continue;
       const k = khoa(g) || "Chưa phân nhóm";
       const r = m.get(k) || { khach: 0, dangKy: 0, den: 0, thiepDen: 0 };
-      r.khach++;
+      r.khach += g.soNguoiMoi;
       if ([TRANG_THAI.THAM_DU, TRANG_THAI.DA_CHECKIN].includes(g.trangThai as any)) r.dangKy += soNguoi(g);
       if (g.trangThai === TRANG_THAI.DA_CHECKIN) {
         r.den += g.soNguoiDen ?? soNguoi(g);
@@ -86,30 +87,32 @@ export default async function Dashboard({ searchParams }: { searchParams: { khon
       )}
       <div>
         <h1 className="font-display text-2xl text-ink">Bảng điều khiển</h1>
-        <p className="mt-1 text-sm text-ink-muted">Đếm người, không đếm thiệp. Số liệu cập nhật theo thời gian thực.</p>
+        <p className="mt-1 text-sm text-ink-muted">
+          Mỗi khách một thiệp, kể cả khách đi kèm, nên số thiệp là số người được mời. Số công ty đếm riêng: một công ty có thể có nhiều thiệp.
+        </p>
       </div>
 
       {/* KPI chinh */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Kpi
-          nhan="Người đã xác nhận"
+          nhan="Thiệp đã xác nhận"
           so={nguoiXacNhan}
-          phu={`ngưỡng ${CHISO.nguongXacNhan} người`}
+          phu={`ngưỡng ${CHISO.nguongXacNhan} thiệp`}
           tiLe={tiLeXacNhan}
           noiBat
         />
         <Kpi
-          nhan="Khách đã phát hành vé"
+          nhan="Thiệp đã phát hành"
           so={nguoiPhatHanh}
-          phu={`mục tiêu ${CHISO.tongKhachMucTieu} khách · ${daPhatHanh} thiệp`}
+          phu={`mục tiêu ${CHISO.tongKhachMucTieu} thiệp`}
           tiLe={Math.min(100, Math.round((nguoiPhatHanh / CHISO.tongKhachMucTieu) * 100))}
         />
-        <Kpi nhan="Người đã check in" so={nguoiCheckin} phu={`${daCheckin.length} thiệp đã đến`} />
-        <Kpi nhan="Chờ BTC duyệt" so={soCho} phu="sales đã gửi, BTC chưa duyệt" canhBao={soCho > 0} />
+        <Kpi nhan="Thiệp đã check in" so={nguoiCheckin} phu={`trên ${nguoiXacNhan} thiệp đã xác nhận`} />
+        <Kpi nhan="Thiệp chờ BTC duyệt" so={soCho} phu="sales đã gửi, BTC chưa duyệt" canhBao={soCho > 0} />
         <Kpi
           nhan="Công ty được mời"
           so={tongVenue.soCongTy}
-          phu={`mục tiêu ${CHISO.tongCongTyMucTieu} công ty check in`}
+          phu={`mục tiêu ${CHISO.tongCongTyMucTieu} công ty`}
           tiLe={Math.min(100, Math.round((tongVenue.soCongTy / CHISO.tongCongTyMucTieu) * 100))}
         />
         <Kpi
@@ -191,7 +194,7 @@ export default async function Dashboard({ searchParams }: { searchParams: { khon
       <div className="card p-6">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-lg text-ink">Phân bổ theo trạng thái</h2>
-          <span className="text-xs text-ink-muted">{guests.length} khách trong hệ thống</span>
+          <span className="text-xs text-ink-muted">{tongThiep} thiệp trong hệ thống</span>
         </div>
         <div className="mt-4 space-y-2.5">
           {Object.keys(NHAN_TRANG_THAI)
@@ -199,7 +202,7 @@ export default async function Dashboard({ searchParams }: { searchParams: { khon
             .sort((a, b) => demTrangThai[b] - demTrangThai[a])
             .map((k) => {
               const n = demTrangThai[k];
-              const pct = guests.length ? Math.round((n / guests.length) * 100) : 0;
+              const pct = tongThiep ? Math.round((n / tongThiep) * 100) : 0;
               const mau = MAU_TRANG_THAI[k];
               return (
                 <div key={k} className="flex items-center gap-3">
@@ -220,11 +223,10 @@ export default async function Dashboard({ searchParams }: { searchParams: { khon
           <div>
             <h2 className="font-display text-lg text-ink">Theo venue</h2>
             <p className="text-xs text-ink-muted">
-              Thực tế so với KPI. Doanh thu dự kiến cộng theo công ty (mỗi công ty tính một lần), không tính khách đã hủy.
+              Thực tế so với KPI. Doanh thu dự kiến cộng theo công ty (mỗi công ty tính một lần), không tính thiệp đã hủy.
             </p>
             <p className="mt-0.5 text-xs text-ink-muted">
-              Thiệp giấy: mỗi khách một thiệp, kể cả khách đi kèm, không tính sales và marketing nội bộ Capella. Thiệp online: mỗi người một thiệp,
-              bằng cột Số khách.
+              Số thiệp: mỗi khách một thiệp, kể cả khách đi kèm. Thiệp giấy: bằng số thiệp trừ sales và marketing nội bộ Capella.
             </p>
           </div>
           <Link href="/admin/quota" className="text-xs font-medium text-brand hover:underline">
@@ -239,7 +241,7 @@ export default async function Dashboard({ searchParams }: { searchParams: { khon
                 <th className="px-6 py-3 font-medium">Venue</th>
                 <th className="px-3 py-3 text-right font-medium">Doanh thu dự kiến</th>
                 <th className="px-3 py-3 text-right font-medium">Số công ty</th>
-                <th className="px-3 py-3 text-right font-medium">Số khách</th>
+                <th className="px-3 py-3 text-right font-medium">Số thiệp</th>
                 <th className="px-3 py-3 text-right font-medium">Xác nhận</th>
                 <th className="px-3 py-3 text-right font-medium">Check in</th>
                 <th className="px-6 py-3 text-right font-medium">Thiệp giấy</th>

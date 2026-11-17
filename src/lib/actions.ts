@@ -300,7 +300,7 @@ export async function suaKhach(
   if (laSales && cu.trangThai === TRANG_THAI.DA_HUY) return { ok: false, thongBao: "Thiệp đã hủy, liên hệ BTC nếu cần mời lại." };
   // Ve da duyet: sales khong tu sua. Quan ly tra ve nhap, sales sua roi gui duyet lai.
   if (laSales && !CHUA_PHAT_HANH.includes(cu.trangThai)) {
-    return { ok: false, thongBao: "Vé đã được duyệt nên không sửa được. Báo quản lý trả vé về nháp, sửa xong gửi duyệt lại." };
+    return { ok: false, thongBao: "Thiệp đã được duyệt nên không sửa được. Báo quản lý trả thiệp về nháp, sửa xong gửi duyệt lại." };
   }
   const hoTen = input.hoTen?.trim().replace(/\s+/g, " ");
   if (!hoTen) return { ok: false, thongBao: "Thiếu họ tên." };
@@ -328,7 +328,7 @@ export async function suaKhach(
     if (u.phamVi && !u.phamVi.includes(input.venueId) && !laSales) {
       return { ok: false, thongBao: "Venue mới nằm ngoài phạm vi bạn được giao." };
     }
-    if (!chuaPhatHanh) return { ok: false, thongBao: "Vé đã phát hành, không đổi venue được. Liên hệ BTC." };
+    if (!chuaPhatHanh) return { ok: false, thongBao: "Thiệp đã phát hành, không đổi venue được. Liên hệ BTC." };
     if (!(await prisma.venue.findUnique({ where: { id: input.venueId } }))) return { ok: false, thongBao: "Venue không hợp lệ." };
     try {
       soThuTu = await capSoThuTu(input.venueId);
@@ -716,7 +716,7 @@ export async function thaoTacHangLoat(ids: string[], loai: LoaiHangLoat, giaTri?
         where: { ...pham, trangThai: { in: CHUA_PHAT_HANH } },
         data: { trangThai: TRANG_THAI.DA_PHAT_HANH, lyDoChoDuyet: null, phatHanhLuc: new Date() },
       })).count;
-      viec = "duyệt, phát hành vé";
+      viec = "duyệt, phát hành thiệp";
       break;
     case "DA_GUI_ONLINE":
       n = (await prisma.guest.updateMany({ where: { ...pham, trangThai: TRANG_THAI.DA_PHAT_HANH }, data: { trangThai: TRANG_THAI.DA_MOI } })).count;

@@ -14,17 +14,17 @@ const HUONG_DAN: VaiTro[] = [
   {
     ma: "ADMIN",
     ten: "BTC (MKT Manager)",
-    moTa: "Giữ danh sách: nhập và duyệt khách, phát hành vé, theo dõi KPI venue và số liệu.",
+    moTa: "Giữ danh sách: nhập và duyệt khách, phát hành thiệp, theo dõi KPI venue và số liệu.",
     muc: [
       {
         tieuDe: "Trước sự kiện",
         buoc: [
-          ["Nhập danh sách", "Nhập danh sách > chọn file Excel > chọn trạng thái sau khi nhập (Chờ duyệt hoặc Đã phát hành vé) > Tiếp tục: kiểm tra file > Hoàn tất: lưu khách vào app."],
+          ["Nhập danh sách", "Nhập danh sách > chọn file Excel > chọn trạng thái sau khi nhập (Chờ duyệt hoặc Đã phát hành thiệp) > Tiếp tục: kiểm tra file > Hoàn tất: lưu khách vào app."],
           ["Duyệt", "Chờ duyệt: khách sales đã gửi. Xem cảnh báo (trùng SĐT, trùng tên cùng công ty, VIP, venue hết quota) rồi Duyệt hoặc Từ chối. Khách không có cảnh báo duyệt một lần bằng nút Duyệt tất cả."],
-          ["Trả về nháp", "Vé đã phát hành mà cần cho sales sửa số người mời, VIP hoặc venue: Danh sách khách > bấm vào khách > Trả về nháp (hoặc tick nhiều khách rồi chọn Trả về nháp để sales sửa). Sales sửa xong gửi duyệt, BTC duyệt lại. Số thứ tự và mã QR giữ nguyên. Trong lúc chờ duyệt lại, QR vẫn quét được nhưng lễ tân sẽ thấy cảnh báo thiệp chưa phát hành, nên duyệt lại trước ngày sự kiện."],
+          ["Trả về nháp", "Thiệp đã phát hành mà cần cho sales sửa số người mời, VIP hoặc venue: Danh sách khách > bấm vào khách > Trả về nháp (hoặc tick nhiều khách rồi chọn Trả về nháp để sales sửa). Sales sửa xong gửi duyệt, BTC duyệt lại. Số thứ tự và mã QR giữ nguyên. Trong lúc chờ duyệt lại, QR vẫn quét được nhưng lễ tân sẽ thấy cảnh báo thiệp chưa phát hành, nên duyệt lại trước ngày sự kiện."],
           ["Xem khách", "Danh sách khách: bấm vào dòng nào là mở toàn bộ thông tin và các nút xử lý của khách đó."],
           ["Cùng công ty", "Danh sách khách > bộ lọc Công ty: xem công ty nào có nhiều sales cùng mời, hoặc được mời trên 2 người. Hàng Chờ duyệt cũng ghi rõ các khách cùng công ty và sales của từng người."],
-          ["Theo dõi theo sales", "Quota venue > Theo dõi theo sales: mỗi sales đã mời bao nhiêu công ty, bao nhiêu khách, bao nhiêu thiệp đang nháp, chờ duyệt, đã có vé, đã xác nhận, đã check in."],
+          ["Theo dõi theo sales", "Quota venue > Theo dõi theo sales: mỗi sales đã mời bao nhiêu công ty, bao nhiêu thiệp; trong đó bao nhiêu thiệp đang nháp, chờ duyệt, đã phát hành, đã xác nhận, đã check in."],
           ["Khách năm trước", "Dữ liệu > Danh sách khách năm trước: tải file check in từng năm (2024, 2025...). File nhiều sheet thì app gộp và bỏ trùng, sheet khác cấu trúc được bỏ chọn sẵn. Sau đó mỗi khách có nhãn: đã đến, mời không đến, cùng công ty, hoặc khách mới. Bảng điều khiển so sánh từng năm (2024, 2025...) trong cùng một bảng: được mời, đã đến, năm nay mời lại, đã đến mà năm nay chưa mời."],
           ["In QR thiệp giấy", "Danh sách khách > In QR thiệp giấy. Lọc theo venue, sales, hoặc chỉ thiệp giấy chưa gửi."],
           ["Theo dõi", "Bảng điều khiển: doanh thu dự kiến, số công ty, số khách theo venue so với KPI. Quota và KPI venue: số thiệp còn lại, mục tiêu từng venue."],
@@ -34,7 +34,7 @@ const HUONG_DAN: VaiTro[] = [
         tieuDe: "Ngày sự kiện",
         buoc: [
           ["Đánh thức hệ thống", "15 phút trước giờ đón khách, mở trang /api/health một lần."],
-          ["Theo dõi cửa", "Bảng điều khiển cập nhật số người check in theo thời gian thực, tách QR và thủ công."],
+          ["Theo dõi cửa", "Bảng điều khiển cập nhật số thiệp đã check in theo thời gian thực, tách QR và thủ công."],
         ],
       },
       {
@@ -46,6 +46,7 @@ const HUONG_DAN: VaiTro[] = [
       },
     ],
     luuY: [
+      "Cách gọi thống nhất trong báo cáo: mỗi khách một thiệp, kể cả khách đi kèm, nên số thiệp là số người được mời. Số công ty đếm riêng, một công ty có thể có nhiều thiệp. Thiệp giấy bằng số thiệp trừ sales và marketing nội bộ Capella.",
       "Tạo tài khoản sales: Tài khoản > Tạo nhiều tài khoản > dán danh sách họ tên > chọn venue. Tên đăng nhập theo công thức chữ cái đầu họ và tên đệm + tên chính (Phạm Lê Minh Thư thành plmthu), mật khẩu tạm ngẫu nhiên chỉ hiện một lần.",
       "Giao venue cho BTC: Tài khoản > bấm nút Duyệt cạnh tên tài khoản BTC > tick các venue người đó được duyệt và sửa khách > Lưu phạm vi. Người đó chỉ thấy danh sách, hàng Chờ duyệt và số liệu của các venue đã tick (tick thêm ô xem mọi venue nếu vẫn cho xem hết). Khách họ tự phụ trách ở venue khác vẫn nằm trong Cổng Sales của họ.",
       "Phân loại khách VIP (chỉ Quản trị): Danh sách khách > bấm vào khách > Xếp vào VIP hoặc Bỏ VIP. Nhiều khách một lúc: tick chọn rồi chọn Xếp vào khách VIP ở thanh thao tác. Bộ lọc VIP ở đầu danh sách để xem riêng khách VIP.",
@@ -69,13 +70,13 @@ const HUONG_DAN: VaiTro[] = [
           ["Cùng công ty", "Dòng \"Cùng công ty\" cho biết công ty đó đã có bao nhiêu khách khác được mời. Chữ đỏ là có sales khác cùng mời, kèm tên sales đó. Khách trùng SĐT hoặc trùng tên và công ty thì app ghi rõ trùng với khách nào, của sales nào, hai bên liên hệ nhau để thống nhất ai mời."],
           ["Lọc khách trùng", "Khách trùng người (cùng SĐT, hoặc cùng tên và công ty) và khách có công ty đang được sales khác cùng mời đều được tô nền đỏ, gắn nhãn Trùng hoặc Trùng công ty. Bấm nút \"Trùng với sales khác\" cạnh các nhóm trạng thái để chỉ xem những khách này, bấm lần nữa để bỏ lọc."],
           ["Nhập từ Excel", "Nhập danh sách > Tải file mẫu > điền > chọn file > Tiếp tục: kiểm tra file > Hoàn tất: lưu khách vào app. Mọi khách trong file do bạn phụ trách."],
-          ["Thiệp khách đi kèm", "Vé mời 2 người thì mỗi người một thiệp riêng. Sau khi vé được duyệt, mở khách ra sẽ thấy thêm dòng Khách thứ 2 với nút Tải thiệp. Thiệp này ghi đúng tên khách đi kèm và có mã QR riêng, người đó đến trước hay sau khách chính đều check in được."],
+          ["Thiệp khách đi kèm", "Khách mời 2 người thì mỗi người một thiệp riêng. Sau khi được duyệt, mở khách ra sẽ thấy thêm dòng Khách thứ 2 với nút Tải thiệp. Thiệp này ghi đúng tên khách đi kèm và có mã QR riêng, người đó đến trước hay sau khách chính đều check in được."],
           ["Gửi duyệt", "Kiểm tra lại rồi bấm Gửi duyệt trên từng khách, hoặc Gửi duyệt tất cả. Nháp sai thì bấm Xóa nháp."],
-          ["Chờ BTC", "BTC duyệt xong khách chuyển sang Đã phát hành vé, lúc đó mới gửi thiệp được."],
+          ["Chờ BTC", "BTC duyệt xong khách chuyển sang Đã phát hành thiệp, lúc đó mới gửi thiệp được."],
         ],
       },
       {
-        tieuDe: "Mỗi khách đã phát hành vé đi qua 3 bước",
+        tieuDe: "Mỗi khách đã phát hành thiệp đi qua 3 bước",
         buoc: [
           ["Gửi thiệp online", "Bấm Tải thiệp để lấy file hình (có sẵn mã QR check in) > tự gửi cho khách qua Zalo hoặc email > bấm Đã gửi."],
           ["Gửi thiệp giấy", "Gửi thiệp giấy cho khách xong thì bấm Đã gửi thiệp giấy."],
@@ -85,8 +86,8 @@ const HUONG_DAN: VaiTro[] = [
       {
         tieuDe: "Theo dõi và chỉnh sửa",
         buoc: [
-          ["Tổng quan", "Số khách, công ty, doanh thu dự kiến, người xác nhận, check in của riêng bạn, kèm danh sách việc cần làm."],
-          ["Sửa thông tin", "Khách đang Nháp hoặc Chờ duyệt: mở khách > Sửa thông tin. Vé đã duyệt thì không tự sửa được: báo quản lý trả vé về nháp, sửa xong gửi duyệt lại. Số thứ tự và mã QR vẫn giữ nguyên."],
+          ["Tổng quan", "Số thiệp, số công ty, doanh thu dự kiến, thiệp xác nhận, thiệp check in của riêng bạn, kèm danh sách việc cần làm."],
+          ["Sửa thông tin", "Khách đang Nháp hoặc Chờ duyệt: mở khách > Sửa thông tin. Thiệp đã duyệt thì không tự sửa được: báo quản lý trả thiệp về nháp, sửa xong gửi duyệt lại. Số thứ tự và mã QR vẫn giữ nguyên."],
           ["Trên máy tính", "Khách của tôi hiện dạng bảng, bấm vào dòng để xem chi tiết và thao tác."],
         ],
       },
@@ -94,7 +95,7 @@ const HUONG_DAN: VaiTro[] = [
     luuY: [
       "Khách không tự xác nhận. Sales hỏi khách rồi xác nhận thay trên app.",
       "Khách hỏi cách vào cửa: đưa mã QR ở cuối file thiệp, hoặc đọc số thứ tự thiệp.",
-      "File thiệp có mã QR là vé vào cửa. Nhắc khách không đăng nguyên file lên mạng; muốn đăng thì cắt bỏ phần mã QR ở dưới.",
+      "File thiệp có mã QR dùng để vào cửa. Nhắc khách không đăng nguyên file lên mạng; muốn đăng thì cắt bỏ phần mã QR ở dưới.",
       "Lần đầu đăng nhập, đổi mật khẩu riêng. Quên mật khẩu thì nhờ Quản trị đặt lại.",
     ],
   },
@@ -110,7 +111,7 @@ const HUONG_DAN: VaiTro[] = [
           ["Quét QR", "Tab Quét QR > Bật camera > hướng vào QR trên điện thoại hoặc thiệp giấy. Dùng được trên iPhone (Safari, Chrome) và Android. Mở app bằng trình duyệt, không mở link trong Zalo hay Facebook."],
           ["Nhập số", "Tab Nhập số > gõ số thứ tự trên thiệp > Check in. Dùng khi QR mờ, màn hình khách quá tối hoặc camera chưa được cho phép."],
           ["Tìm tên", "Tab Tìm tên / SĐT > gõ tên khách, tên công ty hoặc SĐT > chọn khách."],
-          ["Số người thực tế", "Trên thẻ kết quả, bấm + hoặc − nếu khách đi nhiều hoặc ít người hơn đăng ký."],
+          ["Số người thực tế", "Trên thẻ kết quả, bấm + hoặc − nếu khách đi nhiều hoặc ít người hơn số đã xác nhận."],
         ],
       },
       {

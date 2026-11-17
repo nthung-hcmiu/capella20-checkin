@@ -14,7 +14,7 @@ const TRUONG: { key: Truong; nhan: string; batBuoc?: boolean; phu?: boolean; don
   { key: "sdt", nhan: "Số điện thoại", dongNghia: ["sdt", "so dien thoai", "dien thoai", "so dt", "dt", "phone", "mobile", "di dong"] },
   { key: "diaChi", nhan: "Địa chỉ", dongNghia: ["dia chi", "dia chi gui thiep", "dia chi cong ty", "address"] },
   { key: "venue", nhan: "Đơn vị (venue)", dongNghia: ["don vi", "venue", "chi nhanh", "nha hang", "dia diem", "co so", "sanh", "trung tam"] },
-  { key: "soNguoiMoi", nhan: "Số lượng người tham dự", dongNghia: ["so luong nguoi tham du", "so nguoi moi", "so nguoi duoc moi", "so nguoi tham du", "so nguoi", "so khach", "so luong", "sl"] },
+  { key: "soNguoiMoi", nhan: "Số lượng người tham dự", dongNghia: ["so luong nguoi tham du", "so thiep", "so nguoi moi", "so nguoi duoc moi", "so nguoi tham du", "so nguoi", "so khach", "so luong", "sl"] },
   { key: "sales", nhan: "Người phụ trách tiếp khách", dongNghia: ["ho va ten nguoi phu trach tiep khach", "nguoi phu trach tiep khach", "sales phu trach", "nguoi phu trach", "sales", "sale", "nhan vien phu trach", "phu trach", "nhan vien", "nv"] },
   { key: "diCungDanhXung", nhan: "Danh xưng khách thứ 2", dongNghia: ["danh xung khach thu 2", "danh xung khach di cung", "danh xung khach di kem", "danh xung nguoi di cung"] },
   { key: "diCungTen", nhan: "Tên khách thứ 2", dongNghia: ["ten khach thu 2", "khach thu 2", "ten nguoi di cung", "nguoi di cung", "khach di cung", "ten khach di kem", "khach di kem"] },
@@ -365,7 +365,7 @@ export function ImportManager({
                   <>
                     <option value="CHO_DUYET">Chờ duyệt</option>
                     <option value="NHAP">Nháp (sales bổ sung thông tin rồi gửi duyệt)</option>
-                    <option value="DA_PHAT_HANH">Đã phát hành vé (BTC đã duyệt file)</option>
+                    <option value="DA_PHAT_HANH">Đã phát hành thiệp (BTC đã duyệt file)</option>
                   </>
                 )}
               </select>
@@ -453,11 +453,11 @@ export function ImportManager({
               {daNhap.ok && daNhap.tongHop.nhap > 0 && (
                 <div className="mt-1">
                   Việc tiếp theo: mở danh sách khách, xem các khách đang ở trạng thái Nháp, bổ sung thông tin còn thiếu rồi bấm Gửi duyệt để BTC
-                  duyệt và phát hành vé.
+                  duyệt và phát hành thiệp.
                 </div>
               )}
               {daNhap.ok && daNhap.tongHop.nhap === 0 && daNhap.tongHop.choDuyet > 0 && (
-                <div className="mt-1">Khách đã vào hàng Chờ duyệt, BTC duyệt xong sẽ phát hành vé.</div>
+                <div className="mt-1">Khách đã vào hàng Chờ duyệt, BTC duyệt xong sẽ phát hành thiệp.</div>
               )}
               <div className="mt-3 flex flex-wrap gap-2">
                 <Link href={laSales ? (daNhap.tongHop.nhap > 0 ? "/sales?nhom=nhap" : "/sales") : "/admin/khach"} className="btn-brand">
@@ -506,7 +506,7 @@ export function ImportManager({
           )}
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             <O nhan="Hợp lệ" so={ketQua.tongHop.hopLe} />
-            {laSales ? <O nhan="Nháp" so={ketQua.tongHop.nhap} /> : <O nhan="Đã phát hành vé" so={ketQua.tongHop.phatHanh} />}
+            {laSales ? <O nhan="Nháp" so={ketQua.tongHop.nhap} /> : <O nhan="Đã phát hành thiệp" so={ketQua.tongHop.phatHanh} />}
             <O nhan="Chờ duyệt" so={ketQua.tongHop.choDuyet} />
             {ketQua.tongHop.namTruoc > 0 && <O nhan="Đã mời năm trước" so={ketQua.tongHop.namTruoc} />}
             {ketQua.tongHop.cungCongTy > 0 && <O nhan="Công ty đã có khách" so={ketQua.tongHop.cungCongTy} />}

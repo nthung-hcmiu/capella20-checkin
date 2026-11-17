@@ -251,7 +251,8 @@ function MayTinh({ guests, ds, venues, venuesSua, loc }: ViewProps) {
         <div>
           <h1 className="font-display text-2xl text-ink">Khách của tôi</h1>
           <p className="mt-1 text-sm text-ink-muted">
-            {ds.length.toLocaleString("vi-VN")} / {guests.length.toLocaleString("vi-VN")} khách. Bấm vào dòng để xem chi tiết và thao tác.
+            {ds.length.toLocaleString("vi-VN")} / {guests.length.toLocaleString("vi-VN")} dòng · {ds.reduce((t, g) => t + g.soNguoiMoi, 0).toLocaleString("vi-VN")} thiệp.
+            Bấm vào dòng để xem chi tiết và thao tác.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -426,7 +427,7 @@ function ChiTiet({ g }: { g: SalesGuest }) {
     [NHAN_TRUONG.linhVuc, g.them.linhVuc],
     [NHAN_TRUONG.nguonKhach, g.them.nguonKhach],
     ["Khách đi cùng", moTaDiCung(g.khachDiCung) || null],
-    ["Phát hành vé", gio(g.phatHanhLuc)],
+    ["Phát hành thiệp", gio(g.phatHanhLuc)],
     ["Xác nhận lúc", gio(g.xacNhanLuc)],
     ["Check in", g.checkinLuc ? `${gio(g.checkinLuc)}${g.soNguoiDen ? `, ${g.soNguoiDen} người` : ""}` : null],
     ["Năm trước", g.lichSu?.chiTiet ?? null],
@@ -537,7 +538,7 @@ function HanhDong({ g, venuesSua }: { g: SalesGuest; venuesSua: { id: string; te
     return (
       <div className="mt-3 border-t border-ivory-deep pt-3">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs text-ink-muted">Đã gửi, chờ BTC duyệt và phát hành vé.</span>
+          <span className="text-xs text-ink-muted">Đã gửi, chờ BTC duyệt và phát hành thiệp.</span>
           {nutSua}
         </div>
         {formSua}
@@ -620,7 +621,7 @@ function HanhDong({ g, venuesSua }: { g: SalesGuest; venuesSua: { id: string; te
       {/* 4. Ve da duyet: sales khong tu sua thong tin */}
       <div className="flex flex-wrap items-center gap-2">
         <span className="w-24 shrink-0 text-xs text-ink-muted">Thông tin</span>
-        <span className="text-xs text-ink-muted">Vé đã duyệt nên không sửa được. Cần đổi thông tin thì báo quản lý trả vé về nháp.</span>
+        <span className="text-xs text-ink-muted">Thiệp đã duyệt nên không sửa được. Cần đổi thông tin thì báo quản lý trả thiệp về nháp.</span>
       </div>
       {tb && <p className="text-xs text-sage">{tb}</p>}
     </div>

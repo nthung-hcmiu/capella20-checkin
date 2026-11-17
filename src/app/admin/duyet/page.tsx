@@ -68,7 +68,7 @@ export default async function DuyetPage() {
       <div>
         <h1 className="font-display text-2xl text-ink">Chờ duyệt</h1>
         <p className="mt-1 text-sm text-ink-muted">
-          Sales đã gửi duyệt, BTC duyệt để phát hành vé. {items.length} khách đang chờ, trong đó{" "}
+          Sales đã gửi duyệt, BTC duyệt để phát hành thiệp. {items.length} khách đang chờ, trong đó{" "}
           {items.filter((i) => i.canhBao.length > 0).length} khách có cảnh báo cần xem kỹ.
         </p>
       </div>

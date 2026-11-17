@@ -23,7 +23,7 @@ const MODULES = [
     ma: "B",
     ten: "Quản trị BTC",
     thietBi: "Máy tính",
-    mo: "Nhập danh sách, duyệt và phát hành vé, theo dõi KPI venue, in QR thiệp giấy, đối soát và báo cáo.",
+    mo: "Nhập danh sách, duyệt và phát hành thiệp, theo dõi KPI venue, in QR thiệp giấy, đối soát và báo cáo.",
     mau: "#6b2b36",
     vaiTro: ["ADMIN"],
   },
@@ -139,7 +139,7 @@ export default async function Home({ searchParams }: { searchParams: { khongQuye
             <h2 className="font-display text-lg text-ink">Vòng đời khách</h2>
             <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
               {[
-                "Nháp", "Chờ duyệt", "Đã phát hành vé", "Đã mời",
+                "Nháp", "Chờ duyệt", "Đã phát hành thiệp", "Đã mời",
                 "Tham dự / Không tham dự", "Đã check in / Vắng mặt",
               ].map((b, i, arr) => (
                 <span key={b} className="flex items-center gap-2">
@@ -149,7 +149,7 @@ export default async function Home({ searchParams }: { searchParams: { khongQuye
               ))}
             </div>
             <p className="mt-4 text-xs text-ink-muted">
-              Sales lưu nháp và bấm Gửi duyệt, BTC duyệt thì phát hành vé. Hủy được ở mọi bước trước sự kiện, mã thiệp mất hiệu lực.
+              Sales lưu nháp và bấm Gửi duyệt, BTC duyệt thì phát hành thiệp. Hủy được ở mọi bước trước sự kiện, mã thiệp mất hiệu lực.
               Quota (số khách) và mục tiêu venue lấy theo bảng KPI.
             </p>
           </div>

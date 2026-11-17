@@ -4,6 +4,7 @@ import { yeuCauTrang } from "@/lib/auth";
 import { CHUA_PHAT_HANH, MAU_TRANG_THAI, NHAN_TRANG_THAI, TRANG_THAI } from "@/lib/constants";
 import { dinhDangTien } from "@/lib/format";
 import { cong, rong, tongHopTheoVenue } from "@/lib/kpi";
+import { canThiepGiay } from "@/lib/congTy";
 
 export const dynamic = "force-dynamic";
 
@@ -19,8 +20,13 @@ export default async function SalesTongQuan() {
   const dongVenue = venues.map((v) => ({ v, r: soLieu.get(v.id) || rong() })).filter(({ r }) => r.soKhach > 0);
   const tong = dongVenue.reduce((t, { r }) => cong(t, r), rong());
 
-  const dem = (tt: string) => guests.filter((g) => g.trangThai === tt).length;
-  const chuaGiay = conHieuLuc.filter((g) => !CHUA_PHAT_HANH.includes(g.trangThai) && !g.daGuiThiepGiay && g.trangThai !== TRANG_THAI.DA_CHECKIN).length;
+  // Moi khach mot thiep, ke ca khach di kem: moi con so dem theo thiep
+  const soThiep = (ds: typeof guests) => ds.reduce((s, g) => s + g.soNguoiMoi, 0);
+  const dem = (tt: string) => soThiep(guests.filter((g) => g.trangThai === tt));
+  const chuaGiay = soThiep(
+    conHieuLuc.filter((g) => !CHUA_PHAT_HANH.includes(g.trangThai) && !g.daGuiThiepGiay && g.trangThai !== TRANG_THAI.DA_CHECKIN && canThiepGiay(g))
+  );
+  const tongThiep = soThiep(guests);
   const viec = [
     { nhan: "Nháp chưa gửi duyệt", so: dem(TRANG_THAI.NHAP), href: "/sales?nhom=nhap" },
     { nhan: "Đang chờ BTC duyệt", so: dem(TRANG_THAI.CHO_DUYET), href: "/sales?nhom=choDuyet" },
@@ -30,22 +36,24 @@ export default async function SalesTongQuan() {
   ];
 
   const demTrangThai: Record<string, number> = {};
-  for (const g of guests) demTrangThai[g.trangThai] = (demTrangThai[g.trangThai] || 0) + 1;
+  for (const g of guests) demTrangThai[g.trangThai] = (demTrangThai[g.trangThai] || 0) + g.soNguoiMoi;
   const tiLeXN = tong.soKhach ? Math.round((tong.xacNhan / tong.soKhach) * 100) : 0;
 
   return (
     <div className="space-y-5 lg:space-y-7">
       <div>
         <h1 className="font-display text-2xl text-ink">Tổng quan của tôi</h1>
-        <p className="mt-1 text-sm text-ink-muted">Số liệu các khách do {u.hoTen} phụ trách, cập nhật theo thời gian thực.</p>
+        <p className="mt-1 text-sm text-ink-muted">
+          Số liệu các khách do {u.hoTen} phụ trách. Mỗi khách một thiệp, kể cả khách đi kèm; số công ty đếm riêng.
+        </p>
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5 lg:gap-4">
-        <The nhan="Khách phụ trách" gt={conHieuLuc.length.toLocaleString("vi-VN")} phu={`${tong.soKhach} người được mời`} />
+        <The nhan="Thiệp phụ trách" gt={tong.soKhach.toLocaleString("vi-VN")} phu="mỗi khách một thiệp" />
         <The nhan="Công ty" gt={tong.soCongTy.toLocaleString("vi-VN")} phu="theo mã CORP hoặc tên" />
         <The nhan="Doanh thu dự kiến" gt={tong.doanhThu ? dinhDangTien(tong.doanhThu) : "0"} phu="mỗi công ty tính một lần" />
-        <The nhan="Người xác nhận" gt={tong.xacNhan.toLocaleString("vi-VN")} phu={`${tiLeXN}% số người mời`} tiLe={tiLeXN} />
-        <The nhan="Người đã check in" gt={tong.checkin.toLocaleString("vi-VN")} phu={`${dem(TRANG_THAI.DA_CHECKIN)} thiệp đã đến`} rong />
+        <The nhan="Thiệp xác nhận" gt={tong.xacNhan.toLocaleString("vi-VN")} phu={`${tiLeXN}% số thiệp`} tiLe={tiLeXN} />
+        <The nhan="Thiệp đã check in" gt={tong.checkin.toLocaleString("vi-VN")} phu={`trên ${tong.xacNhan} thiệp xác nhận`} rong />
       </div>
 
       <div className="grid gap-5 lg:grid-cols-5 lg:gap-7">
@@ -53,7 +61,7 @@ export default async function SalesTongQuan() {
         <div className="card overflow-hidden lg:col-span-2">
           <div className="px-5 py-4">
             <h2 className="font-display text-lg text-ink">Việc cần làm</h2>
-            <p className="text-xs text-ink-muted">Bấm để mở đúng nhóm khách.</p>
+            <p className="text-xs text-ink-muted">Đếm theo thiệp. Bấm để mở đúng nhóm khách.</p>
           </div>
           {viec.map((v) => (
             <Link key={v.nhan} href={v.href} className="flex items-center justify-between border-t border-ivory-deep px-5 py-3 text-sm hover:bg-ivory/50">
@@ -67,7 +75,7 @@ export default async function SalesTongQuan() {
         <div className="card p-5 lg:col-span-3">
           <div className="flex items-center justify-between">
             <h2 className="font-display text-lg text-ink">Theo trạng thái</h2>
-            <span className="text-xs text-ink-muted">{guests.length} khách</span>
+            <span className="text-xs text-ink-muted">{tongThiep} thiệp</span>
           </div>
           {guests.length === 0 && <p className="mt-4 text-sm text-ink-muted">Chưa có khách nào.</p>}
           <div className="mt-4 space-y-2.5">
@@ -75,7 +83,7 @@ export default async function SalesTongQuan() {
               .filter((k) => demTrangThai[k])
               .map((k) => {
                 const n = demTrangThai[k];
-                const pct = Math.round((n / guests.length) * 100);
+                const pct = tongThiep ? Math.round((n / tongThiep) * 100) : 0;
                 const mau = MAU_TRANG_THAI[k];
                 return (
                   <div key={k} className="flex items-center gap-3">
@@ -109,7 +117,7 @@ export default async function SalesTongQuan() {
                   <span className="text-sm text-ink">{r.doanhThu ? dinhDangTien(r.doanhThu) : "-"}</span>
                 </div>
                 <div className="mt-1 text-xs text-ink-muted">
-                  {r.soCongTy} công ty · {r.soKhach} khách · {r.xacNhan} xác nhận · {r.checkin} check in · {r.thiepGiay} thiệp giấy
+                  {r.soCongTy} công ty · {r.soKhach} thiệp · {r.xacNhan} xác nhận · {r.checkin} check in · {r.thiepGiay} thiệp giấy
                 </div>
               </div>
             ))}
@@ -121,7 +129,7 @@ export default async function SalesTongQuan() {
                   <th className="px-5 py-3 font-medium">Venue</th>
                   <th className="whitespace-nowrap px-3 py-3 text-right font-medium">Doanh thu dự kiến</th>
                   <th className="whitespace-nowrap px-3 py-3 text-right font-medium">Số công ty</th>
-                  <th className="whitespace-nowrap px-3 py-3 text-right font-medium">Số khách</th>
+                  <th className="whitespace-nowrap px-3 py-3 text-right font-medium">Số thiệp</th>
                   <th className="whitespace-nowrap px-3 py-3 text-right font-medium">Xác nhận</th>
                   <th className="whitespace-nowrap px-3 py-3 text-right font-medium">Check in</th>
                   <th className="px-5 py-3 text-right font-medium">Thiệp giấy</th>

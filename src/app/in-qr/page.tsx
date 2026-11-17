@@ -64,9 +64,9 @@ export default async function InQRPage({
       <div className="mx-auto max-w-5xl px-5 py-5 print:hidden">
         <h1 className="font-display text-xl text-ink">In mã QR cho thiệp giấy</h1>
         <p className="mt-1 text-sm text-ink-muted">
-          {the.length.toLocaleString("vi-VN")} thiệp giấy cho {canIn.length.toLocaleString("vi-VN")} vé đã phát hành{laBTC ? "" : ` của ${u.hoTen}`}: mỗi
+          {the.length.toLocaleString("vi-VN")} thiệp giấy cho {canIn.length.toLocaleString("vi-VN")} thiệp đã phát hành{laBTC ? "" : ` của ${u.hoTen}`}: mỗi
           khách một ô, khách đi kèm có ô và mã QR riêng.
-          {soNoiBo > 0 ? ` Không in ${soNoiBo.toLocaleString("vi-VN")} vé của sales và marketing nội bộ Capella (chỉ dùng thiệp online).` : ""} Mỗi trang A4 in 12 ô.
+          {soNoiBo > 0 ? ` Không in ${soNoiBo.toLocaleString("vi-VN")} thiệp của sales và marketing nội bộ Capella (chỉ dùng thiệp online).` : ""} Mỗi trang A4 in 12 ô.
           Khi in, chọn khổ A4 và tắt “Đầu trang và chân trang”.
         </p>
         <form className="mt-4 flex flex-wrap items-center gap-3">

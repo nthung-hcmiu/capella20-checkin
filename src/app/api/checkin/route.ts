@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
           ok: true,
           ketQua: KET_QUA_CHECKIN.THANH_CONG,
           thongBao: "Check in thành công",
-          canhBao: "Vé này đã có người cùng đoàn check in trước đó",
+          canhBao: "Đoàn này đã có người check in trước đó",
           guest: gon(capNhat),
           nguoiQuet,
         });

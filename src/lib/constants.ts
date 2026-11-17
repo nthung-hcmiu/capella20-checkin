@@ -41,7 +41,7 @@ export const NHAN_CANH_BAO: Record<string, string> = {
 export const NHAN_TRANG_THAI: Record<string, string> = {
   NHAP: "Nháp",
   CHO_DUYET: "Chờ duyệt",
-  DA_PHAT_HANH: "Đã phát hành vé",
+  DA_PHAT_HANH: "Đã phát hành thiệp",
   DA_MOI: "Đã mời",
   THAM_DU: "Tham dự",
   KHONG_THAM_DU: "Không tham dự",

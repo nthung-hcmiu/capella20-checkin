@@ -54,7 +54,7 @@ export async function GET(req: NextRequest, { params }: { params: { ma: string }
   const guest = await prisma.guest.findUnique({ where: { maBiMat: params.ma.toUpperCase() } });
   if (!guest || !quyenVoiKhach(u, guest)) return new NextResponse("Không tìm thấy thiệp.", { status: 404 });
   if (CHUA_PHAT_HANH.includes(guest.trangThai) || guest.trangThai === TRANG_THAI.DA_HUY) {
-    return new NextResponse("Vé chưa được duyệt hoặc đã hủy, chưa tải thiệp được.", { status: 409 });
+    return new NextResponse("Thiệp chưa được duyệt hoặc đã hủy, chưa tải thiệp được.", { status: 409 });
   }
 
   const kXin = parseInt(req.nextUrl.searchParams.get("k") || "", 10);

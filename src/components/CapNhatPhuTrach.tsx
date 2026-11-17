@@ -102,7 +102,7 @@ export function CapNhatPhuTrach({ venues }: { venues: { id: string; ten: string 
       <h2 className="font-display text-lg text-ink">Cập nhật người phụ trách từ file</h2>
       <p className="mt-1 text-sm text-ink-muted">
         Dùng khi venue gửi danh sách gộp có cột người phụ trách. App khớp từng dòng với khách đã có trong app theo tên khách cùng mã CORP hoặc
-        công ty; dòng chưa có tên khách thì khớp theo công ty. Chỉ đổi người phụ trách, không đổi thông tin hay vé của khách.
+        công ty; dòng chưa có tên khách thì khớp theo công ty. Chỉ đổi người phụ trách, không đổi thông tin hay thiệp của khách.
       </p>
 
       <div className="mt-4 grid gap-4 sm:grid-cols-2">

@@ -5,7 +5,7 @@ import { thaoTacHangLoat, type KetQua, type LoaiHangLoat } from "@/lib/actions";
 
 const THAO_TAC: { loai: LoaiHangLoat; nhan: string; btc?: boolean; sales?: boolean; nguyHiem?: boolean; quanTri?: boolean }[] = [
   { loai: "GUI_DUYET", nhan: "Gửi duyệt", sales: true, btc: true },
-  { loai: "DUYET", nhan: "Duyệt, phát hành vé", btc: true },
+  { loai: "DUYET", nhan: "Duyệt, phát hành thiệp", btc: true },
   { loai: "DA_GUI_ONLINE", nhan: "Đã gửi thiệp online", sales: true, btc: true },
   { loai: "DA_GUI_GIAY", nhan: "Đã gửi thiệp giấy", sales: true, btc: true },
   { loai: "THAM_DU", nhan: "Xác nhận tham dự (đủ số người)", sales: true, btc: true },

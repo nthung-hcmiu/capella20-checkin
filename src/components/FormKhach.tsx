@@ -211,7 +211,7 @@ export function FormKhach({
     <form action={gui} className="mt-3 space-y-4 rounded-xl border border-ivory-deep bg-white p-4" onClick={(e) => e.stopPropagation()}>
       {daPhatHanh && (
         <p className="rounded-lg bg-ivory/70 px-3 py-2 text-xs text-ink-soft">
-          Vé đã phát hành: số thứ tự, mã QR và venue giữ nguyên, thiệp đã gửi vẫn dùng được.
+          Thiệp đã phát hành: số thứ tự, mã QR và venue giữ nguyên, thiệp đã gửi vẫn dùng được.
           {laSales ? " Số người mời và VIP do BTC duyệt, muốn đổi thì liên hệ BTC." : ""}
         </p>
       )}

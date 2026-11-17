@@ -25,11 +25,11 @@ export async function GET() {
   // Thu tu cot theo mau danh sach cac nam truoc, roi den cac cot cua he thong
   const tieuDe = [
     "STT", "Đơn vị", "Mã CORP Netsuite", "Company Name",
-    "Lĩnh vực", "Danh xưng", "Tên khách mời", "Chức vụ", "Số điện thoại", "Địa chỉ", "Số lượng người tham dự",
+    "Lĩnh vực", "Danh xưng", "Tên khách mời", "Chức vụ", "Số điện thoại", "Địa chỉ", "Số thiệp",
     "Danh xưng khách thứ 2", "Tên khách thứ 2", "Chức vụ khách thứ 2", "Phân loại khách",
     "Phân loại khách VIP", "Doanh thu dự kiến", "Round 1: Khách đã nhận thiệp online", "Round 2: Đã gửi thiệp giấy",
     "Họ và tên người phụ trách tiếp khách", "Ghi chú",
-    "Năm trước", "Số thứ tự thiệp", "Trạng thái", "Số người xác nhận", "Số người thực tế đến", "Giờ check in", "Mã thiệp", "Link thiệp", "Link thiệp khách thứ 2",
+    "Năm trước", "Số thứ tự thiệp", "Trạng thái", "Số thiệp xác nhận", "Số thiệp thực tế đến", "Giờ check in", "Mã thiệp", "Link thiệp", "Link thiệp khách thứ 2",
   ];
   const daNhanOnline = ["DA_MOI", "THAM_DU", "KHONG_THAM_DU", "DA_CHECKIN", "VANG_MAT"];
   const dong = ds.map((g, i) => {

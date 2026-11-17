@@ -25,7 +25,9 @@ export default async function QuotaPage() {
     orderBy: { hoTen: "asc" },
   });
   const theoSales = tongHopTheoVenue(guests.map((g) => ({ ...g, venueId: g.salesOwner })));
-  const demTT = (ten: string, tt: string[]) => guests.filter((g) => g.salesOwner === ten && tt.includes(g.trangThai)).length;
+  // Dem theo thiep: moi khach mot thiep, ke ca khach di kem
+  const demTT = (ten: string, tt: string[]) =>
+    guests.filter((g) => g.salesOwner === ten && tt.includes(g.trangThai)).reduce((s, g) => s + g.soNguoiMoi, 0);
   // loai: SALES (tai khoan sales), BTC (tai khoan BTC phu trach khach, tinh nhu sales), KHONG (chua co tai khoan)
   const dongSales = (ten: string, venueId: string | null, loai: "SALES" | "BTC" | "KHONG") => {
     const r = theoSales.get(ten) || rong();
@@ -72,8 +74,9 @@ export default async function QuotaPage() {
       <div>
         <h1 className="font-display text-2xl text-ink">Quota và KPI venue</h1>
         <p className="mt-1 text-sm text-ink-muted">
-          Quota mỗi venue là số khách mục tiêu, đếm theo người (tổng {tongQuota.toLocaleString("vi-VN")} khách). Không tính khách đã hủy,
-          không tham dự hoặc vắng mặt. Venue hết quota không chặn sales thêm khách, khách mới được gắn cảnh báo để BTC xem khi duyệt.
+          Quota mỗi venue là số thiệp mục tiêu (tổng {tongQuota.toLocaleString("vi-VN")} thiệp). Mỗi khách một thiệp, kể cả khách đi kèm;
+          một công ty có thể có nhiều thiệp. Không tính thiệp đã hủy, không tham dự hoặc vắng mặt. Venue hết quota không chặn sales thêm
+          khách, khách mới được gắn cảnh báo để BTC xem khi duyệt.
         </p>
       </div>
 
@@ -99,8 +102,7 @@ export default async function QuotaPage() {
                 <div className="mt-4 flex items-end justify-between">
                   <div>
                     <span className="font-display text-2xl text-ink">{r.soKhach}</span>
-                    <span className="text-sm text-ink-muted"> / {v.quota || "không giới hạn"} khách</span>
-                    <span className="ml-2 text-xs text-ink-muted">{r.thiep} thiệp</span>
+                    <span className="text-sm text-ink-muted"> / {v.quota || "không giới hạn"} thiệp</span>
                   </div>
                   {vuotQuota > 0 && <span className="chip bg-wine/10 text-wine">{vuotQuota} chờ duyệt vượt quota</span>}
                 </div>
@@ -108,7 +110,7 @@ export default async function QuotaPage() {
                   <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: day ? "#6b2b36" : v.mauSac }} />
                 </div>
                 <div className="mt-2 text-xs text-ink-muted">
-                  {v.quota > 0 ? (day ? "Đã đủ quota, khách thêm mới sẽ có cảnh báo vượt quota" : `Còn ${v.quota - r.soKhach} khách`) : "Dải đặc biệt, không tính quota"}
+                  {v.quota > 0 ? (day ? "Đã đủ quota, khách thêm mới sẽ có cảnh báo vượt quota" : `Còn ${v.quota - r.soKhach} thiệp`) : "Dải đặc biệt, không tính quota"}
                 </div>
 
                 {(v.mucTieuCongTy > 0 || v.doanhThuCamKet > 0) && (
@@ -129,8 +131,8 @@ export default async function QuotaPage() {
         <div className="px-5 py-4">
           <h2 className="font-display text-lg text-ink">Theo dõi theo sales</h2>
           <p className="mt-0.5 text-xs text-ink-muted">
-            Mỗi sales đã mời bao nhiêu công ty, bao nhiêu khách. Số khách đếm theo người, không tính khách đã hủy, không tham dự hoặc vắng mặt.
-            Phần trăm là tỷ trọng trên quota của venue.
+            Mỗi sales đã mời bao nhiêu công ty, bao nhiêu thiệp. Mỗi khách một thiệp, kể cả khách đi kèm. Cột Thiệp không tính thiệp đã hủy,
+            không tham dự hoặc vắng mặt; phần trăm là tỷ trọng trên quota của venue.
           </p>
           {salesTk.length > 0 &&
             (salesChuaMoi.length > 0 ? (
@@ -152,11 +154,10 @@ export default async function QuotaPage() {
               <tr className="border-t border-ivory-deep text-left text-xs uppercase tracking-wider text-ink-muted">
                 <th className="px-5 py-3 font-medium">Sales</th>
                 <th className="px-3 py-3 text-right font-medium">Công ty</th>
-                <th className="px-3 py-3 text-right font-medium">Khách</th>
                 <th className="px-3 py-3 text-right font-medium">Thiệp</th>
                 <th className="px-3 py-3 text-right font-medium">Nháp</th>
                 <th className="px-3 py-3 text-right font-medium">Chờ duyệt</th>
-                <th className="px-3 py-3 text-right font-medium">Đã có vé</th>
+                <th className="px-3 py-3 text-right font-medium">Đã phát hành</th>
                 <th className="px-3 py-3 text-right font-medium">Xác nhận</th>
                 <th className="px-3 py-3 text-right font-medium">Check in</th>
                 <th className="px-5 py-3 text-right font-medium">Doanh thu dự kiến</th>
@@ -190,7 +191,6 @@ export default async function QuotaPage() {
                       {tong.soKhach}
                       {v.quota > 0 && <span className="font-normal text-ink-muted"> / {v.quota}</span>}
                     </td>
-                    <td className={`${o} font-medium`}>{tong.thiep}</td>
                     <td className={o}>{tong.nhap}</td>
                     <td className={o}>{tong.choDuyet}</td>
                     <td className={o}>{tong.coVe}</td>
@@ -217,7 +217,6 @@ export default async function QuotaPage() {
                         {d.soKhach}
                         {v.quota > 0 && <span className="ml-1.5 text-[11px] text-ink-muted">{Math.round((d.soKhach / v.quota) * 100)}%</span>}
                       </td>
-                      <td className={o}>{d.thiep}</td>
                       <td className={`${o} text-ink-muted`}>{d.nhap}</td>
                       <td className={`${o} text-ink-muted`}>{d.choDuyet}</td>
                       <td className={`${o} text-ink-muted`}>{d.coVe}</td>

@@ -135,7 +135,8 @@ export function GuestManager({
         <div>
           <h1 className="font-display text-2xl text-ink">Danh sách khách</h1>
           <p className="mt-1 text-sm text-ink-muted">
-            {locKq.length.toLocaleString("vi-VN")} / {guests.length.toLocaleString("vi-VN")} khách
+            {locKq.length.toLocaleString("vi-VN")} / {guests.length.toLocaleString("vi-VN")} dòng ·{" "}
+            {locKq.reduce((t, g) => t + g.soNguoiMoi, 0).toLocaleString("vi-VN")} thiệp (mỗi khách một thiệp, kể cả khách đi kèm)
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -387,7 +388,7 @@ function Dong({
               )}
               {chuaPhatHanh && (
                 <button className="btn-brand btn-sm" disabled={pending} onClick={() => act(() => duyetKhach(g.id))}>
-                  Duyệt, phát hành vé
+                  Duyệt, phát hành thiệp
                 </button>
               )}
               {g.trangThai === TRANG_THAI.DA_PHAT_HANH && (
@@ -458,7 +459,7 @@ function Dong({
                   <button
                     className="btn-ghost btn-sm"
                     disabled={pending}
-                    title="Thu hồi vé để sales sửa lại rồi gửi duyệt. Số thứ tự và mã QR giữ nguyên."
+                    title="Thu hồi thiệp để sales sửa lại rồi gửi duyệt. Số thứ tự và mã QR giữ nguyên."
                     onClick={() => act(() => traVeNhap(g.id))}
                   >
                     Trả về nháp
@@ -514,7 +515,7 @@ function ChiTiet({ g, canhBao }: { g: GuestRow; canhBao: string[] }) {
     ["Khách đi cùng", moTaDiCung(g.khachDiCung) || null],
     ["Số người xác nhận", g.soNguoiXacNhan],
     ["Xác nhận bởi", g.xacNhanBoi ? `${g.xacNhanBoi}${g.xacNhanLuc ? `, ${gio(g.xacNhanLuc)}` : ""}` : null],
-    ["Phát hành vé", gio(g.phatHanhLuc)],
+    ["Phát hành thiệp", gio(g.phatHanhLuc)],
     ["Check in", g.checkinLuc ? `${gio(g.checkinLuc)}${g.soNguoiDen ? `, ${g.soNguoiDen} người` : ""}` : null],
     ["Thiệp giấy", g.daGuiThiepGiay ? "Đã gửi" : "Chưa gửi"],
     ["Cảnh báo khi duyệt", canhBao.length ? canhBao.map((c) => NHAN_CANH_BAO[c] || c).join(", ") : null],

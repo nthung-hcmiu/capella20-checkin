@@ -461,7 +461,7 @@ function SoNguoiDen({ g }: { g: KhachGon }) {
   };
   return (
     <div className="mt-4 rounded-xl bg-ivory/70 p-3">
-      <div className="text-xs text-ink-muted">Số người thực tế đến (đăng ký {dangKy})</div>
+      <div className="text-xs text-ink-muted">Số người thực tế đến (xác nhận {dangKy})</div>
       <div className="mt-2 flex items-center justify-center gap-3">
         <button className="h-10 w-10 rounded-full border border-ink/20 text-lg" onClick={() => doi(so - 1)} disabled={so <= 1}>
           −
