@@ -438,7 +438,7 @@ function Dong({
                 </span>
               )}
               {!chuaPhatHanh && g.trangThai !== TRANG_THAI.DA_HUY && (
-                <a href={`/api/thiep-anh/${g.maBiMat}`} download={`thiep-capella20-${g.soThuTu}.png`} className="btn-ghost btn-sm">
+                <a href={`/api/thiep-anh/${g.maBiMat}?tai=1`} download={`thiep-capella20-${g.soThuTu}.jpg`} className="btn-ghost btn-sm">
                   Tải thiệp
                 </a>
               )}

@@ -551,7 +551,7 @@ function HanhDong({ g, venuesSua }: { g: SalesGuest; venuesSua: { id: string; te
       {/* 1. Thiep online: sales tai file hinh ve roi tu gui cho khach */}
       <div className="flex flex-wrap items-center gap-2">
         <span className={`w-24 shrink-0 text-xs ${daGuiOnline ? "text-sage" : "text-ink-muted"}`}>{daGuiOnline ? "✓ " : ""}Thiệp online</span>
-        <a href={`/api/thiep-anh/${g.maBiMat}`} download={`thiep-capella20-${g.soThuTu}.png`} className="btn-brand btn-sm">
+        <a href={`/api/thiep-anh/${g.maBiMat}?tai=1`} download={`thiep-capella20-${g.soThuTu}.jpg`} className="btn-brand btn-sm">
           Tải thiệp
         </a>
         {g.trangThai === TRANG_THAI.DA_PHAT_HANH && (
@@ -564,7 +564,7 @@ function HanhDong({ g, venuesSua }: { g: SalesGuest; venuesSua: { id: string; te
       {dsDiKem.map((x) => (
         <div key={x.k} className="flex flex-wrap items-center gap-2">
           <span className="w-24 shrink-0 text-xs text-ink-muted">Khách thứ {x.k}</span>
-          <a href={`/api/thiep-anh/${g.maBiMat}?k=${x.k}`} download={`thiep-capella20-${g.soThuTu}-khach-${x.k}.png`} className="btn-brand btn-sm">
+          <a href={`/api/thiep-anh/${g.maBiMat}?k=${x.k}&tai=1`} download={`thiep-capella20-${g.soThuTu}-khach-${x.k}.jpg`} className="btn-brand btn-sm">
             Tải thiệp {[x.danhXung, x.hoTen].filter(Boolean).join(" ")}
           </a>
         </div>
