@@ -13,32 +13,10 @@ import { taoKhach, danhDauDaMoi, datThiepGiay, xacNhanKhach, guiDuyet, xoaNhap }
 import { DANH_XUNG, LINH_VUC, NHAN_TRUONG, PHAN_LOAI_KHACH, docDiCung, moTaDiCung, tenGoi, thieuThongTinMoi, type ThongTinThem } from "@/lib/khach";
 import { CHUA_PHAT_HANH, DUOC_XAC_NHAN, NHAN_CANH_BAO, TRANG_THAI } from "@/lib/constants";
 
-// Chep link trang thiep de gui kem file hinh: khach mo link nay de tu xac nhan tham du
-function NutChepLink({ link }: { link: string }) {
-  const [da, setDa] = useState(false);
-  return (
-    <button
-      className="btn-ghost btn-sm"
-      onClick={async () => {
-        try {
-          await navigator.clipboard.writeText(link);
-          setDa(true);
-          setTimeout(() => setDa(false), 2000);
-        } catch {
-          window.prompt("Chép link thiệp:", link);
-        }
-      }}
-    >
-      {da ? "Đã chép link" : "Chép link thiệp"}
-    </button>
-  );
-}
-
 export interface SalesGuest {
   id: string;
   soThuTu: number;
   maBiMat: string;
-  linkThiep: string;
   hoTen: string;
   sdt: string | null;
   danhXung: string | null;
@@ -578,7 +556,6 @@ function HanhDong({ g, venuesSua }: { g: SalesGuest; venuesSua: { id: string; te
         <a href={`/api/thiep-anh/${g.maBiMat}?tai=1`} download={`thiep-capella20-${g.soThuTu}.jpg`} className="btn-brand btn-sm">
           Tải thiệp
         </a>
-        <NutChepLink link={g.linkThiep} />
         {g.trangThai === TRANG_THAI.DA_PHAT_HANH && (
           <button className="btn-ink btn-sm" disabled={pending} onClick={() => start(() => void danhDauDaMoi(g.id))}>
             Đã gửi
@@ -592,7 +569,6 @@ function HanhDong({ g, venuesSua }: { g: SalesGuest; venuesSua: { id: string; te
           <a href={`/api/thiep-anh/${g.maBiMat}?k=${x.k}&tai=1`} download={`thiep-capella20-${g.soThuTu}-khach-${x.k}.jpg`} className="btn-brand btn-sm">
             Tải thiệp {[x.danhXung, x.hoTen].filter(Boolean).join(" ")}
           </a>
-          <NutChepLink link={`${g.linkThiep}?k=${x.k}`} />
         </div>
       ))}
       {/* 2. Thiep giay: chi xac nhan da gui */}

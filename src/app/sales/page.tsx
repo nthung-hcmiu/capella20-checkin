@@ -3,7 +3,6 @@ import { yeuCauTrang } from "@/lib/auth";
 import { SalesPortal } from "@/components/SalesPortal";
 import { CHIEM_QUOTA, TRANG_THAI } from "@/lib/constants";
 import { TRUONG_CHU } from "@/lib/khach";
-import { urlQR } from "@/lib/codes";
 import { moTaTraLoi } from "@/lib/xacNhan";
 import { taiBoKhop } from "@/lib/lichSu";
 import { CHON_CONG_TY, choSales, taoBoCongTy, taoBoTrung } from "@/lib/congTy";
@@ -42,7 +41,6 @@ export default async function SalesPage({ searchParams }: { searchParams: { nhom
         id: g.id,
         soThuTu: g.soThuTu,
         maBiMat: g.maBiMat,
-        linkThiep: urlQR(g.maBiMat),
         hoTen: g.hoTen,
         sdt: g.sdt,
         danhXung: g.danhXung,
