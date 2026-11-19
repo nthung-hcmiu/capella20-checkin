@@ -95,7 +95,7 @@ const HUONG_DAN: VaiTro[] = [
       },
     ],
     luuY: [
-      "Khách không tự xác nhận. Sales hỏi khách rồi xác nhận thay trên app.",
+      "Khách tự xác nhận được trên trang thiệp (mở bằng cách quét mã QR trên thiệp). Khách nào chưa trả lời thì sales hỏi rồi xác nhận thay trên app.",
       "Khách hỏi cách vào cửa: đưa mã QR ở cuối file thiệp, hoặc đọc số thứ tự thiệp.",
       "File thiệp có mã QR dùng để vào cửa. Nhắc khách không đăng nguyên file lên mạng; muốn đăng thì cắt bỏ phần mã QR ở dưới.",
       "Lần đầu đăng nhập, đổi mật khẩu riêng. Quên mật khẩu thì nhờ Quản trị đặt lại.",
