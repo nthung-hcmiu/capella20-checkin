@@ -158,7 +158,7 @@ export function GuestManager({
             </a>
           )}
           <a href="/in-qr" target="_blank" className="btn-ghost">
-            In QR thiệp giấy
+            In số thiệp giấy
           </a>
           <button className="btn-brand" onClick={() => setMoForm((v) => !v)}>
             {moForm ? "Đóng" : "+ Thêm khách"}

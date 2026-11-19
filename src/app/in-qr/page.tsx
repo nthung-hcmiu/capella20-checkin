@@ -1,16 +1,15 @@
-import QRCode from "qrcode";
 import { prisma } from "@/lib/db";
 import { yeuCauTrang } from "@/lib/auth";
 import { TRANG_THAI } from "@/lib/constants";
 import { docDiCung, tenGoi } from "@/lib/khach";
 import { canThiepGiay } from "@/lib/congTy";
-import { urlQR } from "@/lib/codes";
 import { NutIn } from "@/components/NutIn";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-// Trang in QR dan len thiep giay. Sales in khach cua minh, BTC loc theo venue / sales.
+// Trang in nhan so thu tu dan len thiep giay (thiep giay chi co so thu tu, khong co ma QR).
+// Sales in khach cua minh, BTC loc theo venue / sales.
 export default async function InQRPage({
   searchParams,
 }: {
@@ -19,7 +18,7 @@ export default async function InQRPage({
   const u = await yeuCauTrang(["SALES", "ADMIN"], "/in-qr");
   const laBTC = u.vaiTro === "ADMIN";
   const chuaGiay = searchParams.chuaGiay === "1";
-  // BTC duoc giao venue: chi in QR khach cua venue do, cong khach chinh minh phu trach
+  // BTC duoc giao venue: chi in khach cua venue do, cong khach chinh minh phu trach
   const xemBtc = u.phamViXem ? { OR: [{ venueId: { in: u.phamViXem } }, { salesOwner: u.hoTen }] } : {};
   const [venues, dsSales] = laBTC
     ? await Promise.all([
@@ -41,7 +40,7 @@ export default async function InQRPage({
     take: 1500,
   });
 
-  // Moi nguoi mot thiep giay: khach chinh va tung khach di kem da co ten, moi nguoi mot ma QR rieng.
+  // Moi nguoi mot thiep giay: khach chinh va tung khach di kem da co ten, cung so thu tu cua thiep.
   // Sales va marketing noi bo Capella khong can thiep giay nen khong in.
   const canIn = guests.filter(canThiepGiay);
   const soNoiBo = guests.length - canIn.length;
@@ -52,21 +51,16 @@ export default async function InQRPage({
       .map((x, i) => ({ g, k: i + 2, ten: [x.danhXung, x.hoTen].filter(Boolean).join(" "), khoa: `${g.id}-${i + 2}` }))
       .filter((x) => x.ten.trim()),
   ]);
-  const the = await Promise.all(
-    nguoi.map(async (n) => ({
-      ...n,
-      svg: await QRCode.toString(urlQR(n.g.maBiMat, undefined, n.k), { type: "svg", errorCorrectionLevel: "M", margin: 1 }),
-    }))
-  );
+  const the = nguoi;
 
   return (
     <main className="min-h-screen bg-white">
       <div className="mx-auto max-w-5xl px-5 py-5 print:hidden">
-        <h1 className="font-display text-xl text-ink">In mã QR cho thiệp giấy</h1>
+        <h1 className="font-display text-xl text-ink">In số thứ tự cho thiệp giấy</h1>
         <p className="mt-1 text-sm text-ink-muted">
           {the.length.toLocaleString("vi-VN")} thiệp giấy cho {canIn.length.toLocaleString("vi-VN")} thiệp đã phát hành{laBTC ? "" : ` của ${u.hoTen}`}: mỗi
-          khách một ô, khách đi kèm có ô và mã QR riêng.
-          {soNoiBo > 0 ? ` Không in ${soNoiBo.toLocaleString("vi-VN")} thiệp của sales và marketing nội bộ Capella (chỉ dùng thiệp online).` : ""} Mỗi trang A4 in 12 ô.
+          khách một ô ghi số thứ tự thiệp, khách đi kèm có ô riêng cùng số thứ tự. Thiệp giấy chỉ ghi số thứ tự, không có mã QR; mã QR nằm trên thiệp online.
+          {soNoiBo > 0 ? ` Không in ${soNoiBo.toLocaleString("vi-VN")} thiệp của sales và marketing nội bộ Capella (chỉ dùng thiệp online).` : ""} Mỗi trang A4 in 24 ô.
           Khi in, chọn khổ A4 và tắt “Đầu trang và chân trang”.
         </p>
         <form className="mt-4 flex flex-wrap items-center gap-3">
@@ -100,10 +94,10 @@ export default async function InQRPage({
       </div>
 
       <div className="mx-auto grid max-w-[190mm] grid-cols-3 gap-[4mm] px-5 pb-10 print:max-w-none print:px-0">
-        {the.map(({ g, k, ten, khoa, svg }) => (
-          <div key={khoa} className="flex h-[66mm] break-inside-avoid flex-col items-center justify-center rounded-lg border border-ink/15 p-[3mm] text-center">
-            <div className="w-[36mm] [&>svg]:h-auto [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: svg }} />
-            <div className="mt-[2mm] font-mono text-[11pt] font-semibold text-ink">
+        {the.map(({ g, k, ten, khoa }) => (
+          <div key={khoa} className="flex h-[31mm] break-inside-avoid flex-col items-center justify-center rounded-lg border border-ink/15 p-[2mm] text-center">
+            <div className="text-[7pt] uppercase tracking-wider text-ink-muted">Số thứ tự thiệp</div>
+            <div className="font-mono text-[20pt] font-semibold leading-tight text-ink">
               {g.soThuTu}
               {k ? <span className="font-sans text-[8pt] font-normal text-ink-muted"> · khách thứ {k}</span> : null}
             </div>

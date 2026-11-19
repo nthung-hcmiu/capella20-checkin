@@ -89,7 +89,7 @@ export default async function ThiepPage({ params, searchParams }: { params: { ma
             Số thứ tự thiệp <span className="font-mono text-2xl font-medium text-ink">{guest.soThuTu}</span>
           </div>
           <p className="mx-auto mt-3 max-w-xs text-xs leading-relaxed text-ink-muted">
-            Vui lòng đưa mã QR này (hoặc thiệp giấy có QR) cho lễ tân tại quầy đón khách. Không quét được thì đọc số thứ tự thiệp.
+            Vui lòng đưa mã QR này (hoặc thiệp giấy có số thứ tự) cho lễ tân tại quầy đón khách. Không quét được thì đọc số thứ tự thiệp.
             {diKem ? " Đây là mã riêng của quý khách, dùng được cả khi đến trước hoặc sau người cùng đoàn." : ""}
           </p>
 
