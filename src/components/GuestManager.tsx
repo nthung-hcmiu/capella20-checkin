@@ -443,18 +443,27 @@ function Dong({
                   Tải thiệp
                 </a>
               )}
+              {/* Khach di kem: tai file hinh thiep rieng cua nguoi do */}
+              {!chuaPhatHanh &&
+                g.trangThai !== TRANG_THAI.DA_HUY &&
+                docDiCung(g.khachDiCung)
+                  .slice(0, Math.max(0, g.soNguoiMoi - 1))
+                  .map((x, i) =>
+                    x.hoTen.trim() ? (
+                      <a
+                        key={i}
+                        href={`/api/thiep-anh/${g.maBiMat}?k=${i + 2}&tai=1`}
+                        download={`thiep-capella20-${g.soThuTu}-khach-${i + 2}.jpg`}
+                        className="btn-ghost btn-sm"
+                        title={[x.danhXung, x.hoTen].filter(Boolean).join(" ")}
+                      >
+                        Tải thiệp khách thứ {i + 2}
+                      </a>
+                    ) : null
+                  )}
               <Link href={`/thiep/${g.maBiMat}`} target="_blank" className="btn-ghost btn-sm">
                 Trang thiệp
               </Link>
-              {docDiCung(g.khachDiCung)
-                .slice(0, Math.max(0, g.soNguoiMoi - 1))
-                .map((x, i) =>
-                  x.hoTen.trim() ? (
-                    <Link key={i} href={`/thiep/${g.maBiMat}?k=${i + 2}`} target="_blank" className="btn-ghost btn-sm" title={x.hoTen}>
-                      Thiệp khách thứ {i + 2}
-                    </Link>
-                  ) : null
-                )}
               <a href={`/api/qr/${g.maBiMat}`} target="_blank" className="btn-ghost btn-sm">
                 Xem QR
               </a>
