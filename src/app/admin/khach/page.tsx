@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { yeuCauTrang } from "@/lib/auth";
 import { GuestManager, GuestRow, VenueOpt } from "@/components/GuestManager";
 import { TRUONG_CHU } from "@/lib/khach";
+import { moTaTraLoi } from "@/lib/xacNhan";
 import { taiBoKhop } from "@/lib/lichSu";
 import { choBtc, taoBoCongTy, taoBoTrung } from "@/lib/congTy";
 
@@ -35,6 +36,7 @@ export default async function KhachPage() {
     soNguoiMoi: g.soNguoiMoi,
     khachDiCung: g.khachDiCung,
     soNguoiXacNhan: g.soNguoiXacNhan,
+    traLoiKhach: moTaTraLoi(g),
     trangThai: g.trangThai,
     isVip: g.isVip,
     salesOwner: g.salesOwner,

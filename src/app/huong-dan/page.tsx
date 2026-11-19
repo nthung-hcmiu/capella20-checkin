@@ -77,11 +77,12 @@ const HUONG_DAN: VaiTro[] = [
         ],
       },
       {
-        tieuDe: "Mỗi khách đã phát hành thiệp đi qua 3 bước",
+        tieuDe: "Mỗi khách đã phát hành thiệp đi qua 3 bước: gửi thiệp online, gửi thiệp giấy, xác nhận tham dự",
         buoc: [
-          ["Gửi thiệp online", "Bấm Tải thiệp để lấy file hình (có sẵn mã QR check in) > tự gửi cho khách qua Zalo hoặc email > bấm Đã gửi."],
+          ["Gửi thiệp online", "Bấm Tải thiệp để lấy file hình (có sẵn tên khách và mã QR check in), bấm Chép link thiệp để lấy link trang thiệp > gửi cả hình và link cho khách qua Zalo hoặc email > bấm Đã gửi. Khách đi kèm có thiệp và link riêng."],
           ["Gửi thiệp giấy", "Gửi thiệp giấy cho khách xong thì bấm Đã gửi thiệp giấy."],
-          ["Xác nhận thay khách", "Sau khi hỏi khách: Xác nhận thay khách > chọn số người > Tham dự hoặc Không tham dự. Khách đổi ý thì Đổi xác nhận hoặc Bỏ xác nhận."],
+          ["Khách tự xác nhận", "Khách mở link thiệp (hoặc quét mã QR trên thiệp) rồi bấm Tôi sẽ tham dự hoặc Tôi không tham dự được. Mỗi người trên thiệp trả lời cho riêng mình. Kết quả hiện ngay trong danh sách của bạn, dòng Khách tự trả lời trên thiệp."],
+          ["Xác nhận thay khách", "Khách báo qua điện thoại hoặc Zalo thì bạn xác nhận giúp: Xác nhận thay khách > chọn số người > Tham dự hoặc Không tham dự. Khách đổi ý thì Đổi xác nhận hoặc Bỏ xác nhận. Lần xác nhận sau cùng (của khách hoặc của bạn) là kết quả đang dùng."],
         ],
       },
       {

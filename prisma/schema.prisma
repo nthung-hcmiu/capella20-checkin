@@ -61,6 +61,7 @@ model Guest {
   diaChi         String? // dia chi gui thiep giay, bat buoc khi them / sua
   khachDiCung    String? // JSON [{hoTen, chucVu}] nguoi thu 2 tro di tren cung thiep
   soNguoiXacNhan Int? // so nguoi xac nhan tham du
+  nguoiXacNhan   String? // khach tu tra loi tren trang thiep, vd "1+,2-": 1 la khach chinh, + tham du, - khong tham du
   trangThai      String    @default("NHAP")
   isVip          Boolean   @default(false)
   ban            String? // line ghe khi xep cho, vd LINE 9 & 10

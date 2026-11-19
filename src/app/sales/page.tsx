@@ -4,6 +4,7 @@ import { SalesPortal } from "@/components/SalesPortal";
 import { CHIEM_QUOTA, TRANG_THAI } from "@/lib/constants";
 import { TRUONG_CHU } from "@/lib/khach";
 import { urlQR } from "@/lib/codes";
+import { moTaTraLoi } from "@/lib/xacNhan";
 import { taiBoKhop } from "@/lib/lichSu";
 import { CHON_CONG_TY, choSales, taoBoCongTy, taoBoTrung } from "@/lib/congTy";
 
@@ -54,6 +55,7 @@ export default async function SalesPage({ searchParams }: { searchParams: { nhom
         soNguoiMoi: g.soNguoiMoi,
         khachDiCung: g.khachDiCung,
         soNguoiXacNhan: g.soNguoiXacNhan,
+        traLoiKhach: moTaTraLoi(g),
         soNguoiDen: g.soNguoiDen,
         trangThai: g.trangThai,
         isVip: g.isVip,

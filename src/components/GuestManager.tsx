@@ -25,6 +25,7 @@ export interface GuestRow {
   soNguoiMoi: number;
   khachDiCung: string | null;
   soNguoiXacNhan: number | null;
+  traLoiKhach: string | null;
   trangThai: string;
   isVip: boolean;
   salesOwner: string;
@@ -532,6 +533,7 @@ function ChiTiet({ g, canhBao }: { g: GuestRow; canhBao: string[] }) {
     ["Số người mời", g.soNguoiMoi],
     ["Khách đi cùng", moTaDiCung(g.khachDiCung) || null],
     ["Số người xác nhận", g.soNguoiXacNhan],
+    ["Khách tự trả lời trên thiệp", g.traLoiKhach],
     ["Xác nhận bởi", g.xacNhanBoi ? `${g.xacNhanBoi}${g.xacNhanLuc ? `, ${gio(g.xacNhanLuc)}` : ""}` : null],
     ["Phát hành thiệp", gio(g.phatHanhLuc)],
     ["Check in", g.checkinLuc ? `${gio(g.checkinLuc)}${g.soNguoiDen ? `, ${g.soNguoiDen} người` : ""}` : null],

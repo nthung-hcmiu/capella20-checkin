@@ -247,7 +247,7 @@ export async function huyKhach(id: string) {
 // BTC thu hoi ve de sales sua lai: khach ve Nhap, giu nguyen so thu tu va ma QR.
 // Sales sua xong gui duyet, BTC duyet lai thi thiep cu dung tiep. Trong luc cho, QR van quet duoc nhung le tan thay canh bao chua phat hanh.
 const TRA_NHAP_DATA = {
-  trangThai: TRANG_THAI.NHAP, lyDoChoDuyet: null, phatHanhLuc: null, soNguoiXacNhan: null, xacNhanLuc: null, xacNhanBoi: null,
+  trangThai: TRANG_THAI.NHAP, lyDoChoDuyet: null, phatHanhLuc: null, soNguoiXacNhan: null, nguoiXacNhan: null, xacNhanLuc: null, xacNhanBoi: null,
 };
 const DUOC_TRA_NHAP = { notIn: [TRANG_THAI.NHAP, TRANG_THAI.DA_CHECKIN] as string[] };
 export async function traVeNhap(id: string): Promise<KetQua> {
@@ -368,7 +368,7 @@ export async function suaKhach(
     : { ok: true, thongBao: `Đã lưu thông tin khách.${doiSo}` };
 }
 
-// Sales (hoac BTC) xac nhan thay khach sau khi da hoi khach
+// Sales (hoac BTC) xac nhan thay khach sau khi da hoi khach. Khach cung tu xac nhan duoc tren trang thiep (khachActions).
 export async function xacNhanKhach(id: string, ketQua: "THAM_DU" | "KHONG_THAM_DU" | "DA_MOI", soNguoi = 1): Promise<KetQua> {
   const u = await batBuocQuyen(["ADMIN", "SALES"]);
   const g = await prisma.guest.findUnique({ where: { id } });
@@ -383,6 +383,7 @@ export async function xacNhanKhach(id: string, ketQua: "THAM_DU" | "KHONG_THAM_D
     data: {
       trangThai: ketQua,
       soNguoiXacNhan: ketQua === "THAM_DU" ? so : ketQua === "KHONG_THAM_DU" ? 0 : null,
+      nguoiXacNhan: null, // sales xac nhan lai thi thay cho cau tra loi khach tu ghi
       xacNhanLuc: ketQua === "DA_MOI" ? null : new Date(),
       xacNhanBoi: ketQua === "DA_MOI" ? null : u.hoTen,
     },
@@ -733,7 +734,7 @@ export async function thaoTacHangLoat(ids: string[], loai: LoaiHangLoat, giaTri?
         ds.map((g) =>
           prisma.guest.update({
             where: { id: g.id },
-            data: { trangThai: TRANG_THAI.THAM_DU, soNguoiXacNhan: g.soNguoiMoi, xacNhanLuc: new Date(), xacNhanBoi: u.hoTen },
+            data: { trangThai: TRANG_THAI.THAM_DU, soNguoiXacNhan: g.soNguoiMoi, nguoiXacNhan: null, xacNhanLuc: new Date(), xacNhanBoi: u.hoTen },
           })
         )
       );
@@ -744,7 +745,7 @@ export async function thaoTacHangLoat(ids: string[], loai: LoaiHangLoat, giaTri?
     case "KHONG_THAM_DU":
       n = (await prisma.guest.updateMany({
         where: { ...pham, trangThai: { in: DUOC_XAC_NHAN } },
-        data: { trangThai: TRANG_THAI.KHONG_THAM_DU, soNguoiXacNhan: 0, xacNhanLuc: new Date(), xacNhanBoi: u.hoTen },
+        data: { trangThai: TRANG_THAI.KHONG_THAM_DU, soNguoiXacNhan: 0, nguoiXacNhan: null, xacNhanLuc: new Date(), xacNhanBoi: u.hoTen },
       })).count;
       viec = "ghi nhận không tham dự";
       break;

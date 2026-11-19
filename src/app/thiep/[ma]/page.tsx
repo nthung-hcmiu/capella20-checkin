@@ -1,17 +1,19 @@
 import QRCode from "qrcode";
 import { Brand } from "@/components/Brand";
 import { prisma } from "@/lib/db";
-import { SU_KIEN, TRANG_THAI } from "@/lib/constants";
+import { DUOC_XAC_NHAN, SU_KIEN, TRANG_THAI } from "@/lib/constants";
 import { layNguoiDung } from "@/lib/auth";
 import { khachDiKemThu, tenGoi } from "@/lib/khach";
 import { urlQR } from "@/lib/codes";
 import { dinhDangGioNgan } from "@/lib/format";
+import { docTraLoi } from "@/lib/xacNhan";
+import { XacNhanKhach } from "@/components/XacNhanKhach";
 
 export const dynamic = "force-dynamic";
 
 // Thiep online: hien thiep theo mau cua designer (file hinh co ten khach va ma QR), ben duoi la so thu tu thiep
 // va huong dan dua ma QR cho le tan khi den.
-// Khach khong tu xac nhan; sales xac nhan tren he thong sau khi hoi khach.
+// Khach tu xac nhan tham du ngay tren trang nay (moi nguoi tra loi cho rieng minh); sales van xac nhan giup duoc tren dashboard.
 // ?k=2: thiep rieng cua khach di kem tren cung ve, ghi ten nguoi do va ma QR rieng.
 export default async function ThiepPage({ params, searchParams }: { params: { ma: string }; searchParams: { k?: string } }) {
   let ma = params.ma.toUpperCase();
@@ -60,6 +62,10 @@ export default async function ThiepPage({ params, searchParams }: { params: { ma
     color: { dark: "#1a1613", light: "#ffffff" },
   });
   const thamSo = k ? `?k=${k}` : "";
+  // Cau tra loi dang ghi nhan cua nguoi nay. Sales xac nhan giup "mot phan so nguoi tham du" thi khong biet ai vang,
+  // nen nguoi chua tu tra loi van duoc hoi, khong hien san la khong tham du.
+  const traLoiGhi = docTraLoi(guest).get(k ?? 1) ?? null;
+  const traLoiHien = guest.nguoiXacNhan == null && guest.trangThai === TRANG_THAI.THAM_DU && traLoiGhi === "-" ? null : traLoiGhi;
   const moTaAnh = `Thiệp mời ${tenGoi(nguoiMoi)}${[chucVuMoi, guest.congTy].filter(Boolean).length ? `, ${[chucVuMoi, guest.congTy].filter(Boolean).join(", ")}` : ""}. Dạ tiệc tri ân và kỷ niệm 20 năm Capella Holdings, ${SU_KIEN.ngay}, ${SU_KIEN.diaDiem}.`;
 
   return (
@@ -84,12 +90,16 @@ export default async function ThiepPage({ params, searchParams }: { params: { ma
           className="block h-auto w-full rounded-2xl bg-wine shadow-card"
         />
 
+        {DUOC_XAC_NHAN.includes(guest.trangThai) && (
+          <XacNhanKhach ma={guest.maBiMat} k={k} traLoi={traLoiHien} ngay={SU_KIEN.ngay} />
+        )}
+
         <div className="card mt-4 p-6 text-center">
           <div className="text-sm text-ink-soft">
             Số thứ tự thiệp <span className="font-mono text-2xl font-medium text-ink">{guest.soThuTu}</span>
           </div>
           <p className="mx-auto mt-3 max-w-xs text-xs leading-relaxed text-ink-muted">
-            Vui lòng đưa mã QR này (hoặc thiệp giấy có số thứ tự) cho lễ tân tại quầy đón khách. Không quét được thì đọc số thứ tự thiệp.
+            Vui lòng đưa mã QR này cho lễ tân tại quầy đón khách. Nếu không quét được mã hoặc mang thiệp giấy, quý khách đọc số thứ tự thiệp cho lễ tân.
             {diKem ? " Đây là mã riêng của quý khách, dùng được cả khi đến trước hoặc sau người cùng đoàn." : ""}
           </p>
 
@@ -108,9 +118,6 @@ export default async function ThiepPage({ params, searchParams }: { params: { ma
             </a>
           </div>
 
-          {!diKem && guest.trangThai === TRANG_THAI.THAM_DU && guest.soNguoiXacNhan != null && (
-            <p className="mt-4 text-xs text-sage">Capella đã ghi nhận quý khách tham dự, {guest.soNguoiXacNhan} người.</p>
-          )}
           <p className="mt-4 text-[11px] text-ink-muted">Cần thay đổi, quý khách vui lòng liên hệ nhân viên Capella đã gửi thiệp.</p>
         </div>
         <p className="mt-5 text-center text-[11px] text-ink-muted">Thiệp mời online · Capella 20 năm</p>

@@ -13,6 +13,27 @@ import { taoKhach, danhDauDaMoi, datThiepGiay, xacNhanKhach, guiDuyet, xoaNhap }
 import { DANH_XUNG, LINH_VUC, NHAN_TRUONG, PHAN_LOAI_KHACH, docDiCung, moTaDiCung, tenGoi, thieuThongTinMoi, type ThongTinThem } from "@/lib/khach";
 import { CHUA_PHAT_HANH, DUOC_XAC_NHAN, NHAN_CANH_BAO, TRANG_THAI } from "@/lib/constants";
 
+// Chep link trang thiep de gui kem file hinh: khach mo link nay de tu xac nhan tham du
+function NutChepLink({ link }: { link: string }) {
+  const [da, setDa] = useState(false);
+  return (
+    <button
+      className="btn-ghost btn-sm"
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(link);
+          setDa(true);
+          setTimeout(() => setDa(false), 2000);
+        } catch {
+          window.prompt("Chép link thiệp:", link);
+        }
+      }}
+    >
+      {da ? "Đã chép link" : "Chép link thiệp"}
+    </button>
+  );
+}
+
 export interface SalesGuest {
   id: string;
   soThuTu: number;
@@ -30,6 +51,7 @@ export interface SalesGuest {
   soNguoiMoi: number;
   khachDiCung: string | null;
   soNguoiXacNhan: number | null;
+  traLoiKhach: string | null; // khach tu tra loi tren trang thiep
   soNguoiDen: number | null;
   trangThai: string;
   isVip: boolean;
@@ -213,6 +235,7 @@ function DienThoai({ guests, ds, venues, venuesSua, loc }: ViewProps) {
                     {g.them.doanhThuDuKien ? ` · ${hienTien(g.them.doanhThuDuKien)}` : ""}
                   </div>
                   {g.khachDiCung && <div className="mt-0.5 text-xs text-ink-soft">Cùng: {moTaDiCung(g.khachDiCung)}</div>}
+                  {g.traLoiKhach && <div className="mt-0.5 text-xs text-sage">Khách tự trả lời trên thiệp: {g.traLoiKhach}</div>}
                   {g.congTyKhac && (
                     <div className={`mt-0.5 text-xs ${g.congTyKhac.salesKhac ? "font-medium text-wine" : "text-ink-muted"}`}>
                       Cùng công ty: +{g.congTyKhac.cuaToi + g.congTyKhac.salesKhac} khách{g.congTyKhac.salesKhac ? `, ${g.congTyKhac.salesKhac} của sales ${g.congTyKhac.tenSalesKhac.join(", ")}` : ""}
@@ -350,6 +373,7 @@ function DongMayTinh({
           {(g.chucVu || g.congTy) && <div className="text-xs text-ink-soft">{[g.chucVu, g.congTy].filter(Boolean).join(" · ")}</div>}
           <div className="text-xs text-ink-muted">{che4SoCuoi(g.sdt)}</div>
           {g.khachDiCung && <div className="text-xs text-ink-soft">Cùng: {moTaDiCung(g.khachDiCung)}</div>}
+          {g.traLoiKhach && <div className="text-xs text-sage">Khách tự trả lời trên thiệp: {g.traLoiKhach}</div>}
           <DongTrung g={g} />
           {g.congTyKhac && (
                     <div className={`text-xs ${g.congTyKhac.salesKhac ? "font-medium text-wine" : "text-ink-muted"}`}>
@@ -554,6 +578,7 @@ function HanhDong({ g, venuesSua }: { g: SalesGuest; venuesSua: { id: string; te
         <a href={`/api/thiep-anh/${g.maBiMat}?tai=1`} download={`thiep-capella20-${g.soThuTu}.jpg`} className="btn-brand btn-sm">
           Tải thiệp
         </a>
+        <NutChepLink link={g.linkThiep} />
         {g.trangThai === TRANG_THAI.DA_PHAT_HANH && (
           <button className="btn-ink btn-sm" disabled={pending} onClick={() => start(() => void danhDauDaMoi(g.id))}>
             Đã gửi
@@ -567,6 +592,7 @@ function HanhDong({ g, venuesSua }: { g: SalesGuest; venuesSua: { id: string; te
           <a href={`/api/thiep-anh/${g.maBiMat}?k=${x.k}&tai=1`} download={`thiep-capella20-${g.soThuTu}-khach-${x.k}.jpg`} className="btn-brand btn-sm">
             Tải thiệp {[x.danhXung, x.hoTen].filter(Boolean).join(" ")}
           </a>
+          <NutChepLink link={`${g.linkThiep}?k=${x.k}`} />
         </div>
       ))}
       {/* 2. Thiep giay: chi xac nhan da gui */}
@@ -591,7 +617,10 @@ function HanhDong({ g, venuesSua }: { g: SalesGuest; venuesSua: { id: string; te
       )}
       {moXN && (
         <div className="rounded-xl bg-ivory/70 p-3">
-          <div className="text-xs text-ink-muted">Sau khi đã hỏi khách. Số người tham dự (tối đa {g.soNguoiMoi}):</div>
+          <div className="text-xs text-ink-muted">
+            Sau khi đã hỏi khách. Số người tham dự (tối đa {g.soNguoiMoi}):
+            {g.traLoiKhach ? " Lưu ý: khách đã tự trả lời trên thiệp, xác nhận ở đây sẽ thay cho câu trả lời đó." : ""}
+          </div>
           <div className="mt-2 flex items-center gap-2">
             {Array.from({ length: g.soNguoiMoi }, (_, i) => i + 1).map((n) => (
               <button
