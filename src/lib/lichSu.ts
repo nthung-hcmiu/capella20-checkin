@@ -72,27 +72,48 @@ function cacKhoaCongTy(g: { maCorp?: string | null; congTy?: string | null }): s
   return ds;
 }
 
+// Moi con so co 2 don vi: so khach (nguoi) va so cong ty
+export interface SoDoi {
+  khach: number;
+  congTy: number;
+}
 export interface ThongKeNam {
   nam: number;
-  tong: number; // khach chinh duoc moi nam do
-  daDen: number;
-  moiLai: number; // nam nay da moi lai
-  moiLaiDaDen: number; // trong so moi lai, nam do da den
-  denChuaMoiLai: number; // nam do da den nhung nam nay chua moi
+  duocMoi: SoDoi; // khach chinh duoc moi nam do, va so cong ty cua ho
+  daDen: SoDoi; // cong ty tinh la da den khi co it nhat 1 khach den
+  moiLai: SoDoi; // nam nay da moi lai
+  moiLaiDaDen: SoDoi; // nam do da den va nam nay duoc moi lai
+  denChuaMoi: SoDoi; // nam do da den nhung nam nay chua moi
 }
+// Co cau khach nam nay so voi lich su: cac nhom khong chong len nhau, cong lai bang tong
+export interface CoCauNamNay {
+  tongKhach: number; // so thiep doi chieu duoc (khach chinh va khach di kem da co ten)
+  chuaCoTen: number; // thiep khach di kem chua co ten nen chua doi chieu duoc
+  khach: Record<LoaiLichSu, number>;
+  tongCongTy: number;
+  khongGhiCongTy: number; // so khach khong ghi cong ty
+  congTy: { den: number; khongDen: number; moi: number };
+}
+// Khach nam nay dua vao doi chieu: can them so nguoi moi va khach di cung de tinh ca khach di kem
+export type KhachNamNay = KhachKhop & { soNguoiMoi?: number; khachDiCung?: string | null };
 
 export interface BoKhop {
   coDuLieu: boolean;
   nam: number | null; // nam moi nhat da tai
   khop: (g: KhachKhop) => LichSu | null;
-  // Moi nam mot dong: so khach chinh nam do, bao nhieu da den, nam nay moi lai bao nhieu
-  thongKe: (guests: KhachKhop[]) => ThongKeNam[];
+  // Moi nam mot dong: so khach chinh va so cong ty nam do, bao nhieu da den, nam nay moi lai bao nhieu
+  thongKe: (guests: KhachNamNay[]) => ThongKeNam[];
+  // Khach va cong ty nam nay: cu hay moi
+  coCau: (guests: KhachNamNay[]) => CoCauNamNay;
 }
 
 // Tai toan bo lich su (vai nghin dong) va tao ham khop trong bo nho. Co nhieu nam thi hien tung nam.
 export async function taiBoKhop(prisma: PrismaClient): Promise<BoKhop> {
   const ds = (await prisma.khachNamTruoc.findMany({ orderBy: { nam: "desc" } })) as (DongLichSu & { laDiKem: boolean })[];
-  if (ds.length === 0) return { coDuLieu: false, nam: null, khop: () => null, thongKe: () => [] };
+  if (ds.length === 0) {
+    const rong: CoCauNamNay = { tongKhach: 0, chuaCoTen: 0, khach: { den: 0, khongDen: 0, congTy: 0, moi: 0 }, tongCongTy: 0, khongGhiCongTy: 0, congTy: { den: 0, khongDen: 0, moi: 0 } };
+    return { coDuLieu: false, nam: null, khop: () => null, thongKe: () => [], coCau: () => rong };
+  }
 
   const cacNam = [...new Set(ds.map((d) => d.nam))].sort((a, b) => b - a);
   const nam = cacNam[0];
@@ -152,17 +173,99 @@ export async function taiBoKhop(prisma: PrismaClient): Promise<BoKhop> {
     return { loai: "moi", nhan: "Khách mới", chiTiet: `Các năm ${cacNam.join(", ")} chưa mời khách này và cả công ty này.` };
   };
 
-  const thongKe = (guests: KhachKhop[]): ThongKeNam[] => {
+  // Moi thiep nam nay la mot nguoi: khach chinh, va khach di kem da co ten (cung cong ty voi khach chinh, khong co SDT rieng)
+  const nguoiNamNay = (guests: KhachNamNay[]) => {
+    const ds2: KhachKhop[] = [];
+    let chuaCoTen = 0;
+    for (const g of guests) {
+      ds2.push(g);
+      const soKem = Math.max(0, (g.soNguoiMoi ?? 1) - 1);
+      let kem: { hoTen?: unknown }[] = [];
+      try {
+        const v = g.khachDiCung ? JSON.parse(g.khachDiCung) : [];
+        if (Array.isArray(v)) kem = v;
+      } catch {}
+      for (let i = 0; i < soKem; i++) {
+        const ten = String(kem[i]?.hoTen ?? "").trim();
+        if (ten) ds2.push({ hoTen: ten, sdt: null, maCorp: g.maCorp, congTy: g.congTy });
+        else chuaCoTen++;
+      }
+    }
+    return { nguoi: ds2, chuaCoTen };
+  };
+  // Mot cong ty: lay ten da chuan hoa lam khoa chinh, khong co ten thi lay ma CORP
+  const khoaChinhCty = (g: { maCorp?: string | null; congTy?: string | null }) => {
+    const ks = cacKhoaCongTy(g);
+    return ks.find((k) => k.startsWith("cty:")) || ks[0] || null;
+  };
+  // Cong ty tung nam: cac khoa de nhan ra (ten, ma CORP) va co khach nao den khong. Chi tinh khach chinh.
+  const ctyTheoNam = new Map<number, Map<string, { khoa: Set<string>; den: boolean }>>();
+  for (const n of cacNam) ctyTheoNam.set(n, new Map());
+  for (const d of ds) {
+    if (d.laDiKem) continue;
+    const chinh = khoaChinhCty(d);
+    if (!chinh) continue;
+    const m = ctyTheoNam.get(d.nam)!;
+    const r = m.get(chinh) || { khoa: new Set<string>(), den: false };
+    for (const k of cacKhoaCongTy(d)) r.khoa.add(k);
+    if (d.soDen > 0) r.den = true;
+    m.set(chinh, r);
+  }
+
+  const thongKe = (guests: KhachNamNay[]): ThongKeNam[] => {
+    const { nguoi } = nguoiNamNay(guests);
     const khoaNay = new Set<string>();
-    for (const g of guests) for (const k of cacKhoa(g)) khoaNay.add(k);
+    for (const g of nguoi) for (const k of cacKhoa(g)) khoaNay.add(k);
+    const ctyNay = new Set<string>();
+    for (const g of guests) for (const k of cacKhoaCongTy(g)) ctyNay.add(k);
     return cacNam.map((n) => {
       const chinh = ds.filter((d) => d.nam === n && !d.laDiKem);
       const moiLai = chinh.filter((d) => cacKhoa(d).some((k) => khoaNay.has(k)));
-      const daDen = chinh.filter((d) => d.soDen > 0);
+      const daDen = chinh.filter((d) => d.soDen > 0).length;
       const moiLaiDaDen = moiLai.filter((d) => d.soDen > 0).length;
-      return { nam: n, tong: chinh.length, daDen: daDen.length, moiLai: moiLai.length, moiLaiDaDen, denChuaMoiLai: daDen.length - moiLaiDaDen };
+      const cty = [...ctyTheoNam.get(n)!.values()];
+      const ctyMoiLai = cty.filter((c) => [...c.khoa].some((k) => ctyNay.has(k)));
+      const ctyDen = cty.filter((c) => c.den).length;
+      const ctyMoiLaiDen = ctyMoiLai.filter((c) => c.den).length;
+      return {
+        nam: n,
+        duocMoi: { khach: chinh.length, congTy: cty.length },
+        daDen: { khach: daDen, congTy: ctyDen },
+        moiLai: { khach: moiLai.length, congTy: ctyMoiLai.length },
+        moiLaiDaDen: { khach: moiLaiDaDen, congTy: ctyMoiLaiDen },
+        denChuaMoi: { khach: daDen - moiLaiDaDen, congTy: ctyDen - ctyMoiLaiDen },
+      };
     });
   };
 
-  return { coDuLieu: true, nam, khop, thongKe };
+  const coCau = (guests: KhachNamNay[]): CoCauNamNay => {
+    const { nguoi, chuaCoTen } = nguoiNamNay(guests);
+    const khach: Record<LoaiLichSu, number> = { den: 0, khongDen: 0, congTy: 0, moi: 0 };
+    for (const g of nguoi) khach[khop(g).loai]++;
+    // Cong ty nam nay: da tung den (bat ky nam nao), tung duoc moi nhung chua den, hay moi hoan toan
+    const lichSuCty = new Map<string, boolean>(); // khoa -> da tung co khach den
+    for (const m of ctyTheoNam.values()) for (const c of m.values()) for (const k of c.khoa) lichSuCty.set(k, (lichSuCty.get(k) || false) || c.den);
+    const ctyNay = new Map<string, Set<string>>();
+    let khongGhiCongTy = 0;
+    for (const g of nguoi) {
+      const chinh = khoaChinhCty(g);
+      if (!chinh) {
+        khongGhiCongTy++;
+        continue;
+      }
+      const r = ctyNay.get(chinh) || new Set<string>();
+      for (const k of cacKhoaCongTy(g)) r.add(k);
+      ctyNay.set(chinh, r);
+    }
+    const congTy = { den: 0, khongDen: 0, moi: 0 };
+    for (const ks of ctyNay.values()) {
+      const khopDuoc = [...ks].filter((k) => lichSuCty.has(k));
+      if (!khopDuoc.length) congTy.moi++;
+      else if (khopDuoc.some((k) => lichSuCty.get(k))) congTy.den++;
+      else congTy.khongDen++;
+    }
+    return { tongKhach: nguoi.length, chuaCoTen, khach, tongCongTy: ctyNay.size, khongGhiCongTy, congTy };
+  };
+
+  return { coDuLieu: true, nam, khop, thongKe, coCau };
 }

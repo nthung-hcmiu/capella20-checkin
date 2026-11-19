@@ -23,8 +23,7 @@ export default async function Dashboard({ searchParams }: { searchParams: { khon
   const boKhop = await taiBoKhop(prisma);
   const conHieuLuc = guests.filter((g) => g.trangThai !== TRANG_THAI.DA_HUY);
   const tkNamTruoc = boKhop.thongKe(conHieuLuc);
-  const demLs: Record<string, number> = {};
-  if (boKhop.coDuLieu) for (const g of conHieuLuc) { const l = boKhop.khop(g)!.loai; demLs[l] = (demLs[l] || 0) + 1; }
+  const coCau = boKhop.coCau(conHieuLuc);
   const venues = await prisma.venue.findMany({ where: u.phamViXem ? { id: { in: u.phamViXem } } : {}, orderBy: { thuTu: "asc" } });
   // Muc tieu: toan su kien theo con so chung; xem theo pham vi thi cong tu cac venue duoc giao
   const tongQuotaXem = venues.reduce((t, v) => t + v.quota, 0);
@@ -128,46 +127,93 @@ export default async function Dashboard({ searchParams }: { searchParams: { khon
         />
       </div>
 
-      {/* So voi cac nam truoc: moi nam mot dong, khong kem chu thich */}
+      {/* So voi cac nam truoc: moi con so deu ghi ca so khach va so cong ty, kem ti le va cach tinh */}
       {tkNamTruoc.length > 0 && (
         <div className="card overflow-hidden">
-          <div className="flex flex-wrap items-center justify-between gap-2 px-6 py-4">
-            <h2 className="font-display text-lg text-ink">So với khách các năm trước</h2>
+          <div className="flex flex-wrap items-start justify-between gap-2 px-6 py-4">
+            <div>
+              <h2 className="font-display text-lg text-ink">So với khách các năm trước</h2>
+              <p className="text-xs text-ink-muted">Mỗi con số ghi cả số khách và số công ty. Phần trăm ghi rõ tính trên nhóm nào.</p>
+            </div>
             <Link href="/admin/khach" className="text-xs font-medium text-brand hover:underline">
               Lọc trong danh sách khách →
             </Link>
           </div>
+
+          {/* A. Tu danh sach nam truoc nhin sang nam nay */}
+          <div className="border-t border-ivory-deep px-6 pb-1 pt-4 text-xs font-medium uppercase tracking-wider text-ink-muted">
+            A. Khách các năm trước: đã đến bao nhiêu, năm nay mời lại bao nhiêu
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-t border-ivory-deep text-left text-xs uppercase tracking-wider text-ink-muted">
+                <tr className="text-left text-xs uppercase tracking-wider text-ink-muted">
                   <th className="px-6 py-3 font-medium">Năm</th>
-                  <th className="px-3 py-3 text-right font-medium">Khách được mời</th>
+                  <th className="px-3 py-3 font-medium">Đơn vị</th>
+                  <th className="px-3 py-3 text-right font-medium">Được mời</th>
                   <th className="px-3 py-3 text-right font-medium">Đã đến</th>
                   <th className="px-3 py-3 text-right font-medium">Năm nay mời lại</th>
-                  <th className="px-3 py-3 text-right font-medium">Mời lại, năm đó đã đến</th>
+                  <th className="px-3 py-3 text-right font-medium">Đã đến và được mời lại</th>
                   <th className="px-6 py-3 text-right font-medium">Đã đến, năm nay chưa mời</th>
                 </tr>
               </thead>
               <tbody>
-                {tkNamTruoc.map((t) => (
-                  <tr key={t.nam} className="border-t border-ivory-deep">
-                    <td className="px-6 py-3 font-display text-lg text-ink">{t.nam}</td>
-                    <td className="px-3 py-3 text-right">{t.tong}</td>
-                    <td className="px-3 py-3 text-right">{t.daDen}</td>
-                    <td className="px-3 py-3 text-right">{t.moiLai}</td>
-                    <td className="px-3 py-3 text-right">{t.moiLaiDaDen}</td>
-                    <td className="px-6 py-3 text-right font-medium text-brand">{t.denChuaMoiLai}</td>
-                  </tr>
-                ))}
+                {tkNamTruoc.map((t) =>
+                  (["khach", "congTy"] as const).map((dv) => (
+                    <tr key={`${t.nam}-${dv}`} className={dv === "khach" ? "border-t border-ivory-deep" : ""}>
+                      {dv === "khach" && (
+                        <td rowSpan={2} className="px-6 py-1.5 align-top font-display text-lg text-ink">
+                          {t.nam}
+                        </td>
+                      )}
+                      <td className="whitespace-nowrap px-3 py-2 align-top text-ink-soft">{dv === "khach" ? "Khách" : "Công ty"}</td>
+                      <ONam so={t.duocMoi[dv]} />
+                      <ONam so={t.daDen[dv]} tren={t.duocMoi[dv]} ghi="số được mời" />
+                      <ONam so={t.moiLai[dv]} tren={t.duocMoi[dv]} ghi="số được mời" />
+                      <ONam so={t.moiLaiDaDen[dv]} tren={t.daDen[dv]} ghi="số đã đến" />
+                      <ONam so={t.denChuaMoi[dv]} tren={t.daDen[dv]} ghi="số đã đến" noiBat cuoi />
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
-          <div className="grid grid-cols-2 gap-3 border-t border-ivory-deep p-4 lg:grid-cols-4">
-            <OSo nhan="Khách năm nay từng được mời" so={(demLs.den || 0) + (demLs.khongDen || 0)} />
-            <OSo nhan="Trong đó lần gần nhất có đến" so={demLs.den || 0} />
-            <OSo nhan="Người mới, công ty cũ" so={demLs.congTy || 0} />
-            <OSo nhan="Khách mới hoàn toàn" so={demLs.moi || 0} />
+
+          {/* B. Tu danh sach nam nay nhin ve lich su */}
+          <div className="border-t border-ivory-deep px-6 pb-1 pt-4 text-xs font-medium uppercase tracking-wider text-ink-muted">
+            B. Khách năm nay: cũ hay mới
+          </div>
+          <div className="grid gap-4 p-4 lg:grid-cols-2">
+            <CoCau
+              tieuDe="Theo khách"
+              tong={coCau.tongKhach}
+              donVi="khách"
+              nhom={[
+                { nhan: "Khách cũ, lần gần nhất có đến", so: coCau.khach.den, mau: "#5c6b4f" },
+                { nhan: "Khách cũ, lần gần nhất mời nhưng không đến", so: coCau.khach.khongDen, mau: "#c2853d" },
+                { nhan: "Người mới của công ty đã từng được mời", so: coCau.khach.congTy, mau: "#3a5a6b" },
+                { nhan: "Khách mới hoàn toàn (cả công ty chưa từng mời)", so: coCau.khach.moi, mau: "#b5303a" },
+              ]}
+              ghiChu={coCau.chuaCoTen > 0 ? `Chưa tính ${coCau.chuaCoTen.toLocaleString("vi-VN")} thiệp khách đi kèm chưa có tên.` : undefined}
+            />
+            <CoCau
+              tieuDe="Theo công ty"
+              tong={coCau.tongCongTy}
+              donVi="công ty"
+              nhom={[
+                { nhan: "Công ty cũ, đã từng có khách đến", so: coCau.congTy.den, mau: "#5c6b4f" },
+                { nhan: "Công ty cũ, từng được mời nhưng chưa đến", so: coCau.congTy.khongDen, mau: "#c2853d" },
+                { nhan: "Công ty mới hoàn toàn", so: coCau.congTy.moi, mau: "#b5303a" },
+              ]}
+              ghiChu={coCau.khongGhiCongTy > 0 ? `${coCau.khongGhiCongTy.toLocaleString("vi-VN")} khách không ghi công ty nên không tính vào đây.` : undefined}
+            />
+          </div>
+
+          <div className="border-t border-ivory-deep px-6 py-4 text-xs leading-relaxed text-ink-muted">
+            <b className="font-medium text-ink-soft">Cách tính.</b> Khách các năm trước là khách chính trong file check in từng năm, không tính người đi kèm. Khách
+            năm nay là mỗi thiệp chưa hủy, gồm cả khách đi kèm đã có tên. Hai dòng được coi là cùng một người khi trùng số điện thoại, hoặc trùng tên và công ty.
+            Công ty được nhận theo tên đã bỏ loại hình (Công ty, TNHH, Cổ phần...) hoặc mã CORP, nên các cách viết khác nhau của một công ty được gộp làm một;
+            vì vậy số công ty ở đây có thể thấp hơn số ở bảng Theo venue. Công ty tính là đã đến khi có ít nhất một khách của công ty đó đến.
           </div>
         </div>
       )}
@@ -307,11 +353,51 @@ function OSoSanh({ thucTe, mucTieu, tien }: { thucTe: number; mucTieu: number; t
   );
 }
 
-function OSo({ nhan, so, noiBat }: { nhan: string; so: number; noiBat?: boolean }) {
+// Mot o so trong bang nam truoc: so, va ti le tren nhom ghi ro ben duoi
+function ONam({ so, tren, ghi, noiBat, cuoi }: { so: number; tren?: number; ghi?: string; noiBat?: boolean; cuoi?: boolean }) {
   return (
-    <div className={`rounded-xl px-4 py-3 ${noiBat ? "bg-brand/10" : "bg-ivory/70"}`}>
-      <div className="text-[11px] uppercase tracking-wider text-ink-muted">{nhan}</div>
-      <div className={`mt-0.5 font-display text-2xl ${noiBat ? "text-brand" : "text-ink"}`}>{so.toLocaleString("vi-VN")}</div>
+    <td className={`${cuoi ? "px-6" : "px-3"} py-2 text-right align-top`}>
+      <div className={`whitespace-nowrap ${noiBat && so > 0 ? "font-medium text-brand" : "text-ink"}`}>{so.toLocaleString("vi-VN")}</div>
+      {ghi != null && (
+        <div className="whitespace-nowrap text-[11px] text-ink-muted">{tren ? `${Math.round((so / tren) * 100)}% ${ghi}` : "-"}</div>
+      )}
+    </td>
+  );
+}
+
+// Co cau: cac nhom khong chong len nhau, cong lai bang tong; kem thanh ti le
+function CoCau({
+  tieuDe, tong, donVi, nhom, ghiChu,
+}: {
+  tieuDe: string; tong: number; donVi: string; nhom: { nhan: string; so: number; mau: string }[]; ghiChu?: string;
+}) {
+  const pt = (so: number) => (tong ? Math.round((so / tong) * 100) : 0);
+  return (
+    <div className="rounded-xl bg-ivory/70 p-4">
+      <div className="flex items-baseline justify-between gap-3">
+        <div className="text-[11px] font-medium uppercase tracking-wider text-ink-muted">{tieuDe}</div>
+        <div className="text-sm text-ink-soft">
+          <span className="font-display text-2xl text-ink">{tong.toLocaleString("vi-VN")}</span> {donVi}
+        </div>
+      </div>
+      <div className="mt-3 flex h-2.5 overflow-hidden rounded-full bg-ivory-deep">
+        {nhom.map((n) => (n.so > 0 ? <div key={n.nhan} style={{ width: `${(n.so / (tong || 1)) * 100}%`, backgroundColor: n.mau }} /> : null))}
+      </div>
+      <table className="mt-3 w-full text-sm">
+        <tbody>
+          {nhom.map((n) => (
+            <tr key={n.nhan} className="border-t border-ivory-deep first:border-0">
+              <td className="py-1.5 pr-2 text-ink-soft">
+                <span className="mr-2 inline-block h-2 w-2 rounded-full align-middle" style={{ backgroundColor: n.mau }} />
+                {n.nhan}
+              </td>
+              <td className="whitespace-nowrap py-1.5 text-right font-medium text-ink">{n.so.toLocaleString("vi-VN")}</td>
+              <td className="w-12 whitespace-nowrap py-1.5 text-right text-xs text-ink-muted">{pt(n.so)}%</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {ghiChu && <p className="mt-2 text-[11px] text-ink-muted">{ghiChu}</p>}
     </div>
   );
 }
