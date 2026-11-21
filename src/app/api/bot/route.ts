@@ -15,6 +15,7 @@ import {
   taoKhach,
   suaKhach,
   thaoTacHangLoat,
+  xoaKhach,
   type LoaiHangLoat,
 } from "@/lib/actions";
 
@@ -174,6 +175,11 @@ export async function POST(req: NextRequest) {
       case "hang_loat": {
         const ids = Array.isArray(body.ids) ? body.ids.map(String) : [];
         return NextResponse.json(await thaoTacHangLoat(ids, String(body.loai) as LoaiHangLoat, body.giaTri ? String(body.giaTri) : undefined));
+      }
+      // Xoa han khoi CSDL: chi dung de don du lieu test. KHONG khai bao trong TOOLS cua tro ly.
+      case "xoa": {
+        if (!id) return NextResponse.json({ ok: false, thongBao: "Thieu id." });
+        return NextResponse.json(await xoaKhach(id));
       }
 
       default:
