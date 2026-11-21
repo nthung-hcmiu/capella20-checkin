@@ -103,8 +103,17 @@ export async function POST(req: NextRequest) {
       // --- Duyet / phat hanh ---
       case "duyet": {
         if (!id) return NextResponse.json({ ok: false, thongBao: "Thieu id." });
+        const g = await prisma.guest.findUnique({ where: { id } });
+        if (!g) return NextResponse.json({ ok: false, thongBao: "Khong tim thay khach." });
+        if (!["NHAP", "CHO_DUYET"].includes(g.trangThai)) {
+          return NextResponse.json({ ok: false, thongBao: `${g.hoTen} dang o trang thai ${TEN_TRANG_THAI[g.trangThai] || g.trangThai}, khong duyet lai duoc.` });
+        }
         await duyetKhach(id);
-        return NextResponse.json({ ok: true, thongBao: "Da duyet va phat hanh thiep." });
+        const sau = await prisma.guest.findUnique({ where: { id }, select: { trangThai: true, soThuTu: true } });
+        if (sau?.trangThai !== TRANG_THAI.DA_PHAT_HANH) {
+          return NextResponse.json({ ok: false, thongBao: "Khong duyet duoc: khach ngoai pham vi venue cua ban hoac trang thai da doi." });
+        }
+        return NextResponse.json({ ok: true, thongBao: `Da duyet va phat hanh thiep cho ${g.hoTen} (so thu tu ${sau.soThuTu}).` });
       }
       case "duyet_khong_canh_bao":
         return NextResponse.json(await duyetKhongCanhBao());
@@ -114,13 +123,23 @@ export async function POST(req: NextRequest) {
       }
       case "huy": {
         if (!id) return NextResponse.json({ ok: false, thongBao: "Thieu id." });
+        const g = await prisma.guest.findUnique({ where: { id } });
+        if (!g) return NextResponse.json({ ok: false, thongBao: "Khong tim thay khach." });
         await huyKhach(id);
-        return NextResponse.json({ ok: true, thongBao: "Da huy khach." });
+        const sau = await prisma.guest.findUnique({ where: { id }, select: { trangThai: true } });
+        return sau?.trangThai === TRANG_THAI.DA_HUY
+          ? NextResponse.json({ ok: true, thongBao: `Da huy ${g.hoTen}.` })
+          : NextResponse.json({ ok: false, thongBao: "Khong huy duoc: khach ngoai pham vi venue cua ban." });
       }
       case "da_moi": {
         if (!id) return NextResponse.json({ ok: false, thongBao: "Thieu id." });
+        const g = await prisma.guest.findUnique({ where: { id } });
+        if (!g) return NextResponse.json({ ok: false, thongBao: "Khong tim thay khach." });
+        if (g.trangThai !== TRANG_THAI.DA_PHAT_HANH) {
+          return NextResponse.json({ ok: false, thongBao: `${g.hoTen} dang ${TEN_TRANG_THAI[g.trangThai] || g.trangThai}; chi danh dau da moi khi thiep da phat hanh.` });
+        }
         await danhDauDaMoi(id);
-        return NextResponse.json({ ok: true, thongBao: "Da danh dau da gui thiep." });
+        return NextResponse.json({ ok: true, thongBao: `Da danh dau da gui thiep cho ${g.hoTen}.` });
       }
       case "chot_vang_mat":
         return NextResponse.json(await chotVangMat());
