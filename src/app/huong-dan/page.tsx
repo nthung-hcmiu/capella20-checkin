@@ -21,7 +21,7 @@ const HUONG_DAN: VaiTro[] = [
         buoc: [
           ["Nhập danh sách", "Nhập danh sách > chọn file Excel > chọn trạng thái sau khi nhập (Chờ duyệt hoặc Đã phát hành thiệp) > Tiếp tục: kiểm tra file > Hoàn tất: lưu khách vào app."],
           ["Duyệt", "Chờ duyệt: khách sales đã gửi. Xem cảnh báo (trùng SĐT, trùng tên cùng công ty, VIP, venue hết quota) rồi Duyệt hoặc Từ chối. Khách không có cảnh báo duyệt một lần bằng nút Duyệt tất cả."],
-          ["Trả về nháp", "Thiệp đã phát hành mà cần cho sales sửa số người mời, VIP hoặc venue: Danh sách khách > bấm vào khách > Trả về nháp (hoặc tick nhiều khách rồi chọn Trả về nháp để sales sửa). Sales sửa xong gửi duyệt, BTC duyệt lại. Số thứ tự và mã QR giữ nguyên. Trong lúc chờ duyệt lại, QR vẫn quét được nhưng lễ tân sẽ thấy cảnh báo thiệp chưa phát hành, nên duyệt lại trước ngày sự kiện."],
+          ["Trả về nháp", "Thiệp đã phát hành mà cần cho sales sửa số người mời, VIP hoặc venue: Danh sách khách > bấm vào khách > Trả về nháp (hoặc tick nhiều khách rồi chọn Trả về nháp để sales sửa). Sales sửa xong gửi duyệt, BTC duyệt lại. Sales không xóa được thiệp đã từng phát hành. Số thứ tự và mã QR giữ nguyên. Trong lúc chờ duyệt lại, QR vẫn quét được nhưng lễ tân sẽ thấy cảnh báo thiệp chưa phát hành, nên duyệt lại trước ngày sự kiện."],
           ["Xem khách", "Danh sách khách: bấm vào dòng nào là mở toàn bộ thông tin và các nút xử lý của khách đó."],
           ["Cùng công ty", "Danh sách khách > bộ lọc Công ty: xem công ty nào có nhiều sales cùng mời, hoặc được mời trên 2 người. Hàng Chờ duyệt cũng ghi rõ các khách cùng công ty và sales của từng người."],
           ["Theo dõi theo sales", "Quota venue > Theo dõi theo sales: mỗi sales đã mời bao nhiêu công ty, bao nhiêu thiệp; trong đó bao nhiêu thiệp đang nháp, chờ duyệt, đã phát hành, đã xác nhận, đã check in."],
@@ -90,6 +90,7 @@ const HUONG_DAN: VaiTro[] = [
         buoc: [
           ["Tổng quan", "Số thiệp, số công ty, doanh thu dự kiến, thiệp xác nhận, thiệp check in của riêng bạn, kèm danh sách việc cần làm."],
           ["Sửa thông tin", "Khách đang Nháp hoặc Chờ duyệt: mở khách > Sửa thông tin. Thiệp đã duyệt thì không tự sửa được: báo quản lý trả thiệp về nháp, sửa xong gửi duyệt lại. Số thứ tự và mã QR vẫn giữ nguyên."],
+          ["Khách không đi được", "Thiệp đã phát hành thì không xóa được, kể cả khi được trả về nháp. Mở khách > Xác nhận thay khách > Không tham dự. Thiệp đó không còn tính vào quota, bạn thêm khách mới thay vào như bình thường (khách mới có số thứ tự và thiệp riêng). Chỉ khách Nháp chưa từng phát hành mới xóa được."],
           ["Trên máy tính", "Khách của tôi hiện dạng bảng, bấm vào dòng để xem chi tiết và thao tác."],
         ],
       },

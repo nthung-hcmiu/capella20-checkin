@@ -429,7 +429,7 @@ function ChiTiet({ g }: { g: SalesGuest }) {
     [NHAN_TRUONG.linhVuc, g.them.linhVuc],
     [NHAN_TRUONG.nguonKhach, g.them.nguonKhach],
     ["Khách đi cùng", moTaDiCung(g.khachDiCung) || null],
-    ["Phát hành thiệp", gio(g.phatHanhLuc)],
+    [CHUA_PHAT_HANH.includes(g.trangThai) ? "Phát hành lần trước" : "Phát hành thiệp", gio(g.phatHanhLuc)],
     ["Xác nhận lúc", gio(g.xacNhanLuc)],
     ["Check in", g.checkinLuc ? `${gio(g.checkinLuc)}${g.soNguoiDen ? `, ${g.soNguoiDen} người` : ""}` : null],
     ["Năm trước", g.lichSu?.chiTiet ?? null],
@@ -515,7 +515,7 @@ function HanhDong({ g, venuesSua }: { g: SalesGuest; venuesSua: { id: string; te
             Gửi duyệt
           </button>
           {nutSua}
-          {xoa ? (
+          {g.phatHanhLuc ? null : xoa ? (
             <button
               className="rounded-full bg-wine px-3.5 py-1.5 text-xs text-white"
               disabled={pending}
@@ -529,7 +529,11 @@ function HanhDong({ g, venuesSua }: { g: SalesGuest; venuesSua: { id: string; te
             </button>
           )}
         </div>
-        <p className="mt-2 text-xs text-ink-muted">Kiểm tra lại thông tin rồi gửi BTC duyệt.</p>
+        <p className="mt-2 text-xs text-ink-muted">
+          {g.phatHanhLuc
+            ? "Thiệp đã phát hành, BTC trả về nháp để sửa: sửa xong gửi duyệt lại, không xóa được. Khách không đi được thì sau khi duyệt chọn Không tham dự rồi thêm khách mới."
+            : "Kiểm tra lại thông tin rồi gửi BTC duyệt."}
+        </p>
         {tb && <p className="mt-1 text-xs text-sage">{tb}</p>}
         {formSua}
       </div>
@@ -626,7 +630,7 @@ function HanhDong({ g, venuesSua }: { g: SalesGuest; venuesSua: { id: string; te
       {/* 4. Ve da duyet: sales khong tu sua thong tin */}
       <div className="flex flex-wrap items-center gap-2">
         <span className="w-24 shrink-0 text-xs text-ink-muted">Thông tin</span>
-        <span className="text-xs text-ink-muted">Thiệp đã duyệt nên không sửa được. Cần đổi thông tin thì báo quản lý trả thiệp về nháp.</span>
+        <span className="text-xs text-ink-muted">Thiệp đã duyệt nên không sửa hoặc xóa được. Khách không đi được thì chọn Không tham dự ở dòng Xác nhận, rồi thêm khách mới. Cần đổi thông tin thì báo quản lý trả thiệp về nháp.</span>
       </div>
       {tb && <p className="text-xs text-sage">{tb}</p>}
     </div>

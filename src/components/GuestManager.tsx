@@ -544,7 +544,7 @@ function ChiTiet({ g, canhBao }: { g: GuestRow; canhBao: string[] }) {
     ["Số người xác nhận", g.soNguoiXacNhan],
     ["Khách tự trả lời trên thiệp", g.traLoiKhach],
     ["Xác nhận bởi", g.xacNhanBoi ? `${g.xacNhanBoi}${g.xacNhanLuc ? `, ${gio(g.xacNhanLuc)}` : ""}` : null],
-    ["Phát hành thiệp", gio(g.phatHanhLuc)],
+    [g.trangThai === TRANG_THAI.NHAP || g.trangThai === TRANG_THAI.CHO_DUYET ? "Phát hành lần trước" : "Phát hành thiệp", gio(g.phatHanhLuc)],
     ["Check in", g.checkinLuc ? `${gio(g.checkinLuc)}${g.soNguoiDen ? `, ${g.soNguoiDen} người` : ""}` : null],
     ["Thiệp giấy", g.daGuiThiepGiay ? "Đã gửi" : "Chưa gửi"],
     ["Cảnh báo khi duyệt", canhBao.length ? canhBao.map((c) => NHAN_CANH_BAO[c] || c).join(", ") : null],

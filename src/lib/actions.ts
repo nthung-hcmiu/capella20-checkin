@@ -201,6 +201,10 @@ export async function xoaNhap(id: string): Promise<KetQua> {
   if (!g) return { ok: false, thongBao: "Không tìm thấy khách." };
   if (!quyenVoiKhach(u, g)) return { ok: false, thongBao: KHONG_QUYEN_KHACH };
   if (g.trangThai !== TRANG_THAI.NHAP) return { ok: false, thongBao: "Chỉ xóa được khách đang ở trạng thái Nháp." };
+  // Thiep da tung phat hanh (BTC tra ve nhap de sua) thi sales khong xoa duoc: da co so thu tu va co the da gui cho khach
+  if (g.phatHanhLuc && quyenVoiKhach(u, g) !== "BTC") {
+    return { ok: false, thongBao: "Thiệp này đã phát hành nên không xóa được. Sửa xong hãy gửi duyệt lại; khách không đi được thì sau khi duyệt chọn Không tham dự rồi thêm khách mới." };
+  }
   await prisma.guest.delete({ where: { id } });
   lamTuoi();
   return { ok: true, thongBao: `Đã xóa nháp ${g.hoTen}.` };
@@ -245,9 +249,10 @@ export async function huyKhach(id: string) {
 }
 
 // BTC thu hoi ve de sales sua lai: khach ve Nhap, giu nguyen so thu tu va ma QR.
+// Giu phatHanhLuc de biet thiep nay da tung phat hanh: sales khong duoc xoa, chi duoc sua roi gui duyet lai.
 // Sales sua xong gui duyet, BTC duyet lai thi thiep cu dung tiep. Trong luc cho, QR van quet duoc nhung le tan thay canh bao chua phat hanh.
 const TRA_NHAP_DATA = {
-  trangThai: TRANG_THAI.NHAP, lyDoChoDuyet: null, phatHanhLuc: null, soNguoiXacNhan: null, nguoiXacNhan: null, xacNhanLuc: null, xacNhanBoi: null,
+  trangThai: TRANG_THAI.NHAP, lyDoChoDuyet: null, soNguoiXacNhan: null, nguoiXacNhan: null, xacNhanLuc: null, xacNhanBoi: null,
 };
 const DUOC_TRA_NHAP = { notIn: [TRANG_THAI.NHAP, TRANG_THAI.DA_CHECKIN] as string[] };
 export async function traVeNhap(id: string): Promise<KetQua> {
@@ -780,7 +785,8 @@ export async function thaoTacHangLoat(ids: string[], loai: LoaiHangLoat, giaTri?
       viec = "xóa";
       break;
     case "XOA_NHAP":
-      n = (await prisma.guest.deleteMany({ where: { ...pham, trangThai: TRANG_THAI.NHAP } })).count;
+      // Khong xoa thiep da tung phat hanh (bi tra ve nhap de sua)
+      n = (await prisma.guest.deleteMany({ where: { ...pham, trangThai: TRANG_THAI.NHAP, phatHanhLuc: null } })).count;
       viec = "xóa nháp";
       break;
   }
