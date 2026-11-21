@@ -1,0 +1,162 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
+import { NHAN_TRANG_THAI, TRANG_THAI } from "@/lib/constants";
+import { layNguoiDung } from "@/lib/auth";
+import {
+  duyetKhach,
+  duyetKhongCanhBao,
+  traVeNhap,
+  huyKhach,
+  danhDauDaMoi,
+  chotVangMat,
+  xacNhanKhach,
+  datVip,
+  datThiepGiay,
+  taoKhach,
+  suaKhach,
+  thaoTacHangLoat,
+  type LoaiHangLoat,
+} from "@/lib/actions";
+
+// API cho tro ly (H Mini): thao tac thang tren du lieu, dung phien dang nhap cua nguoi goi.
+// Moi quyen deu do cac server action goc kiem tra (ADMIN/SALES + pham vi venue).
+
+export const dynamic = "force-dynamic";
+
+const TEN_TRANG_THAI = NHAN_TRANG_THAI;
+
+function gon(g: any) {
+  return {
+    id: g.id,
+    soThuTu: g.soThuTu,
+    hoTen: g.hoTen,
+    sdt: g.sdt,
+    congTy: g.congTy ?? null,
+    venue: g.venue?.ten ?? null,
+    trangThai: g.trangThai,
+    trangThaiTen: TEN_TRANG_THAI[g.trangThai] ?? g.trangThai,
+    soNguoiMoi: g.soNguoiMoi,
+    isVip: g.isVip,
+    salesOwner: g.salesOwner,
+    checkinLuc: g.checkinLuc,
+  };
+}
+
+export async function GET() {
+  const u = await layNguoiDung();
+  return NextResponse.json({
+    ok: !!u,
+    nguoiDung: u ? { hoTen: u.hoTen, vaiTro: u.vaiTro, quanTri: u.quanTri, venue: u.venueTen } : null,
+  });
+}
+
+export async function POST(req: NextRequest) {
+  const u = await layNguoiDung();
+  if (!u) return NextResponse.json({ ok: false, thongBao: "Chua dang nhap (thieu phien c20_phien)." }, { status: 401 });
+
+  const body = await req.json().catch(() => ({} as any));
+  const action = String(body.action || "");
+  const id = body.id ? String(body.id) : undefined;
+
+  try {
+    switch (action) {
+      // --- Tra cuu ---
+      case "tim": {
+        const q = String(body.q || "").trim();
+        if (!q) return NextResponse.json({ ok: false, thongBao: "Thieu tu khoa (q)." });
+        const ds = await prisma.guest.findMany({
+          where: {
+            OR: [{ hoTen: { contains: q } }, { sdt: { contains: q } }, { congTy: { contains: q } }],
+            ...(body.trangThai ? { trangThai: String(body.trangThai) } : {}),
+          },
+          include: { venue: true },
+          orderBy: { updatedAt: "desc" },
+          take: Math.min(Number(body.limit) || 10, 30),
+        });
+        return NextResponse.json({ ok: true, thongBao: `Tim thay ${ds.length} khach.`, data: ds.map(gon) });
+      }
+      case "cho_duyet": {
+        const ds = await prisma.guest.findMany({
+          where: { trangThai: TRANG_THAI.CHO_DUYET },
+          include: { venue: true },
+          orderBy: { updatedAt: "asc" },
+          take: Math.min(Number(body.limit) || 20, 100),
+        });
+        const tong = await prisma.guest.count({ where: { trangThai: TRANG_THAI.CHO_DUYET } });
+        return NextResponse.json({ ok: true, thongBao: `${tong} khach cho duyet.`, data: ds.map(gon), tong });
+      }
+      case "khach": {
+        if (!id) return NextResponse.json({ ok: false, thongBao: "Thieu id." });
+        const g = await prisma.guest.findUnique({ where: { id }, include: { venue: true } });
+        if (!g) return NextResponse.json({ ok: false, thongBao: "Khong tim thay khach." });
+        return NextResponse.json({ ok: true, thongBao: "OK", data: gon(g) });
+      }
+
+      // --- Duyet / phat hanh ---
+      case "duyet": {
+        if (!id) return NextResponse.json({ ok: false, thongBao: "Thieu id." });
+        await duyetKhach(id);
+        return NextResponse.json({ ok: true, thongBao: "Da duyet va phat hanh thiep." });
+      }
+      case "duyet_khong_canh_bao":
+        return NextResponse.json(await duyetKhongCanhBao());
+      case "tra_nhap": {
+        if (!id) return NextResponse.json({ ok: false, thongBao: "Thieu id." });
+        return NextResponse.json(await traVeNhap(id));
+      }
+      case "huy": {
+        if (!id) return NextResponse.json({ ok: false, thongBao: "Thieu id." });
+        await huyKhach(id);
+        return NextResponse.json({ ok: true, thongBao: "Da huy khach." });
+      }
+      case "da_moi": {
+        if (!id) return NextResponse.json({ ok: false, thongBao: "Thieu id." });
+        await danhDauDaMoi(id);
+        return NextResponse.json({ ok: true, thongBao: "Da danh dau da gui thiep." });
+      }
+      case "chot_vang_mat":
+        return NextResponse.json(await chotVangMat());
+
+      // --- Khach xac nhan ---
+      case "xac_nhan": {
+        if (!id) return NextResponse.json({ ok: false, thongBao: "Thieu id." });
+        const kq = String(body.ketQua || "");
+        if (!["THAM_DU", "KHONG_THAM_DU", "DA_MOI"].includes(kq)) {
+          return NextResponse.json({ ok: false, thongBao: "ketQua phai la THAM_DU | KHONG_THAM_DU | DA_MOI." });
+        }
+        return NextResponse.json(await xacNhanKhach(id, kq as any, Number(body.soNguoi) || 1));
+      }
+
+      // --- Thong tin khach ---
+      case "vip": {
+        if (!id) return NextResponse.json({ ok: false, thongBao: "Thieu id." });
+        await datVip(id, body.isVip !== false);
+        return NextResponse.json({ ok: true, thongBao: body.isVip === false ? "Da bo VIP." : "Da dat VIP." });
+      }
+      case "thiep_giay": {
+        if (!id) return NextResponse.json({ ok: false, thongBao: "Thieu id." });
+        await datThiepGiay(id, body.daGui !== false);
+        return NextResponse.json({ ok: true, thongBao: "Da cap nhat thiep giay." });
+      }
+      case "tao_khach":
+        return NextResponse.json(await taoKhach(body.input || {}));
+      case "sua_khach": {
+        if (!id) return NextResponse.json({ ok: false, thongBao: "Thieu id." });
+        return NextResponse.json(await suaKhach(id, body.input || {}));
+      }
+      case "hang_loat": {
+        const ids = Array.isArray(body.ids) ? body.ids.map(String) : [];
+        return NextResponse.json(await thaoTacHangLoat(ids, String(body.loai) as LoaiHangLoat, body.giaTri ? String(body.giaTri) : undefined));
+      }
+
+      default:
+        return NextResponse.json({ ok: false, thongBao: `Action khong ho tro: ${action}` }, { status: 400 });
+    }
+  } catch (e: any) {
+    const laQuyen = e?.name === "LoiQuyen" || /quyen/i.test(String(e?.message || ""));
+    return NextResponse.json(
+      { ok: false, thongBao: laQuyen ? "Khong du quyen cho thao tac nay." : `Loi: ${e?.message || e}` },
+      { status: laQuyen ? 403 : 500 }
+    );
+  }
+}
