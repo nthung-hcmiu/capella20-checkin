@@ -91,6 +91,14 @@ export async function POST(req: NextRequest) {
         if (!g) return NextResponse.json({ ok: false, thongBao: "Khong tim thay khach." });
         return NextResponse.json({ ok: true, thongBao: "OK", data: gon(g) });
       }
+      case "venue": {
+        const ds = await prisma.venue.findMany({ orderBy: { ten: "asc" } });
+        return NextResponse.json({
+          ok: true,
+          thongBao: `${ds.length} venue.`,
+          data: ds.map((v: any) => ({ id: v.id, ten: v.ten, quota: v.quota })),
+        });
+      }
 
       // --- Duyet / phat hanh ---
       case "duyet": {
