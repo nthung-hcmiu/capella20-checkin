@@ -91,6 +91,7 @@ const HUONG_DAN: VaiTro[] = [
           ["Tổng quan", "Số thiệp, số công ty, doanh thu dự kiến, thiệp xác nhận, thiệp check in của riêng bạn, kèm danh sách việc cần làm."],
           ["Sửa thông tin", "Khách đang Nháp hoặc Chờ duyệt: mở khách > Sửa thông tin. Thiệp đã duyệt thì không tự sửa được: báo quản lý trả thiệp về nháp, sửa xong gửi duyệt lại. Số thứ tự và mã QR vẫn giữ nguyên."],
           ["Khách không đi được", "Thiệp đã phát hành thì không xóa được, kể cả khi được trả về nháp. Mở khách > Xác nhận thay khách > Không tham dự. Thiệp đó không còn tính vào quota, bạn thêm khách mới thay vào như bình thường (khách mới có số thứ tự và thiệp riêng). Chỉ khách Nháp chưa từng phát hành mới xóa được."],
+          ["Xuất danh sách", "Khách của tôi > Xuất danh sách: tải file CSV (mở bằng Excel) gồm toàn bộ khách bạn phụ trách, kèm số thứ tự thiệp, trạng thái, số thiệp xác nhận và thực tế đến."],
           ["Trên máy tính", "Khách của tôi hiện dạng bảng, bấm vào dòng để xem chi tiết và thao tác."],
         ],
       },

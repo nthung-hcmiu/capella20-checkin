@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { yeuCauQuyen } from "@/lib/auth";
 import { NHAN_TRANG_THAI } from "@/lib/constants";
@@ -15,12 +15,15 @@ function o(v: unknown): string {
   return `"${s.replace(/"/g, '""')}"`;
 }
 
-// Xuat toan bo danh sach khach ra CSV (UTF-8 co BOM de Excel doc dung tieng Viet)
-export async function GET() {
-  const u = await yeuCauQuyen(["ADMIN"]);
-  if (!u) return NextResponse.json({ loi: "Chỉ Quản trị được xuất danh sách" }, { status: 401 });
-  if (!u.quanTri) return NextResponse.json({ loi: "Chỉ Quản trị được xuất danh sách" }, { status: 403 });
-  const ds = await prisma.guest.findMany({ include: { venue: true }, orderBy: { soThuTu: "asc" } });
+// Xuat danh sach khach ra CSV (UTF-8 co BOM de Excel doc dung tieng Viet).
+// Mac dinh: toan bo danh sach, chi Quan tri. ?cuaToi=1: sales (hoac BTC) xuat rieng khach do chinh minh phu trach,
+// khong kem ma thiep va link trang thiep.
+export async function GET(req: NextRequest) {
+  const cuaToi = req.nextUrl.searchParams.get("cuaToi") === "1";
+  const u = await yeuCauQuyen(cuaToi ? ["ADMIN", "SALES"] : ["ADMIN"]);
+  if (!u) return NextResponse.json({ loi: cuaToi ? "Phiên đăng nhập đã hết, hãy đăng nhập lại" : "Chỉ Quản trị được xuất danh sách" }, { status: 401 });
+  if (!cuaToi && !u.quanTri) return NextResponse.json({ loi: "Chỉ Quản trị được xuất danh sách" }, { status: 403 });
+  const ds = await prisma.guest.findMany({ where: cuaToi ? { salesOwner: u.hoTen } : {}, include: { venue: true }, orderBy: { soThuTu: "asc" } });
   const boKhop = await taiBoKhop(prisma);
   // Thu tu cot theo mau danh sach cac nam truoc, roi den cac cot cua he thong
   const tieuDe = [
@@ -29,7 +32,8 @@ export async function GET() {
     "Danh xưng khách thứ 2", "Tên khách thứ 2", "Chức vụ khách thứ 2", "Phân loại khách",
     "Phân loại khách VIP", "Doanh thu dự kiến", "Round 1: Khách đã nhận thiệp online", "Round 2: Đã gửi thiệp giấy",
     "Họ và tên người phụ trách tiếp khách", "Ghi chú",
-    "Năm trước", "Số thứ tự thiệp", "Trạng thái", "Số thiệp xác nhận", "Số thiệp thực tế đến", "Giờ check in", "Mã thiệp", "Link thiệp", "Link thiệp khách thứ 2",
+    "Năm trước", "Số thứ tự thiệp", "Trạng thái", "Số thiệp xác nhận", "Số thiệp thực tế đến", "Giờ check in",
+    ...(cuaToi ? [] : ["Mã thiệp", "Link thiệp", "Link thiệp khách thứ 2"]),
   ];
   const daNhanOnline = ["DA_MOI", "THAM_DU", "KHONG_THAM_DU", "DA_CHECKIN", "VANG_MAT"];
   const dong = ds.map((g, i) => {
@@ -44,7 +48,7 @@ export async function GET() {
       o(boKhop.coDuLieu ? boKhop.khop(g)!.chiTiet : ""), o(g.soThuTu), o(NHAN_TRANG_THAI[g.trangThai] || g.trangThai), o(g.soNguoiXacNhan ?? ""),
       o(g.soNguoiDen ?? ""),
       o(g.checkinLuc ? g.checkinLuc.toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }) : ""),
-      o(g.maBiMat), o(urlQR(g.maBiMat)), o(g.soNguoiMoi >= 2 && dc[0]?.hoTen ? urlQR(g.maBiMat, undefined, 2) : ""),
+      ...(cuaToi ? [] : [o(g.maBiMat), o(urlQR(g.maBiMat)), o(g.soNguoiMoi >= 2 && dc[0]?.hoTen ? urlQR(g.maBiMat, undefined, 2) : "")]),
     ].join(",");
   });
   const csv = "﻿" + [tieuDe.map(o).join(","), ...dong].join("\r\n");
@@ -52,7 +56,7 @@ export async function GET() {
   return new NextResponse(csv, {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="capella20-khach-${ngay}.csv"`,
+      "Content-Disposition": `attachment; filename="capella20-khach-${cuaToi ? `${u.username}-` : ""}${ngay}.csv"`,
       "Cache-Control": "no-store",
     },
   });

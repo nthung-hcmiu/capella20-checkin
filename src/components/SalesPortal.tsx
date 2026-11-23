@@ -257,6 +257,11 @@ function MayTinh({ guests, ds, venues, venuesSua, loc }: ViewProps) {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          {guests.length > 0 && (
+            <a href="/api/xuat?cuaToi=1" className="btn-ghost">
+              Xuất danh sách
+            </a>
+          )}
           <Link href="/sales/nhap" className="btn-ghost">
             Nhập từ Excel
           </Link>
