@@ -41,11 +41,17 @@ export default async function SalesTongQuan() {
 
   return (
     <div className="space-y-5 lg:space-y-7">
-      <div>
-        <h1 className="font-display text-2xl text-ink">Tổng quan của tôi</h1>
-        <p className="mt-1 text-sm text-ink-muted">
-          Số liệu các khách do {u.hoTen} phụ trách. Mỗi khách một thiệp, kể cả khách đi kèm; số công ty đếm riêng.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="font-display text-2xl text-ink">Tổng quan của tôi</h1>
+          <p className="mt-1 text-sm text-ink-muted">
+            Số liệu các khách do {u.hoTen} phụ trách. Mỗi khách một thiệp, kể cả khách đi kèm; số công ty đếm riêng.
+          </p>
+        </div>
+        {/* File CSV chi gom khach do chinh nguoi nay phu trach */}
+        <a href="/api/xuat?cuaToi=1" className="btn-ghost shrink-0">
+          Xuất danh sách
+        </a>
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5 lg:gap-4">
