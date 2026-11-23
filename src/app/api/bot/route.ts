@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { NHAN_TRANG_THAI, TRANG_THAI } from "@/lib/constants";
-import { layNguoiDung } from "@/lib/auth";
+import { layNguoiDung, locDuocDung, locPhamVi, quyenVoiKhach, type NguoiDung } from "@/lib/auth";
 import {
   duyetKhach,
   duyetKhongCanhBao,
@@ -20,11 +20,27 @@ import {
 } from "@/lib/actions";
 
 // API cho tro ly (H Mini): thao tac thang tren du lieu, dung phien dang nhap cua nguoi goi.
-// Moi quyen deu do cac server action goc kiem tra (ADMIN/SALES + pham vi venue).
+// Lenh ghi: quyen do cac server action goc kiem tra (ADMIN/SALES + pham vi venue).
+// Lenh doc: route nay tu ap pham vi cua nguoi goi (locDuocDung / locPhamVi / quyenVoiKhach),
+// vi truy van Prisma truc tiep thi khong co lop kiem tra nao khac.
 
 export const dynamic = "force-dynamic";
 
 const TEN_TRANG_THAI = NHAN_TRANG_THAI;
+
+// Le tan khong dung API nay: tra cuu luc check in da co /api/lookup.
+const VAI_TRO_DUOC_GOI = ["ADMIN", "SALES"];
+const duocGoi = (u: NguoiDung | null): u is NguoiDung => !!u && !u.doiMatKhau && VAI_TRO_DUOC_GOI.includes(u.vaiTro);
+
+const KHONG_TIM_THAY = { ok: false, thongBao: "Khong tim thay khach." };
+const khongDuQuyen = () => NextResponse.json({ ok: false, thongBao: "Khong du quyen cho thao tac nay." }, { status: 403 });
+
+// Doc mot khach theo id trong pham vi cua nguoi goi. Khach ngoai pham vi duoc coi nhu khong ton tai,
+// de khong lo ten, trang thai va cung khong do duoc id nao co that.
+async function khachDuocDung(u: NguoiDung, id: string) {
+  const g = await prisma.guest.findUnique({ where: { id }, include: { venue: true } });
+  return g && quyenVoiKhach(u, g) ? g : null;
+}
 
 function gon(g: any) {
   return {
@@ -46,7 +62,7 @@ function gon(g: any) {
 export async function GET() {
   const u = await layNguoiDung();
   return NextResponse.json({
-    ok: !!u,
+    ok: duocGoi(u),
     nguoiDung: u ? { hoTen: u.hoTen, vaiTro: u.vaiTro, quanTri: u.quanTri, venue: u.venueTen } : null,
   });
 }
@@ -54,6 +70,8 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const u = await layNguoiDung();
   if (!u) return NextResponse.json({ ok: false, thongBao: "Chua dang nhap (thieu phien c20_phien)." }, { status: 401 });
+  if (u.doiMatKhau) return NextResponse.json({ ok: false, thongBao: "Tai khoan phai doi mat khau truoc khi dung tro ly." }, { status: 403 });
+  if (!duocGoi(u)) return khongDuQuyen();
 
   const body = await req.json().catch(() => ({} as any));
   const action = String(body.action || "");
@@ -67,7 +85,8 @@ export async function POST(req: NextRequest) {
         if (!q) return NextResponse.json({ ok: false, thongBao: "Thieu tu khoa (q)." });
         const ds = await prisma.guest.findMany({
           where: {
-            OR: [{ hoTen: { contains: q } }, { sdt: { contains: q } }, { congTy: { contains: q } }],
+            // AND tach rieng tu khoa va pham vi: locDuocDung cung co the tra ve mot OR
+            AND: [{ OR: [{ hoTen: { contains: q } }, { sdt: { contains: q } }, { congTy: { contains: q } }] }, locDuocDung(u)],
             ...(body.trangThai ? { trangThai: String(body.trangThai) } : {}),
           },
           include: { venue: true },
@@ -77,19 +96,22 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ ok: true, thongBao: `Tim thay ${ds.length} khach.`, data: ds.map(gon) });
       }
       case "cho_duyet": {
+        // Hang cho duyet la viec cua BTC, trong cac venue duoc giao (giong trang /admin/duyet)
+        if (u.vaiTro !== "ADMIN") return khongDuQuyen();
+        const where = { trangThai: TRANG_THAI.CHO_DUYET, ...locPhamVi(u) };
         const ds = await prisma.guest.findMany({
-          where: { trangThai: TRANG_THAI.CHO_DUYET },
+          where,
           include: { venue: true },
           orderBy: { updatedAt: "asc" },
           take: Math.min(Number(body.limit) || 20, 100),
         });
-        const tong = await prisma.guest.count({ where: { trangThai: TRANG_THAI.CHO_DUYET } });
+        const tong = await prisma.guest.count({ where });
         return NextResponse.json({ ok: true, thongBao: `${tong} khach cho duyet.`, data: ds.map(gon), tong });
       }
       case "khach": {
         if (!id) return NextResponse.json({ ok: false, thongBao: "Thieu id." });
-        const g = await prisma.guest.findUnique({ where: { id }, include: { venue: true } });
-        if (!g) return NextResponse.json({ ok: false, thongBao: "Khong tim thay khach." });
+        const g = await khachDuocDung(u, id);
+        if (!g) return NextResponse.json(KHONG_TIM_THAY);
         return NextResponse.json({ ok: true, thongBao: "OK", data: gon(g) });
       }
       case "venue": {
@@ -104,8 +126,8 @@ export async function POST(req: NextRequest) {
       // --- Duyet / phat hanh ---
       case "duyet": {
         if (!id) return NextResponse.json({ ok: false, thongBao: "Thieu id." });
-        const g = await prisma.guest.findUnique({ where: { id } });
-        if (!g) return NextResponse.json({ ok: false, thongBao: "Khong tim thay khach." });
+        const g = await khachDuocDung(u, id);
+        if (!g) return NextResponse.json(KHONG_TIM_THAY);
         if (!["NHAP", "CHO_DUYET"].includes(g.trangThai)) {
           return NextResponse.json({ ok: false, thongBao: `${g.hoTen} dang o trang thai ${TEN_TRANG_THAI[g.trangThai] || g.trangThai}, khong duyet lai duoc.` });
         }
@@ -124,8 +146,8 @@ export async function POST(req: NextRequest) {
       }
       case "huy": {
         if (!id) return NextResponse.json({ ok: false, thongBao: "Thieu id." });
-        const g = await prisma.guest.findUnique({ where: { id } });
-        if (!g) return NextResponse.json({ ok: false, thongBao: "Khong tim thay khach." });
+        const g = await khachDuocDung(u, id);
+        if (!g) return NextResponse.json(KHONG_TIM_THAY);
         await huyKhach(id);
         const sau = await prisma.guest.findUnique({ where: { id }, select: { trangThai: true } });
         return sau?.trangThai === TRANG_THAI.DA_HUY
@@ -134,8 +156,8 @@ export async function POST(req: NextRequest) {
       }
       case "da_moi": {
         if (!id) return NextResponse.json({ ok: false, thongBao: "Thieu id." });
-        const g = await prisma.guest.findUnique({ where: { id } });
-        if (!g) return NextResponse.json({ ok: false, thongBao: "Khong tim thay khach." });
+        const g = await khachDuocDung(u, id);
+        if (!g) return NextResponse.json(KHONG_TIM_THAY);
         if (g.trangThai !== TRANG_THAI.DA_PHAT_HANH) {
           return NextResponse.json({ ok: false, thongBao: `${g.hoTen} dang ${TEN_TRANG_THAI[g.trangThai] || g.trangThai}; chi danh dau da moi khi thiep da phat hanh.` });
         }
@@ -163,6 +185,7 @@ export async function POST(req: NextRequest) {
       }
       case "thiep_giay": {
         if (!id) return NextResponse.json({ ok: false, thongBao: "Thieu id." });
+        if (!(await khachDuocDung(u, id))) return NextResponse.json(KHONG_TIM_THAY);
         await datThiepGiay(id, body.daGui !== false);
         return NextResponse.json({ ok: true, thongBao: "Da cap nhat thiep giay." });
       }
@@ -176,8 +199,9 @@ export async function POST(req: NextRequest) {
         const ids = Array.isArray(body.ids) ? body.ids.map(String) : [];
         return NextResponse.json(await thaoTacHangLoat(ids, String(body.loai) as LoaiHangLoat, body.giaTri ? String(body.giaTri) : undefined));
       }
-      // Xoa han khoi CSDL: chi dung de don du lieu test. KHONG khai bao trong TOOLS cua tro ly.
+      // Xoa han khoi CSDL: chi dung de don du lieu test, chi Quan tri duoc goi. KHONG khai bao trong TOOLS cua tro ly.
       case "xoa": {
+        if (!u.quanTri) return khongDuQuyen();
         if (!id) return NextResponse.json({ ok: false, thongBao: "Thieu id." });
         return NextResponse.json(await xoaKhach(id));
       }
