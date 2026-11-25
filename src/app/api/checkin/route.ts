@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { docMaTuQR, docNguoiTuQR } from "@/lib/codes";
-import { TRANG_THAI, KET_QUA_CHECKIN } from "@/lib/constants";
+import { TRANG_THAI, KET_QUA_CHECKIN, DUOC_CHECKIN } from "@/lib/constants";
 import { yeuCauQuyen } from "@/lib/auth";
 import { khachDiKemThu, moTaDiCung } from "@/lib/khach";
 
@@ -9,7 +9,7 @@ import { khachDiKemThu, moTaDiCung } from "@/lib/khach";
 // Ma chung cua ve (khach chinh, thiep giay, go so thu tu): check in ca ve, mac dinh du so nguoi.
 // Ma rieng cua khach di kem (?k=2): ghi nhan dung nguoi do, den truoc hay sau khach chinh deu duoc.
 export async function POST(req: NextRequest) {
-  const u = await yeuCauQuyen(["LE_TAN", "ADMIN"]);
+  const u = await yeuCauQuyen(DUOC_CHECKIN);
   if (!u) {
     return NextResponse.json({ ok: false, ketQua: KET_QUA_CHECKIN.KHONG_HOP_LE, thongBao: "Phiên đăng nhập đã hết, hãy đăng nhập lại" }, { status: 401 });
   }

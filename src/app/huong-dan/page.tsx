@@ -104,6 +104,34 @@ const HUONG_DAN: VaiTro[] = [
     ],
   },
   {
+    ma: "QL_CHECKIN",
+    ten: "Quản lý check in",
+    moTa: "Theo dõi cửa đón khách: số khách tổng và từng trung tâm, tình hình từng làn lễ tân. Chỉ xem số liệu, không sửa danh sách khách.",
+    muc: [
+      {
+        tieuDe: "Trang Giám sát check in",
+        buoc: [
+          ["Số tổng", "Hàng trên cùng: thiệp đã mời, đã xác nhận tham dự, đã check in, số đã xác nhận mà chưa đến, và số lượt check in trong 15 phút gần nhất."],
+          ["Theo trung tâm", "Bảng Theo trung tâm: mỗi trung tâm mời bao nhiêu thiệp, bao nhiêu đã xác nhận, bao nhiêu đã check in, còn bao nhiêu chưa đến."],
+          ["Các làn lễ tân", "Mỗi làn một ô: tổng số lượt, lượt trong 15 phút gần nhất, bao nhiêu lượt quét QR, bao nhiêu nhập tay, bao nhiêu lượt trùng hoặc lỗi, lễ tân nào đang đứng làn đó và lần quét gần nhất lúc mấy giờ."],
+          ["Xem riêng một làn", "Bấm vào ô của làn: danh sách Check in gần đây bên dưới chỉ còn các lượt của làn đó. Bấm Xem mọi làn để bỏ lọc."],
+          ["Tự cập nhật", "Trang tự cập nhật mỗi 10 giây. Bấm Tạm dừng khi cần đọc kỹ, Cập nhật ngay khi muốn xem số mới nhất."],
+        ],
+      },
+      {
+        tieuDe: "Khi cần hỗ trợ cửa",
+        buoc: [
+          ["Tự check in giúp", "Bấm Mở app check in để quét QR, nhập số thứ tự hoặc tìm tên khách như một lễ tân, ví dụ khi đứng ở Quầy hỗ trợ."],
+          ["Làn chậm hoặc nhiều lỗi", "Làn có nhiều lượt Trùng, lỗi hoặc đứng yên lâu trong khi làn khác vẫn chạy: xuống kiểm tra mạng và máy của lễ tân làn đó."],
+        ],
+      },
+    ],
+    luuY: [
+      "Một lượt là một lần check in thành công. Khách chính và khách đi kèm quét mã riêng thì tính 2 lượt; số ở hàng Đã check in đếm theo số người thực tế đến.",
+      "Trang Giám sát không hiện số điện thoại hay doanh thu. Vai trò này không vào được Quản trị BTC và Cổng Sales, không sửa được dữ liệu khách; chỉ check in được qua app check in như lễ tân.",
+    ],
+  },
+  {
     ma: "LE_TAN",
     ten: "Lễ tân",
     moTa: "Đón khách tại cửa: check in mỗi thiệp một lần, ghi số người thực tế đến.",

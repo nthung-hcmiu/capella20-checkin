@@ -43,7 +43,16 @@ const MODULES = [
     thietBi: "Lễ tân theo ca",
     mo: "Quét QR, nhập số, tìm tên hoặc số điện thoại. Mỗi mã chỉ check in một lần.",
     mau: "#3a5a6b",
-    vaiTro: ["ADMIN", "LE_TAN"],
+    vaiTro: ["ADMIN", "LE_TAN", "QL_CHECKIN"],
+  },
+  {
+    href: "/giam-sat",
+    ma: "E",
+    ten: "Giám sát check in",
+    thietBi: "Quản lý check in",
+    mo: "Số khách tổng và từng trung tâm, tình hình check in tại từng làn lễ tân, danh sách check in gần đây. Tự cập nhật.",
+    mau: "#7b5a8c",
+    vaiTro: ["ADMIN", "QL_CHECKIN"],
   },
 ];
 

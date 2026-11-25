@@ -25,7 +25,7 @@ export interface TaiKhoanRow {
   thiepSo: number | null; // so thu tu cua khach trung ho ten (nguoi nay da co trong danh sach khach moi)
 }
 
-const THU_TU = ["ADMIN", "SALES", "LE_TAN"];
+const THU_TU = ["ADMIN", "SALES", "QL_CHECKIN", "LE_TAN"];
 
 type VenueOpt = { id: string; ten: string };
 
@@ -444,6 +444,7 @@ function FormThem({ venues, onKq, onXong }: { venues: VenueOpt[]; onKq: (k: KetQ
           <select className="input" value={vaiTro} onChange={(e) => setVaiTro(e.target.value)}>
             <option value="SALES">Sales</option>
             <option value="LE_TAN">Lễ tân</option>
+            <option value="QL_CHECKIN">Quản lý check in</option>
             <option value="ADMIN">BTC</option>
           </select>
         </div>

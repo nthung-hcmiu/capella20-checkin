@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { yeuCauQuyen } from "@/lib/auth";
-import { TRANG_THAI } from "@/lib/constants";
+import { TRANG_THAI, DUOC_CHECKIN } from "@/lib/constants";
 
 // Le tan chinh so nguoi thuc te den cua mot khach da check in (doi soat dang ky va thuc te)
 export async function POST(req: NextRequest) {
-  if (!(await yeuCauQuyen(["LE_TAN", "ADMIN"]))) {
+  if (!(await yeuCauQuyen(DUOC_CHECKIN))) {
     return NextResponse.json({ ok: false, thongBao: "Phiên đăng nhập đã hết, hãy đăng nhập lại" }, { status: 401 });
   }
   const body = await req.json().catch(() => ({}));

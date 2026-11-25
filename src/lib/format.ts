@@ -1,3 +1,6 @@
+// Luon hien gio Viet Nam, ke ca khi trang duoc dung tren may chu (may chu chay gio UTC)
+const MUI_GIO = "Asia/Ho_Chi_Minh";
+
 export function dinhDangGio(d?: Date | string | null): string {
   if (!d) return "-";
   const date = typeof d === "string" ? new Date(d) : d;
@@ -6,13 +9,14 @@ export function dinhDangGio(d?: Date | string | null): string {
     month: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: MUI_GIO,
   });
 }
 
 export function dinhDangGioNgan(d?: Date | string | null): string {
   if (!d) return "-";
   const date = typeof d === "string" ? new Date(d) : d;
-  return date.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+  return date.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", timeZone: MUI_GIO });
 }
 
 export function che4SoCuoi(sdt: string | null | undefined): string {

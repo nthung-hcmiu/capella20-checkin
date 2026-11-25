@@ -68,19 +68,27 @@ export const VAI_TRO = {
   ADMIN: "ADMIN",
   LE_TAN: "LE_TAN",
   SALES: "SALES",
+  // Quan ly check in: xem so lieu khach va tinh hinh check in tung lan le tan; khong sua danh sach khach
+  QL_CHECKIN: "QL_CHECKIN",
 } as const;
 
 export const NHAN_VAI_TRO: Record<string, string> = {
   ADMIN: "BTC",
   SALES: "Sales",
   LE_TAN: "Lễ tân",
+  QL_CHECKIN: "Quản lý check in",
 };
+// Vai tro duoc dung app check in (quet QR, nhap so, tim ten)
+export const DUOC_CHECKIN: string[] = ["LE_TAN", "QL_CHECKIN", "ADMIN"];
+// Vai tro duoc xem trang giam sat check in
+export const DUOC_GIAM_SAT: string[] = ["QL_CHECKIN", "ADMIN"];
 
 // Trang mac dinh sau khi dang nhap theo vai tro
 export const TRANG_CHINH: Record<string, string> = {
   ADMIN: "/admin",
   SALES: "/sales",
   LE_TAN: "/checkin",
+  QL_CHECKIN: "/giam-sat",
 };
 
 // ===== Lan check in =====

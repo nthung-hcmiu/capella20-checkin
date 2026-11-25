@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { DUOC_CHECKIN } from "@/lib/constants";
 import { prisma } from "@/lib/db";
 import { docMaTuQR } from "@/lib/codes";
 import { boDau } from "@/lib/format";
@@ -6,7 +7,7 @@ import { yeuCauQuyen } from "@/lib/auth";
 
 // Tra cuu khach cho app check in: theo ma QR, so thu tu, ten hoac SDT
 export async function GET(req: NextRequest) {
-  if (!(await yeuCauQuyen(["LE_TAN", "ADMIN"]))) {
+  if (!(await yeuCauQuyen(DUOC_CHECKIN))) {
     return NextResponse.json({ ket_qua: [], loi: "Phiên đăng nhập đã hết, hãy đăng nhập lại" }, { status: 401 });
   }
   const q = (req.nextUrl.searchParams.get("q") || "").trim();

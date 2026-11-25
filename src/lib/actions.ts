@@ -455,7 +455,7 @@ export async function taoTaiKhoan(input: {
   if (!/^[a-z0-9._]{3,32}$/.test(username)) {
     return { ok: false, thongBao: "Tên đăng nhập 3 đến 32 ký tự, chỉ gồm chữ không dấu, số, dấu chấm hoặc gạch dưới." };
   }
-  if (!["ADMIN", "SALES", "LE_TAN"].includes(input.vaiTro)) return { ok: false, thongBao: "Vai trò không hợp lệ." };
+  if (!["ADMIN", "SALES", "LE_TAN", "QL_CHECKIN"].includes(input.vaiTro)) return { ok: false, thongBao: "Vai trò không hợp lệ." };
   if (input.matKhau.length < 8) return { ok: false, thongBao: "Mật khẩu tối thiểu 8 ký tự." };
   if (await prisma.staffUser.findUnique({ where: { username } })) {
     return { ok: false, thongBao: "Tên đăng nhập đã tồn tại." };
