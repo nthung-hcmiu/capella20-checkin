@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { DS_QUY_CACH, MEP_AN_TOAN, type Nhan } from "@/lib/nhan";
+import { DS_QUY_CACH, MEP_AN_TOAN, SO_CACH_BEN, SO_CACH_DAY, type Nhan } from "@/lib/nhan";
 
 // In nhan dan ngoai thiep giay. Nguoi in chon loai giay nhan (lib/nhan.ts), o bat dau va do lech cua may in.
 const KHOA_LOAI = "c20_nhan_loai";
@@ -190,11 +190,13 @@ export function InNhan({ nhan }: { nhan: Nhan[] }) {
                   const cot = j % qc.cot;
                   const mepDoc = Math.max(0, MEP_AN_TOAN - qc.leDoc);
                   const mepNgang = Math.max(0, MEP_AN_TOAN - qc.leNgang);
-                  const soDuoi = Math.max(1.5, hang === qc.hang - 1 ? mepDoc : 0);
-                  const soPhai = Math.max(3, cot === qc.cot - 1 ? mepNgang : 0);
+                  const soDuoi = Math.max(SO_CACH_DAY, hang === qc.hang - 1 ? mepDoc : 0);
+                  const soPhai = Math.max(SO_CACH_BEN, cot === qc.cot - 1 ? mepNgang : 0);
+                  const soTrai = Math.max(SO_CACH_BEN, cot === 0 ? mepNgang : 0);
+                  const caoSo = qc.coSo * 0.3528; // chieu cao chu so (mm)
                   const dem = {
-                    paddingTop: `${hang === 0 ? Math.max(qc.demTren, mepDoc) : soDuoi > 1.5 ? Math.min(qc.demTren, 1.2) : qc.demTren}mm`,
-                    paddingBottom: `${soDuoi + 3.3}mm`, // chua cho cho so thu tu
+                    paddingTop: `${hang === 0 ? Math.max(qc.demTren, mepDoc) : soDuoi > SO_CACH_DAY ? Math.min(qc.demTren, 1.2) : qc.demTren}mm`,
+                    paddingBottom: `${soDuoi + caoSo + 0.6}mm`, // chua cho cho dong so dien thoai va so thu tu
                     paddingLeft: `${Math.max(qc.demNgang, cot === 0 ? mepNgang : 0)}mm`,
                     paddingRight: `${Math.max(qc.demNgang, cot === qc.cot - 1 ? mepNgang : 0)}mm`,
                   };
@@ -223,7 +225,12 @@ export function InNhan({ nhan }: { nhan: Nhan[] }) {
                               </div>
                             )}
                           </div>
-                          <div className="absolute font-mono font-semibold" style={{ right: `${soPhai}mm`, bottom: `${soDuoi}mm`, fontSize: `${qc.coSo}pt`, lineHeight: 1 }}>
+                          {n.sdt && (
+                            <div className="absolute whitespace-nowrap" style={{ left: `${soTrai}mm`, bottom: `${soDuoi}mm`, fontSize: `${qc.coPhu}pt`, lineHeight: 1.1 }}>
+                              ĐT: {n.sdt}
+                            </div>
+                          )}
+                          <div data-so="" className="absolute font-mono font-bold" style={{ right: `${soPhai}mm`, bottom: `${soDuoi}mm`, fontSize: `${qc.coSo}pt`, lineHeight: 1 }}>
                             {n.so}
                           </div>
                         </>
