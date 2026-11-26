@@ -4,6 +4,7 @@ import { yeuCauTrang } from "@/lib/auth";
 import { TRANG_CHINH, TRANG_THAI } from "@/lib/constants";
 import { docDiCung, tenGoi } from "@/lib/khach";
 import { canThiepGiay } from "@/lib/congTy";
+import { khoaCty } from "@/lib/lichSu";
 import { InNhan } from "@/components/InNhan";
 import { hienSdt, type Nhan } from "@/lib/nhan";
 
@@ -56,14 +57,30 @@ export default async function InNhanPage({
   const soNoiBo = daPhatHanh.length - canIn.length;
   const soKhongThay = theoChon ? dsSo.length - tatCa.length : 0;
 
-  // Moi nguoi mot thiep giay nen moi nguoi mot nhan: khach chinh va tung khach di kem da co ten, cung so thu tu
-  const nhan: Nhan[] = canIn.flatMap((g) => [
-    { khoa: g.id, ten: tenGoi(g), chucVu: g.chucVu || "", congTy: g.congTy || "", diaChi: (g.diaChi || "").trim(), sdt: hienSdt(g.sdt), so: g.soThuTu },
-    ...docDiCung(g.khachDiCung)
-      .slice(0, Math.max(0, g.soNguoiMoi - 1))
-      .map((x, i) => ({ khoa: `${g.id}-${i + 2}`, ten: [x.danhXung, x.hoTen].filter(Boolean).join(" ").trim(), chucVu: x.chucVu || "", congTy: g.congTy || "", diaChi: (g.diaChi || "").trim(), sdt: hienSdt(g.sdt), so: g.soThuTu }))
-      .filter((x) => x.ten),
-  ]);
+  // Moi nguoi mot thiep giay: khach chinh va tung khach di kem da co ten, cung so thu tu.
+  // Nhan thi gop theo cong ty: cac khach cung cong ty cua cung mot nguoi phu trach (va khach di kem tren cung thiep)
+  // di chung mot phong bi, chi can nhan cua khach dau tien (so thu tu nho nhat). Nguoi in tat duoc viec gop nay tren trang.
+  const nhan: Nhan[] = [];
+  const dauNhom = new Map<string, Nhan>();
+  for (const g of canIn) {
+    const cty = khoaCty(g.congTy);
+    const nhom = cty ? `${g.salesOwner}|${cty}` : `thiep:${g.id}`;
+    const chung = { congTy: g.congTy || "", diaChi: (g.diaChi || "").trim(), sdt: hienSdt(g.sdt), so: g.soThuTu };
+    const cuaThiep = [
+      { khoa: g.id, ten: tenGoi(g), chucVu: g.chucVu || "" },
+      ...docDiCung(g.khachDiCung)
+        .slice(0, Math.max(0, g.soNguoiMoi - 1))
+        .map((x, i) => ({ khoa: `${g.id}-${i + 2}`, ten: [x.danhXung, x.hoTen].filter(Boolean).join(" ").trim(), chucVu: x.chucVu || "" }))
+        .filter((x) => x.ten),
+    ];
+    for (const x of cuaThiep) {
+      const dau = dauNhom.get(nhom);
+      const n: Nhan = { ...x, ...chung, gop: !!dau, kem: [] };
+      if (!dau) dauNhom.set(nhom, n);
+      else if (n.so !== dau.so && !dau.kem.includes(n.so)) dau.kem.push(n.so);
+      nhan.push(n);
+    }
+  }
   const soKem = nhan.length - canIn.length;
   const boQua = [
     soChuaDuyet > 0 ? `${soChuaDuyet} khách chưa được duyệt hoặc đã hủy` : "",
@@ -86,9 +103,9 @@ export default async function InNhanPage({
           </Link>
         </div>
         <p className="mt-3 text-sm text-ink-soft">
-          <b className="font-medium text-ink">{nhan.length.toLocaleString("vi-VN")} nhãn</b> cho {canIn.length.toLocaleString("vi-VN")} khách
+          <b className="font-medium text-ink">{nhan.length.toLocaleString("vi-VN")} thiệp giấy</b> của {canIn.length.toLocaleString("vi-VN")} khách
           {theoChon ? " đã chọn" : laBTC ? "" : ` của ${u.hoTen}`}
-          {soKem > 0 ? `, gồm ${soKem.toLocaleString("vi-VN")} nhãn của khách đi kèm (mỗi người một thiệp giấy)` : ""}.
+          {soKem > 0 ? `, gồm ${soKem.toLocaleString("vi-VN")} thiệp của khách đi kèm` : ""}.
           {boQua.length > 0 ? ` Không in: ${boQua.join("; ")}.` : ""}
         </p>
         {!theoChon && (

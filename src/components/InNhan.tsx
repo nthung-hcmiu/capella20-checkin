@@ -7,8 +7,13 @@ import { DS_QUY_CACH, MEP_AN_TOAN, SO_CACH_BEN, SO_CACH_DAY, type Nhan } from "@
 const KHOA_LOAI = "c20_nhan_loai";
 const khoaLech = (ma: string) => `c20_nhan_lech_${ma}`;
 
-export function InNhan({ nhan }: { nhan: Nhan[] }) {
+export function InNhan({ nhan: tatCaNhan }: { nhan: Nhan[] }) {
   const [ma, setMa] = useState(DS_QUY_CACH[0].ma);
+  // Mac dinh moi cong ty chi in mot nhan (khach dau tien) de tiet kiem nhan; bo tick thi moi thiep mot nhan
+  const [gopCty, setGopCty] = useState(true);
+  const nhan = gopCty ? tatCaNhan.filter((n) => !n.gop) : tatCaNhan;
+  const soGop = tatCaNhan.length - tatCaNhan.filter((n) => !n.gop).length;
+  const nhomGop = tatCaNhan.filter((n) => !n.gop && n.kem.length > 0);
   const [batDau, setBatDau] = useState(1); // o dau tien se in, 1 la o tren cung ben trai
   const [lechX, setLechX] = useState(0);
   const [lechY, setLechY] = useState(0);
@@ -36,7 +41,7 @@ export function InNhan({ nhan }: { nhan: Nhan[] }) {
     chinh();
     // Chu web tai xong co the lam doi do rong chu, do lai mot lan nua
     document.fonts?.ready.then(chinh).catch(() => {});
-  }, [nhan, ma, batDau]);
+  }, [tatCaNhan, gopCty, ma, batDau]);
 
   // Loai giay da chon lan truoc va do lech cua may in luu tren may nay, lan sau khoi chon lai
   useEffect(() => {
@@ -110,6 +115,35 @@ export function InNhan({ nhan }: { nhan: Nhan[] }) {
               </button>
             ))}
           </div>
+
+          {soGop > 0 && (
+            <div className="mt-4 rounded-xl bg-ivory/70 px-4 py-3">
+              <label className="flex items-start gap-2 text-sm text-ink">
+                <input type="checkbox" className="mt-0.5 h-4 w-4 accent-brand" checked={gopCty} onChange={(e) => { setGopCty(e.target.checked); setBatDau(1); }} />
+                <span>
+                  Mỗi công ty chỉ in một nhãn, cho khách đầu tiên
+                  <span className="block text-xs text-ink-muted">
+                    {gopCty
+                      ? `Đang in ${nhan.length.toLocaleString("vi-VN")} nhãn cho ${tatCaNhan.length.toLocaleString("vi-VN")} thiệp, tiết kiệm ${soGop.toLocaleString("vi-VN")} nhãn. Thiệp của các khách cùng công ty (và khách đi kèm) bỏ chung phong bì với khách đầu tiên.`
+                      : `Đang in mỗi thiệp một nhãn: ${tatCaNhan.length.toLocaleString("vi-VN")} nhãn. Tick lại để tiết kiệm ${soGop.toLocaleString("vi-VN")} nhãn.`}
+                  </span>
+                </span>
+              </label>
+              {gopCty && nhomGop.length > 0 && (
+                <details className="mt-2 text-xs text-ink-soft">
+                  <summary className="cursor-pointer text-brand">Xem nhãn nào đi kèm thiệp nào ({nhomGop.length} công ty có nhiều thiệp)</summary>
+                  <ul className="mt-2 max-h-48 space-y-1 overflow-y-auto pr-2">
+                    {nhomGop.map((n) => (
+                      <li key={n.khoa}>
+                        Nhãn <b className="font-mono">{n.so}</b> {n.ten}
+                        {n.congTy ? ` (${n.congTy})` : ""}: bỏ chung thiệp số {n.kem.join(", ")}
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+            </div>
+          )}
 
           <div className="mt-5 grid gap-5 lg:grid-cols-3">
             <div>

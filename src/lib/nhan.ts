@@ -49,6 +49,9 @@ export interface Nhan {
   diaChi: string; // dia chi gui thiep giay; khach di kem dung dia chi cua khach chinh
   sdt: string; // so dien thoai, da tach nhom cho de doc; khach di kem dung so cua khach chinh
   so: number; // so thu tu thiep
+  // Gop nhan theo cong ty de tiet kiem nhan: moi cong ty (cua cung mot nguoi phu trach) chi in nhan cua khach dau tien.
+  gop: boolean; // true: da co nhan cua khach dau tien cung cong ty, khong can in nhan nay
+  kem: number[]; // tren nhan duoc in: so thu tu cac thiep khac cung cong ty di chung
 }
 
 // 0901234567 thanh 0901 234 567
