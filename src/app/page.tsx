@@ -23,7 +23,7 @@ const MODULES = [
     ma: "B",
     ten: "Quản trị BTC",
     thietBi: "Máy tính",
-    mo: "Nhập danh sách, duyệt và phát hành thiệp, theo dõi KPI venue, in số thứ tự thiệp giấy, đối soát và báo cáo.",
+    mo: "Nhập danh sách, duyệt và phát hành thiệp, theo dõi KPI venue, in nhãn dán thiệp giấy, đối soát và báo cáo.",
     mau: "#6b2b36",
     vaiTro: ["ADMIN"],
   },

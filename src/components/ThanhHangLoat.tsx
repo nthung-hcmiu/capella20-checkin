@@ -22,12 +22,14 @@ const THAO_TAC: { loai: LoaiHangLoat; nhan: string; btc?: boolean; sales?: boole
 // Thanh hien khi da tick chon khach: chon thao tac roi ap dung cho tat ca khach da chon
 export function ThanhHangLoat({
   ids,
+  soThuTu = [],
   laSales,
   salesTeam = [],
   quanTri = false,
   onXong,
 }: {
   ids: string[];
+  soThuTu?: number[]; // so thu tu thiep cua cac khach da chon, de mo trang in nhan
   laSales: boolean;
   salesTeam?: string[];
   quanTri?: boolean;
@@ -93,6 +95,11 @@ export function ThanhHangLoat({
         >
           {pending ? "Đang làm..." : xacNhan ? `Bấm lần nữa để ${chon?.nhan.toLowerCase()} ${ids.length} khách` : "Áp dụng"}
         </button>
+        {soThuTu.length > 0 && (
+          <a href={`/in-nhan?so=${soThuTu.join(",")}`} target="_blank" rel="noopener" className="btn-ink btn-sm" title="In nhãn dán ngoài thiệp giấy cho các khách đã chọn, 8 nhãn mỗi tờ">
+            In nhãn thiệp giấy
+          </a>
+        )}
         <button className="btn-ghost btn-sm" onClick={() => { onXong(); setKq(null); }}>
           Bỏ chọn
         </button>

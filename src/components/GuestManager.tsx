@@ -158,8 +158,8 @@ export function GuestManager({
               {vn ? `Xuất CSV: ${venues.find((v) => v.id === vn)?.ten || "venue đang lọc"}` : "Xuất CSV"}
             </a>
           )}
-          <a href="/in-qr" target="_blank" className="btn-ghost">
-            In số thiệp giấy
+          <a href="/in-nhan" target="_blank" className="btn-ghost">
+            In nhãn thiệp giấy
           </a>
           <button className="btn-brand" onClick={() => setMoForm((v) => !v)}>
             {moForm ? "Đóng" : "+ Thêm khách"}
@@ -255,7 +255,14 @@ export function GuestManager({
         )}
       </div>
 
-      <ThanhHangLoat ids={[...chon]} laSales={false} salesTeam={salesTeam} quanTri={quanTri} onXong={() => setChon(new Set())} />
+      <ThanhHangLoat
+        ids={[...chon]}
+        soThuTu={guests.filter((g) => chon.has(g.id)).map((g) => g.soThuTu)}
+        laSales={false}
+        salesTeam={salesTeam}
+        quanTri={quanTri}
+        onXong={() => setChon(new Set())}
+      />
 
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
@@ -461,6 +468,11 @@ function Dong({
                       </a>
                     ) : null
                   )}
+              {!chuaPhatHanh && g.trangThai !== TRANG_THAI.DA_HUY && (
+                <a href={`/in-nhan?so=${g.soThuTu}`} target="_blank" rel="noopener" className="btn-ghost btn-sm">
+                  In nhãn thiệp giấy
+                </a>
+              )}
               <Link href={`/thiep/${g.maBiMat}`} target="_blank" className="btn-ghost btn-sm">
                 Trang thiệp
               </Link>

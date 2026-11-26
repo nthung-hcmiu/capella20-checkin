@@ -284,7 +284,7 @@ function MayTinh({ guests, ds, venues, venuesSua, loc }: ViewProps) {
         <ChipTrung guests={guests} loc={loc} />
       </div>
 
-      <ThanhHangLoat ids={[...chon]} laSales onXong={() => setChon(new Set())} />
+      <ThanhHangLoat ids={[...chon]} soThuTu={guests.filter((g) => chon.has(g.id)).map((g) => g.soThuTu)} laSales onXong={() => setChon(new Set())} />
 
       <div className="card overflow-hidden">
         <table className="w-full text-sm">
@@ -584,6 +584,10 @@ function HanhDong({ g, venuesSua }: { g: SalesGuest; venuesSua: { id: string; te
         <button className={g.daGuiThiepGiay ? "btn-ghost btn-sm" : "btn-ink btn-sm"} disabled={pending} onClick={() => start(() => void datThiepGiay(g.id, !g.daGuiThiepGiay))}>
           {g.daGuiThiepGiay ? "Bỏ đánh dấu đã gửi" : "Đã gửi thiệp giấy"}
         </button>
+        {/* Nhan dan ngoai thiep giay: mo trang in, mac dinh o dau tien cua to nhan */}
+        <a href={`/in-nhan?so=${g.soThuTu}`} target="_blank" rel="noopener" className="btn-ghost btn-sm">
+          In nhãn
+        </a>
       </div>
       {/* 3. Xac nhan */}
       {duocXN && (
