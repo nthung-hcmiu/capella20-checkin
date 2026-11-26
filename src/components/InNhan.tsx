@@ -17,7 +17,7 @@ export function InNhan({ nhan }: { nhan: Nhan[] }) {
   const moiTo = qc.cot * qc.hang;
   const vung = useRef<HTMLDivElement>(null);
 
-  // Nhan nao chu qua dai (ten, chuc vu, cong ty deu 2 dong) thi thu nho chu cua rieng nhan do cho vua, khong de bi cat
+  // Nhan nao chu qua dai (ten, chuc vu, cong ty, dia chi deu 2 dong) thi thu nho chu cua rieng nhan do cho vua, khong de bi cat
   useEffect(() => {
     const chinh = () => {
       vung.current?.querySelectorAll<HTMLElement>("[data-chu]").forEach((nd) => {
@@ -27,7 +27,7 @@ export function InNhan({ nhan }: { nhan: Nhan[] }) {
         const choPhep = o.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
         let heSo = 1;
         nd.style.fontSize = "1pt";
-        while (nd.scrollHeight > choPhep + 0.5 && heSo > 0.7) {
+        while (nd.scrollHeight > choPhep + 0.5 && heSo > 0.56) {
           heSo -= 0.04;
           nd.style.fontSize = `${heSo}pt`;
         }
@@ -222,6 +222,12 @@ export function InNhan({ nhan }: { nhan: Nhan[] }) {
                             {n.congTy && (
                               <div className="line-clamp-2 font-medium" style={{ fontSize: `${qc.coPhu}em`, lineHeight: 1.2, marginTop: "0.04em" }}>
                                 {n.congTy}
+                              </div>
+                            )}
+                            {/* Dia chi de giao thiep nen cho toi 3 dong, tranh bi cat mat phan cuoi */}
+                            {n.diaChi && (
+                              <div className="line-clamp-3" style={{ fontSize: `${qc.coPhu}em`, lineHeight: 1.2, marginTop: "0.04em", textWrap: "balance" }}>
+                                Đ/c: {n.diaChi}
                               </div>
                             )}
                           </div>

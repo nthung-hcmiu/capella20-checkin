@@ -10,7 +10,7 @@ import { hienSdt, type Nhan } from "@/lib/nhan";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-// Trang in nhan dan ngoai thiep giay: Kinh gui, ten, chuc vu, cong ty; day nhan la so dien thoai (trai) va so thu tu thiep (phai).
+// Trang in nhan dan ngoai thiep giay: Kinh gui, ten, chuc vu, cong ty, dia chi; day nhan la so dien thoai (trai) va so thu tu thiep (phai).
 // Nguoi in chon loai giay nhan (Tomy No. 100 hoac No. 136) ngay tren trang.
 // ?so=1004,1005: chi in cac khach da chon (theo so thu tu). Khong co so: in theo bo loc.
 // Sales in khach cua minh, BTC loc theo venue / sales.
@@ -58,10 +58,10 @@ export default async function InNhanPage({
 
   // Moi nguoi mot thiep giay nen moi nguoi mot nhan: khach chinh va tung khach di kem da co ten, cung so thu tu
   const nhan: Nhan[] = canIn.flatMap((g) => [
-    { khoa: g.id, ten: tenGoi(g), chucVu: g.chucVu || "", congTy: g.congTy || "", sdt: hienSdt(g.sdt), so: g.soThuTu },
+    { khoa: g.id, ten: tenGoi(g), chucVu: g.chucVu || "", congTy: g.congTy || "", diaChi: (g.diaChi || "").trim(), sdt: hienSdt(g.sdt), so: g.soThuTu },
     ...docDiCung(g.khachDiCung)
       .slice(0, Math.max(0, g.soNguoiMoi - 1))
-      .map((x, i) => ({ khoa: `${g.id}-${i + 2}`, ten: [x.danhXung, x.hoTen].filter(Boolean).join(" ").trim(), chucVu: x.chucVu || "", congTy: g.congTy || "", sdt: hienSdt(g.sdt), so: g.soThuTu }))
+      .map((x, i) => ({ khoa: `${g.id}-${i + 2}`, ten: [x.danhXung, x.hoTen].filter(Boolean).join(" ").trim(), chucVu: x.chucVu || "", congTy: g.congTy || "", diaChi: (g.diaChi || "").trim(), sdt: hienSdt(g.sdt), so: g.soThuTu }))
       .filter((x) => x.ten),
   ]);
   const soKem = nhan.length - canIn.length;
@@ -78,7 +78,7 @@ export default async function InNhanPage({
           <div>
             <h1 className="font-display text-xl text-ink">In nhãn dán thiệp giấy</h1>
             <p className="mt-1 text-sm text-ink-muted">
-              Nhãn ghi Kính gửi, tên, chức vụ, công ty; dòng dưới cùng là số điện thoại (bên trái) và số thứ tự thiệp (bên phải). Chọn loại giấy nhãn đang dùng ở bên dưới rồi bấm in.
+              Nhãn ghi Kính gửi, tên, chức vụ, công ty, địa chỉ; dòng dưới cùng là số điện thoại (bên trái) và số thứ tự thiệp (bên phải). Chọn loại giấy nhãn đang dùng ở bên dưới rồi bấm in.
             </p>
           </div>
           <Link href={TRANG_CHINH[u.vaiTro] === "/admin" ? "/admin/khach" : "/sales"} className="btn-ghost btn-sm">

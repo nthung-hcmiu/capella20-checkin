@@ -46,6 +46,7 @@ export interface Nhan {
   ten: string; // da gom danh xung
   chucVu: string;
   congTy: string;
+  diaChi: string; // dia chi gui thiep giay; khach di kem dung dia chi cua khach chinh
   sdt: string; // so dien thoai, da tach nhom cho de doc; khach di kem dung so cua khach chinh
   so: number; // so thu tu thiep
 }
