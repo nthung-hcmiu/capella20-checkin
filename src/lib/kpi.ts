@@ -17,7 +17,7 @@ export interface KhachKpi {
 
 export interface SoLieuVenue {
   thiep: number; // so dong khach con hieu luc (chiem quota)
-  thiepGiay: number; // so thiep giay can in: moi nguoi mot thiep, tru sales va marketing noi bo Capella
+  thiepGiay: number; // so thiep giay can in: moi nguoi mot thiep, tru khach noi bo Capella Holdings
   soCongTy: number;
   soKhach: number; // so nguoi duoc moi con hieu luc, dung de so voi quota
   doanhThu: number;

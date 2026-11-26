@@ -10,7 +10,7 @@ import { NHAN_TRUONG, TRUONG_CHU, docDiCung, moTaDiCung, tenGoi, thieuThongTinMo
 import { ChipLichSu } from "./ChipLichSu";
 import { HopChon, HopChonTatCa, ThanhHangLoat } from "./ThanhHangLoat";
 import type { LichSu } from "@/lib/lichSu";
-import { moTaChoBtc, moTaKhachTrung, moTaTrung, type CongTyBtc, type KhachTrung } from "@/lib/congTy";
+import { canThiepGiay, moTaChoBtc, moTaKhachTrung, moTaTrung, type CongTyBtc, type KhachTrung } from "@/lib/congTy";
 import { FormKhach, OThongTin, SoNguoiDiCung, docDiCungForm, docThem } from "./FormKhach";
 
 export interface GuestRow {
@@ -468,7 +468,7 @@ function Dong({
                       </a>
                     ) : null
                   )}
-              {!chuaPhatHanh && g.trangThai !== TRANG_THAI.DA_HUY && (
+              {!chuaPhatHanh && g.trangThai !== TRANG_THAI.DA_HUY && canThiepGiay({ congTy: g.them.congTy }) && (
                 <a href={`/in-nhan?so=${g.soThuTu}`} target="_blank" rel="noopener" className="btn-ghost btn-sm">
                   In nhãn thiệp giấy
                 </a>
@@ -491,9 +491,13 @@ function Dong({
                   {g.isVip ? "Bỏ VIP" : "Xếp vào VIP"}
                 </button>
               )}
-              <button className="btn-ghost btn-sm" disabled={pending} onClick={() => act(() => datThiepGiay(g.id, !g.daGuiThiepGiay))}>
-                {g.daGuiThiepGiay ? "Bỏ đánh dấu thiệp giấy" : "Đã gửi thiệp giấy"}
-              </button>
+              {canThiepGiay({ congTy: g.them.congTy }) ? (
+                <button className="btn-ghost btn-sm" disabled={pending} onClick={() => act(() => datThiepGiay(g.id, !g.daGuiThiepGiay))}>
+                  {g.daGuiThiepGiay ? "Bỏ đánh dấu thiệp giấy" : "Đã gửi thiệp giấy"}
+                </button>
+              ) : (
+                <span className="self-center text-xs text-ink-muted">Khách nội bộ, không cần thiệp giấy</span>
+              )}
               <span className="ml-auto flex gap-2">
                 {g.trangThai !== TRANG_THAI.NHAP && g.trangThai !== TRANG_THAI.DA_CHECKIN && (
                   <button
@@ -558,7 +562,7 @@ function ChiTiet({ g, canhBao }: { g: GuestRow; canhBao: string[] }) {
     ["Xác nhận bởi", g.xacNhanBoi ? `${g.xacNhanBoi}${g.xacNhanLuc ? `, ${gio(g.xacNhanLuc)}` : ""}` : null],
     [g.trangThai === TRANG_THAI.NHAP || g.trangThai === TRANG_THAI.CHO_DUYET ? "Phát hành lần trước" : "Phát hành thiệp", gio(g.phatHanhLuc)],
     ["Check in", g.checkinLuc ? `${gio(g.checkinLuc)}${g.soNguoiDen ? `, ${g.soNguoiDen} người` : ""}` : null],
-    ["Thiệp giấy", g.daGuiThiepGiay ? "Đã gửi" : "Chưa gửi"],
+    ["Thiệp giấy", !canThiepGiay({ congTy: g.them.congTy }) ? "Không cần (khách nội bộ Capella Holdings)" : g.daGuiThiepGiay ? "Đã gửi" : "Chưa gửi"],
     ["Cảnh báo khi duyệt", canhBao.length ? canhBao.map((c) => NHAN_CANH_BAO[c] || c).join(", ") : null],
     ["Ghi chú", g.ghiChu],
     ["Năm trước", g.lichSu?.chiTiet ?? null],

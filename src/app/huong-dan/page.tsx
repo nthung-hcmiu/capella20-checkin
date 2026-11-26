@@ -47,7 +47,8 @@ const HUONG_DAN: VaiTro[] = [
       },
     ],
     luuY: [
-      "Cách gọi thống nhất trong báo cáo: mỗi khách một thiệp, kể cả khách đi kèm, nên số thiệp là số người được mời. Số công ty đếm riêng, một công ty có thể có nhiều thiệp. Thiệp giấy bằng số thiệp trừ sales và marketing nội bộ Capella.",
+      "Cách gọi thống nhất trong báo cáo: mỗi khách một thiệp, kể cả khách đi kèm, nên số thiệp là số người được mời. Số công ty đếm riêng, một công ty có thể có nhiều thiệp. Thiệp giấy bằng số thiệp trừ khách nội bộ Capella Holdings.",
+      "Khách nội bộ: ghi công ty là CAPELLA HOLDINGS và do Nguyễn Hương Thảo phụ trách. Nhóm này không cần thiệp giấy (kể cả ban lãnh đạo và VIP), chỉ gửi thiệp online; app tự bỏ họ khỏi số thiệp giấy, khỏi việc Chưa gửi thiệp giấy và khỏi trang in nhãn. Họ cũng không bị tính trùng công ty và không bắt buộc ngành hàng.",
       "Ngành hàng: bắt buộc chọn khi thêm khách (trừ nhân sự nội bộ Capella). Xếp theo ngành sản phẩm cuối của công ty; Hàng Tiêu Dùng chỉ gồm hàng phi thực phẩm; Sản Xuất/Công Nghiệp chỉ dành cho công nghiệp B2B. Rà lại hàng loạt: Xuất CSV > sửa cột Ngành hàng > Nhập danh sách > Cập nhật ngành hàng từ file.",
       "Tạo tài khoản sales: Tài khoản > Tạo nhiều tài khoản > dán danh sách họ tên > chọn venue. Tên đăng nhập theo công thức chữ cái đầu họ và tên đệm + tên chính (Phạm Lê Minh Thư thành plmthu), mật khẩu tạm ngẫu nhiên chỉ hiện một lần.",
       "Giao venue cho BTC: Tài khoản > bấm nút Duyệt cạnh tên tài khoản BTC > tick các venue người đó được duyệt và sửa khách > Lưu phạm vi. Người đó chỉ thấy danh sách, hàng Chờ duyệt và số liệu của các venue đã tick (tick thêm ô xem mọi venue nếu vẫn cho xem hết). Khách họ tự phụ trách ở venue khác vẫn nằm trong Cổng Sales của họ.",

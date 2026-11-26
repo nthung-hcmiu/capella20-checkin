@@ -6,7 +6,7 @@ import { StatusBadge } from "./StatusBadge";
 import { ChipLichSu } from "./ChipLichSu";
 import { HopChon, HopChonTatCa, ThanhHangLoat } from "./ThanhHangLoat";
 import type { LichSu } from "@/lib/lichSu";
-import { moTaChoSales, moTaKhachTrung, moTaTrung, type CongTySales, type KhachTrung } from "@/lib/congTy";
+import { canThiepGiay, moTaChoSales, moTaKhachTrung, moTaTrung, type CongTySales, type KhachTrung } from "@/lib/congTy";
 import { FormKhach, OThongTin, SoNguoiDiCung, docDiCungForm, docThem } from "./FormKhach";
 import { che4SoCuoi, boDau, dinhDangGio, hienTien } from "@/lib/format";
 import { taoKhach, danhDauDaMoi, datThiepGiay, xacNhanKhach, guiDuyet, xoaNhap } from "@/lib/actions";
@@ -377,7 +377,11 @@ function DongMayTinh({
           {daPhatHanh ? (
             <div className="space-y-0.5">
               <div className={daGuiOnline ? "text-sage" : "text-ink-muted"}>{daGuiOnline ? "✓" : "○"} Online</div>
-              <div className={g.daGuiThiepGiay ? "text-sage" : "text-ink-muted"}>{g.daGuiThiepGiay ? "✓" : "○"} Giấy</div>
+              {canThiepGiay(g) ? (
+                <div className={g.daGuiThiepGiay ? "text-sage" : "text-ink-muted"}>{g.daGuiThiepGiay ? "✓" : "○"} Giấy</div>
+              ) : (
+                <div className="text-ink-muted" title="Khách nội bộ Capella Holdings chỉ dùng thiệp online">Giấy: không cần</div>
+              )}
             </div>
           ) : (
             <span className="text-ink-muted">-</span>
@@ -578,17 +582,24 @@ function HanhDong({ g, venuesSua }: { g: SalesGuest; venuesSua: { id: string; te
           </a>
         </div>
       ))}
-      {/* 2. Thiep giay: chi xac nhan da gui */}
-      <div className="flex flex-wrap items-center gap-2">
-        <span className={`w-24 shrink-0 text-xs ${g.daGuiThiepGiay ? "text-sage" : "text-ink-muted"}`}>{g.daGuiThiepGiay ? "✓ " : ""}Thiệp giấy</span>
-        <button className={g.daGuiThiepGiay ? "btn-ghost btn-sm" : "btn-ink btn-sm"} disabled={pending} onClick={() => start(() => void datThiepGiay(g.id, !g.daGuiThiepGiay))}>
-          {g.daGuiThiepGiay ? "Bỏ đánh dấu đã gửi" : "Đã gửi thiệp giấy"}
-        </button>
-        {/* Nhan dan ngoai thiep giay: mo trang in, mac dinh o dau tien cua to nhan */}
-        <a href={`/in-nhan?so=${g.soThuTu}`} target="_blank" rel="noopener" className="btn-ghost btn-sm">
-          In nhãn
-        </a>
-      </div>
+      {/* 2. Thiep giay: chi xac nhan da gui. Khach noi bo Capella Holdings khong can thiep giay */}
+      {canThiepGiay(g) ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className={`w-24 shrink-0 text-xs ${g.daGuiThiepGiay ? "text-sage" : "text-ink-muted"}`}>{g.daGuiThiepGiay ? "✓ " : ""}Thiệp giấy</span>
+          <button className={g.daGuiThiepGiay ? "btn-ghost btn-sm" : "btn-ink btn-sm"} disabled={pending} onClick={() => start(() => void datThiepGiay(g.id, !g.daGuiThiepGiay))}>
+            {g.daGuiThiepGiay ? "Bỏ đánh dấu đã gửi" : "Đã gửi thiệp giấy"}
+          </button>
+          {/* Nhan dan ngoai thiep giay: mo trang in, mac dinh o dau tien cua to nhan */}
+          <a href={`/in-nhan?so=${g.soThuTu}`} target="_blank" rel="noopener" className="btn-ghost btn-sm">
+            In nhãn
+          </a>
+        </div>
+      ) : (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="w-24 shrink-0 text-xs text-ink-muted">Thiệp giấy</span>
+          <span className="text-xs text-ink-muted">Khách nội bộ Capella Holdings, không cần thiệp giấy. Chỉ gửi thiệp online.</span>
+        </div>
+      )}
       {/* 3. Xac nhan */}
       {duocXN && (
         <div className="flex flex-wrap items-center gap-2">

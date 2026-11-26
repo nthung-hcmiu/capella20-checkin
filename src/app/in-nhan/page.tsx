@@ -49,7 +49,7 @@ export default async function InNhanPage({
     orderBy: { soThuTu: "asc" },
     take: 1500,
   });
-  // Chi in thiep da phat hanh; sales va marketing noi bo Capella khong can thiep giay
+  // Chi in thiep da phat hanh; khach noi bo Capella Holdings khong can thiep giay
   const CHUA_IN: string[] = [TRANG_THAI.NHAP, TRANG_THAI.CHO_DUYET, TRANG_THAI.DA_HUY];
   const daPhatHanh = tatCa.filter((g) => !CHUA_IN.includes(g.trangThai));
   const canIn = daPhatHanh.filter(canThiepGiay);
@@ -84,7 +84,7 @@ export default async function InNhanPage({
   const soKem = nhan.length - canIn.length;
   const boQua = [
     soChuaDuyet > 0 ? `${soChuaDuyet} khách chưa được duyệt hoặc đã hủy` : "",
-    soNoiBo > 0 ? `${soNoiBo} khách là sales, marketing nội bộ Capella (chỉ dùng thiệp online)` : "",
+    soNoiBo > 0 ? `${soNoiBo} khách nội bộ Capella Holdings (chỉ dùng thiệp online)` : "",
     soKhongThay > 0 ? `${soKhongThay} số thứ tự không tìm thấy hoặc không thuộc quyền của bạn` : "",
   ].filter(Boolean);
 

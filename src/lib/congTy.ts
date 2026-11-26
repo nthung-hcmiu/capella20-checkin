@@ -24,9 +24,11 @@ export function maCorpThat(maCorp: string | null | undefined): string | null {
 // nen khong xet "cung cong ty" / "trung cong ty giua cac sales" cho nhom nay
 const laNoiBo = (cty: string | null) => !!cty && /^capella( |$)/.test(cty);
 export const laNoiBoCapella = (congTy: string | null | undefined) => laNoiBo(khoaCty(congTy));
-// Thiep giay: moi khach mot thiep, tru sales va marketing noi bo Capella (chi can thiep online).
-// Ban lanh dao Capella (noi bo, VIP) van nhan thiep giay.
-export const canThiepGiay = (g: { congTy: string | null | undefined; isVip?: boolean | null }) => !laNoiBoCapella(g.congTy) || !!g.isVip;
+// Khach noi bo ghi cong ty la CAPELLA HOLDINGS, do Nguyen Huong Thao phu trach (ten cong ty bat dau bang "Capella" deu tinh la noi bo).
+// Thiep giay: moi khach mot thiep, tru toan bo khach noi bo (ke ca ban lanh dao va VIP): nhom nay chi dung thiep online.
+export const canThiepGiay = (g: { congTy: string | null | undefined; isVip?: boolean | null }) => !laNoiBoCapella(g.congTy);
+export const CONG_TY_NOI_BO = "CAPELLA HOLDINGS";
+export const PHU_TRACH_NOI_BO = "Nguyễn Hương Thảo";
 
 function cacKhoa(g: { maCorp?: string | null; congTy?: string | null }): string[] {
   const cty = khoaCty(g.congTy);

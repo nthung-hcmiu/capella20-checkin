@@ -273,7 +273,7 @@ export default async function Dashboard({ searchParams }: { searchParams: { khon
               Thực tế so với KPI. Doanh thu dự kiến cộng theo công ty (mỗi công ty tính một lần), không tính thiệp đã hủy.
             </p>
             <p className="mt-0.5 text-xs text-ink-muted">
-              Số thiệp: mỗi khách một thiệp, kể cả khách đi kèm. Thiệp giấy: bằng số thiệp trừ sales và marketing nội bộ Capella.
+              Số thiệp: mỗi khách một thiệp, kể cả khách đi kèm. Thiệp giấy: bằng số thiệp trừ khách nội bộ (công ty Capella Holdings), nhóm này chỉ dùng thiệp online.
             </p>
           </div>
           <Link href="/admin/quota" className="text-xs font-medium text-brand hover:underline">

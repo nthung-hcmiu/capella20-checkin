@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { NHAN_VAI_TRO } from "@/lib/constants";
+import { CONG_TY_NOI_BO, PHU_TRACH_NOI_BO } from "@/lib/congTy";
 import {
   taoTaiKhoan, taoNhieuTaiKhoan, datMatKhau, datMatKhauChung, datVenueTaiKhoan, datPhamViBtc, xoaTaiKhoan,
   type KetQua, type TaiKhoanMoi,
@@ -113,7 +114,8 @@ function XuatLamKhach({ ds }: { ds: TaiKhoanRow[] }) {
     .sort((a, b) => Number(a.vaiTro !== "SALES") - Number(b.vaiTro !== "SALES") || (a.venueTen || "").localeCompare(b.venueTen || "", "vi") || a.hoTen.localeCompare(b.hoTen, "vi"));
   // Mac dinh: moi tai khoan sales chua co trong danh sach khach moi
   const [chon, setChon] = useState<Set<string>>(new Set(ungVien.filter((t) => t.vaiTro === "SALES" && t.thiepSo === null).map((t) => t.id)));
-  const [phuTrach, setPhuTrach] = useState("");
+  // Khach noi bo deu ghi cong ty CAPELLA HOLDINGS va do mot nguoi phu trach
+  const [phuTrach, setPhuTrach] = useState(PHU_TRACH_NOI_BO);
   const doi = (id: string) =>
     setChon((s) => {
       const m = new Set(s);
@@ -129,7 +131,7 @@ function XuatLamKhach({ ds }: { ds: TaiKhoanRow[] }) {
       "Doanh thu dự kiến", "Round 2: Đã gửi thiệp giấy", "Họ và tên người phụ trách tiếp khách", "Ghi chú",
     ];
     const dong = dsChon.map((t, i) => [
-      String(i + 1), "Holdings", "", "CAPELLA HOLDINGS", "", "", t.hoTen,
+      String(i + 1), "Holdings", "", CONG_TY_NOI_BO, "", "", t.hoTen,
       t.vaiTro === "SALES" ? (t.venueTen ? `Sales, ${t.venueTen}` : "Sales") : "",
       "", "", "1", "", "", "", "", "THƯỜNG", "", "", phuTrach.trim(), "Nội bộ Capella, không cần thiệp giấy.",
     ]);
