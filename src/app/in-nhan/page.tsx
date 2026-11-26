@@ -5,12 +5,13 @@ import { TRANG_CHINH, TRANG_THAI } from "@/lib/constants";
 import { docDiCung, tenGoi } from "@/lib/khach";
 import { canThiepGiay } from "@/lib/congTy";
 import { InNhan } from "@/components/InNhan";
-import { QUY_CACH, type Nhan } from "@/lib/nhan";
+import type { Nhan } from "@/lib/nhan";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-// Trang in nhan dan ngoai thiep giay: ten, chuc vu, cong ty, goc duoi ben phai la so thu tu thiep.
+// Trang in nhan dan ngoai thiep giay: Kinh gui, ten, chuc vu, cong ty, goc duoi ben phai la so thu tu thiep.
+// Nguoi in chon loai giay nhan (Tomy No. 100 hoac No. 136) ngay tren trang.
 // ?so=1004,1005: chi in cac khach da chon (theo so thu tu). Khong co so: in theo bo loc.
 // Sales in khach cua minh, BTC loc theo venue / sales.
 export default async function InNhanPage({
@@ -77,8 +78,7 @@ export default async function InNhanPage({
           <div>
             <h1 className="font-display text-xl text-ink">In nhãn dán thiệp giấy</h1>
             <p className="mt-1 text-sm text-ink-muted">
-              Giấy nhãn {QUY_CACH.ten}: tờ {QUY_CACH.kho}, {QUY_CACH.cot * QUY_CACH.hang} nhãn mỗi tờ, mỗi nhãn {QUY_CACH.nhanRong} x {QUY_CACH.nhanCao} mm. Nhãn ghi tên,
-              chức vụ, công ty; góc dưới bên phải là số thứ tự thiệp.
+              Nhãn ghi Kính gửi, tên, chức vụ, công ty; góc dưới bên phải là số thứ tự thiệp. Chọn loại giấy nhãn đang dùng ở bên dưới rồi bấm in.
             </p>
           </div>
           <Link href={TRANG_CHINH[u.vaiTro] === "/admin" ? "/admin/khach" : "/sales"} className="btn-ghost btn-sm">
