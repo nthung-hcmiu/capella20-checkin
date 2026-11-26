@@ -154,8 +154,8 @@ export function GuestManager({
             Nhập từ Excel
           </Link>
           {quanTri && (
-            <a href="/api/xuat" className="btn-ghost">
-              Xuất CSV
+            <a href={vn ? `/api/xuat?venue=${vn}` : "/api/xuat"} className="btn-ghost" title={vn ? "Chỉ xuất khách của venue đang lọc" : "Xuất toàn bộ danh sách. Chọn một venue ở bộ lọc để xuất riêng venue đó."}>
+              {vn ? `Xuất CSV: ${venues.find((v) => v.id === vn)?.ten || "venue đang lọc"}` : "Xuất CSV"}
             </a>
           )}
           <a href="/in-qr" target="_blank" className="btn-ghost">

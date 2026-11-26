@@ -17,13 +17,21 @@ function o(v: unknown): string {
 
 // Xuat danh sach khach ra CSV (UTF-8 co BOM de Excel doc dung tieng Viet).
 // Mac dinh: toan bo danh sach, chi Quan tri. ?cuaToi=1: sales (hoac BTC) xuat rieng khach do chinh minh phu trach,
-// khong kem ma thiep va link trang thiep.
+// khong kem ma thiep va link trang thiep. ?venue=<id>: Quan tri xuat rieng mot don vi (venue).
 export async function GET(req: NextRequest) {
   const cuaToi = req.nextUrl.searchParams.get("cuaToi") === "1";
   const u = await yeuCauQuyen(cuaToi ? ["ADMIN", "SALES"] : ["ADMIN"]);
   if (!u) return NextResponse.json({ loi: cuaToi ? "Phiên đăng nhập đã hết, hãy đăng nhập lại" : "Chỉ Quản trị được xuất danh sách" }, { status: 401 });
   if (!cuaToi && !u.quanTri) return NextResponse.json({ loi: "Chỉ Quản trị được xuất danh sách" }, { status: 403 });
-  const ds = await prisma.guest.findMany({ where: cuaToi ? { salesOwner: u.hoTen } : {}, include: { venue: true }, orderBy: { soThuTu: "asc" } });
+  // Xuat rieng mot don vi: chi ap dung cho ban xuat cua Quan tri
+  const venueId = cuaToi ? "" : req.nextUrl.searchParams.get("venue") || "";
+  const venue = venueId ? await prisma.venue.findUnique({ where: { id: venueId } }) : null;
+  if (venueId && !venue) return NextResponse.json({ loi: "Không tìm thấy đơn vị này" }, { status: 404 });
+  const ds = await prisma.guest.findMany({
+    where: cuaToi ? { salesOwner: u.hoTen } : venue ? { venueId: venue.id } : {},
+    include: { venue: true },
+    orderBy: { soThuTu: "asc" },
+  });
   const boKhop = await taiBoKhop(prisma);
   // Thu tu cot theo mau danh sach cac nam truoc, roi den cac cot cua he thong
   const tieuDe = [
@@ -56,7 +64,7 @@ export async function GET(req: NextRequest) {
   return new NextResponse(csv, {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="capella20-khach-${cuaToi ? `${u.username}-` : ""}${ngay}.csv"`,
+      "Content-Disposition": `attachment; filename="capella20-khach-${cuaToi ? `${u.username}-` : venue ? `${venue.code.toLowerCase()}-` : ""}${ngay}.csv"`,
       "Cache-Control": "no-store",
     },
   });

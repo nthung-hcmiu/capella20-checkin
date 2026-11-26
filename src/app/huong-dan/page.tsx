@@ -42,6 +42,7 @@ const HUONG_DAN: VaiTro[] = [
         buoc: [
           ["Chốt vắng mặt", "Dữ liệu > Chốt vắng mặt: khách Tham dự mà không check in chuyển sang Vắng mặt."],
           ["Báo cáo", "Dữ liệu > Tải file CSV, hoặc Danh sách khách > Xuất CSV. Chỉ Quản trị thấy nút này."],
+          ["Xuất riêng một đơn vị", "Dữ liệu > Xuất danh sách > chọn đơn vị > Tải file CSV. Hoặc ở Danh sách khách, chọn venue ở bộ lọc rồi bấm nút Xuất CSV (nút sẽ ghi tên venue đang lọc)."],
         ],
       },
     ],

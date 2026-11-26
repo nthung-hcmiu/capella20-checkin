@@ -20,5 +20,13 @@ export default async function DuLieuPage() {
     soKhach: n._count._all,
     soDen: daDen.find((d) => d.nam === n.nam)?._count._all || 0,
   }));
-  return <DataTools soKhach={soKhach} soCheckin={soCheckin} soThamDu={soThamDu} namDaTai={namDaTai} />;
+  // Don vi (venue) de xuat rieng tung don vi
+  const [dsVenue, demVenue] = await Promise.all([
+    prisma.venue.findMany({ orderBy: { thuTu: "asc" }, select: { id: true, ten: true } }),
+    prisma.guest.groupBy({ by: ["venueId"], _count: { _all: true } }),
+  ]);
+  const venues = dsVenue
+    .map((v) => ({ id: v.id, ten: v.ten, soKhach: demVenue.find((d) => d.venueId === v.id)?._count._all || 0 }))
+    .filter((v) => v.soKhach > 0);
+  return <DataTools soKhach={soKhach} soCheckin={soCheckin} soThamDu={soThamDu} namDaTai={namDaTai} venues={venues} />;
 }

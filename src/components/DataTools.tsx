@@ -5,8 +5,9 @@ import { chotVangMat, napDuLieuMau, xoaToanBoKhach, type KetQua } from "@/lib/ac
 import { LichSuNamTruoc, type NamDaTai } from "./LichSuNamTruoc";
 
 export function DataTools({
-  soKhach, soCheckin, soThamDu, namDaTai,
-}: { soKhach: number; soCheckin: number; soThamDu: number; namDaTai: NamDaTai[] }) {
+  soKhach, soCheckin, soThamDu, namDaTai, venues,
+}: { soKhach: number; soCheckin: number; soThamDu: number; namDaTai: NamDaTai[]; venues: { id: string; ten: string; soKhach: number }[] }) {
+  const [venueXuat, setVenueXuat] = useState("");
   const [pending, start] = useTransition();
   const [kq, setKq] = useState<KetQua | null>(null);
   const [chuXoa, setChuXoa] = useState("");
@@ -41,9 +42,20 @@ export function DataTools({
         <p className="mt-1 text-sm text-ink-muted">
           File CSV mở được bằng Excel, gồm số thứ tự, thông tin khách, trạng thái, số người, sales, link thiệp. Nên xuất một bản sao lưu trước khi xóa.
         </p>
-        <a href="/api/xuat" className="btn-ink mt-4">
-          Tải file CSV
-        </a>
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <select className="input w-auto" value={venueXuat} onChange={(e) => setVenueXuat(e.target.value)} aria-label="Đơn vị cần xuất">
+            <option value="">Tất cả đơn vị</option>
+            {venues.map((v) => (
+              <option key={v.id} value={v.id}>
+                {v.ten} ({v.soKhach.toLocaleString("vi-VN")} dòng khách)
+              </option>
+            ))}
+          </select>
+          <a href={venueXuat ? `/api/xuat?venue=${venueXuat}` : "/api/xuat"} className="btn-ink">
+            Tải file CSV
+          </a>
+        </div>
+        <p className="mt-2 text-xs text-ink-muted">Chọn một đơn vị để chỉ xuất khách của đơn vị đó. File gồm cả khách đã hủy, xem cột Trạng thái.</p>
       </div>
 
       <LichSuNamTruoc ds={namDaTai} />
