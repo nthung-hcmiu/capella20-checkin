@@ -79,6 +79,16 @@ export default async function Dashboard({ searchParams }: { searchParams: { khon
   const tongVenue = dongVenue.reduce((t, { r }) => cong(t, r), rong());
 
   const tiLeXacNhan = Math.min(100, Math.round((nguoiXacNhan / CHISO.nguongXacNhan) * 100));
+  // Doi chieu hai con so hay bi hoi: "thiep trong he thong" dem moi trang thai, con bang venue chi dem thiep con hieu luc
+  // (khong tinh khach da bao khong tham du, vang mat, da huy vi cac thiep nay khong con chiem quota)
+  const khongHieuLuc = ([
+    [TRANG_THAI.KHONG_THAM_DU, "không tham dự"],
+    [TRANG_THAI.VANG_MAT, "vắng mặt"],
+    [TRANG_THAI.DA_HUY, "đã hủy"],
+  ] as const)
+    .map(([k, nhan]) => ({ nhan, so: demTrangThai[k] || 0 }))
+    .filter((x) => x.so > 0);
+  const soKhongHieuLuc = khongHieuLuc.reduce((t, x) => t + x.so, 0);
 
   return (
     <div className="space-y-7">
@@ -241,7 +251,10 @@ export default async function Dashboard({ searchParams }: { searchParams: { khon
       <div className="card p-6">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-lg text-ink">Phân bổ theo trạng thái</h2>
-          <span className="text-xs text-ink-muted">{tongThiep} thiệp trong hệ thống</span>
+          <span className="text-right text-xs text-ink-muted">
+            {tongThiep.toLocaleString("vi-VN")} thiệp trong hệ thống
+            {soKhongHieuLuc > 0 ? `, trong đó ${(tongThiep - soKhongHieuLuc).toLocaleString("vi-VN")} còn hiệu lực` : ""}
+          </span>
         </div>
         <div className="mt-4 space-y-2.5">
           {Object.keys(NHAN_TRANG_THAI)
@@ -275,6 +288,13 @@ export default async function Dashboard({ searchParams }: { searchParams: { khon
             <p className="mt-0.5 text-xs text-ink-muted">
               Số thiệp: mỗi khách một thiệp, kể cả khách đi kèm. Thiệp giấy: bằng số thiệp trừ khách nội bộ (công ty Capella Holdings), nhóm này chỉ dùng thiệp online.
             </p>
+            {soKhongHieuLuc > 0 && (
+              <p className="mt-0.5 text-xs text-ink-muted">
+                Bảng này chỉ đếm thiệp còn hiệu lực: {tongThiep.toLocaleString("vi-VN")} thiệp trong hệ thống trừ{" "}
+                {khongHieuLuc.map((x) => `${x.so.toLocaleString("vi-VN")} ${x.nhan}`).join(", ")} còn{" "}
+                <b className="font-medium text-ink-soft">{(tongThiep - soKhongHieuLuc).toLocaleString("vi-VN")} thiệp</b>.
+              </p>
+            )}
           </div>
           <Link href="/admin/quota" className="text-xs font-medium text-brand hover:underline">
             Xem quota và KPI →
