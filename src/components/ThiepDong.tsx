@@ -8,6 +8,7 @@ import "@fontsource/montserrat/500.css";
 import "@fontsource/montserrat/700.css";
 import css from "./thiepDong.module.css";
 import { XacNhanKhach } from "./XacNhanKhach";
+import { soThiep } from "@/lib/khach";
 
 // Trang thiep dong cua khach: tranh cua designer lam nen co dinh, co tia sang xoay, bui vang bay,
 // noi dung hien dan theo tay cuon, ma QR nam o cuoi trang.
@@ -356,7 +357,7 @@ export function ThiepDong(p: DuLieuThiep) {
               <div className={css.qr} dangerouslySetInnerHTML={{ __html: p.qrSvg }} />
             </div>
             <div className={css.soNhan}>Số thứ tự thiệp</div>
-            <div className={css.so}>{p.soThuTu}</div>
+            <div className={css.so}>{soThiep(p.soThuTu, p.k)}</div>
             <p className={css.huongDan}>
               Vui lòng đưa mã QR này cho lễ tân tại quầy đón khách. Nếu không quét được mã hoặc mang thiệp giấy, quý khách đọc số thứ tự thiệp cho lễ tân.
               {p.laKhachDiKem ? " Đây là mã riêng của quý khách, dùng được cả khi đến trước hoặc sau người cùng đoàn." : ""}

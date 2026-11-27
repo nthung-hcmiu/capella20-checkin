@@ -73,7 +73,7 @@ const HUONG_DAN: VaiTro[] = [
           ["Cùng công ty", "Dòng \"Cùng công ty\" cho biết công ty đó đã có bao nhiêu khách khác được mời. Chữ đỏ là có sales khác cùng mời, kèm tên sales đó. Khách trùng SĐT hoặc trùng tên và công ty thì app ghi rõ trùng với khách nào, của sales nào, hai bên liên hệ nhau để thống nhất ai mời."],
           ["Lọc khách trùng", "Khách trùng người (cùng SĐT, hoặc cùng tên và công ty) và khách có công ty đang được sales khác cùng mời đều được tô nền đỏ, gắn nhãn Trùng hoặc Trùng công ty. Bấm nút \"Trùng với sales khác\" cạnh các nhóm trạng thái để chỉ xem những khách này, bấm lần nữa để bỏ lọc."],
           ["Nhập từ Excel", "Nhập danh sách > Tải file mẫu > điền > chọn file > Tiếp tục: kiểm tra file > Hoàn tất: lưu khách vào app. Mọi khách trong file do bạn phụ trách."],
-          ["Thiệp khách đi kèm", "Khách mời 2 người thì mỗi người một thiệp riêng. Sau khi được duyệt, mở khách ra sẽ thấy thêm dòng Khách thứ 2 với nút Tải thiệp. Thiệp này ghi đúng tên khách đi kèm và có mã QR riêng, người đó đến trước hay sau khách chính đều check in được."],
+          ["Thiệp khách đi kèm", "Khách mời 2 người thì mỗi người một thiệp riêng. Sau khi được duyệt, mở khách ra sẽ thấy thêm dòng Khách thứ 2 với nút Tải thiệp. Thiệp này ghi đúng tên khách đi kèm và có mã QR riêng, người đó đến trước hay sau khách chính đều check in được. Số thứ tự của khách đi kèm là số của thiệp thêm đuôi, ví dụ khách chính 1004 thì khách thứ 2 là 1004-2; ghi số này lên thiệp giấy của khách đi kèm."],
           ["Gửi duyệt", "Kiểm tra lại rồi bấm Gửi duyệt trên từng khách, hoặc Gửi duyệt tất cả. Nháp sai thì bấm Xóa nháp."],
           ["Chờ BTC", "BTC duyệt xong khách chuyển sang Đã phát hành thiệp, lúc đó mới gửi thiệp được."],
         ],
@@ -144,6 +144,7 @@ const HUONG_DAN: VaiTro[] = [
         buoc: [
           ["Vào ca", "Đăng nhập > chọn làn phụ trách."],
           ["Quét QR", "Tab Quét QR > Bật camera > hướng vào QR trên thiệp online ở điện thoại của khách. Dùng được trên iPhone (Safari, Chrome) và Android. Mở app bằng trình duyệt, không mở link trong Zalo hay Facebook."],
+          ["Số của khách đi kèm", "Khách đi kèm có số riêng dạng 1004-2. Gõ 1004-2 (bàn phím số không có dấu gạch thì gõ 1004.2 hoặc 1004,2) để check in đúng người đó. Gõ 1004 là check in cả thiệp, mặc định đủ số người."],
           ["Nhập số", "Tab Nhập số > gõ số thứ tự trên thiệp > Check in. Dùng khi khách mang thiệp giấy (chỉ có số thứ tự, không có QR), QR mờ, màn hình khách quá tối hoặc camera chưa được cho phép."],
           ["Tìm tên", "Tab Tìm tên / SĐT > gõ tên khách, tên công ty hoặc SĐT > chọn khách."],
           ["Số người thực tế", "Trên thẻ kết quả, bấm + hoặc − nếu khách đi nhiều hoặc ít người hơn số đã xác nhận."],

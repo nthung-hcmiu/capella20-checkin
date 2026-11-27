@@ -106,6 +106,18 @@ export function khachDiKemThu(
   const x = docDiCung(g.khachDiCung)[k - 2];
   return x?.hoTen?.trim() ? x : null;
 }
+// So thu tu cua tung nguoi tren thiep: khach chinh la so cua thiep (1004), khach di kem them duoi thu tu (1004-2).
+// So trong CSDL van la mot so cho ca thiep; duoi chi de phan biet nguoi khi in thiep giay, in nhan va check in.
+export function soThiep(soThuTu: number, nguoi?: number | null): string {
+  return nguoi && nguoi >= 2 ? `${soThuTu}-${nguoi}` : String(soThuTu);
+}
+// Doc so le tan go: "1004" hoac "1004-2". Ban phim so tren dien thoai khong co dau gach nen nhan ca dau cham, phay, cach, gach cheo.
+export function docSoThiep(raw: string): { so: number; nguoi: number | null } | null {
+  const khop = String(raw || "").trim().match(/^(\d{1,5})(?:\s*[-.,/ ]\s*(\d{1,2}))?$/);
+  if (!khop) return null;
+  const nguoi = khop[2] ? parseInt(khop[2], 10) : null;
+  return { so: parseInt(khop[1], 10), nguoi: nguoi && nguoi >= 2 ? nguoi : null };
+}
 // Giu dung so nguoi di cung theo so nguoi moi, cat khoang trang
 export function lamSachDiCung(ds: NguoiDiCung[] | undefined, soNguoiMoi: number): NguoiDiCung[] {
   const lam = (x: string | undefined) => String(x ?? "").trim().replace(/\s+/g, " ");

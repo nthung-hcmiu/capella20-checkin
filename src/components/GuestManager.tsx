@@ -6,7 +6,7 @@ import { StatusBadge } from "./StatusBadge";
 import { DUOC_XAC_NHAN, NHAN_CANH_BAO, NHAN_TRANG_THAI, TRANG_THAI } from "@/lib/constants";
 import { che4SoCuoi, boDau, dinhDangGio, hienTien } from "@/lib/format";
 import { taoKhach, datThiepGiay, xacNhanKhach, guiDuyet, danhDauDaMoi, huyKhach, duyetKhach, xoaKhach, traVeNhap, datVip } from "@/lib/actions";
-import { NHAN_TRUONG, TRUONG_CHU, docDiCung, moTaDiCung, tenGoi, thieuThongTinMoi, type ThongTinThem } from "@/lib/khach";
+import { NHAN_TRUONG, TRUONG_CHU, docDiCung, moTaDiCung, soThiep, tenGoi, thieuThongTinMoi, type ThongTinThem } from "@/lib/khach";
 import { ChipLichSu } from "./ChipLichSu";
 import { HopChon, HopChonTatCa, ThanhHangLoat } from "./ThanhHangLoat";
 import type { LichSu } from "@/lib/lichSu";
@@ -464,7 +464,7 @@ function Dong({
                         className="btn-ghost btn-sm"
                         title={[x.danhXung, x.hoTen].filter(Boolean).join(" ")}
                       >
-                        Tải thiệp khách thứ {i + 2}
+                        Tải thiệp khách thứ {i + 2} ({soThiep(g.soThuTu, i + 2)})
                       </a>
                     ) : null
                   )}

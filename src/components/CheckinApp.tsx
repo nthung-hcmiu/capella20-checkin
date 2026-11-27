@@ -28,11 +28,11 @@ interface KetQua {
   canhBao?: string | null;
   guest?: KhachGon;
   hetPhien?: boolean;
-  nguoiQuet?: { ten: string; chucVu: string } | null; // khach di kem quet ma rieng
+  nguoiQuet?: { ten: string; chucVu: string; so?: string } | null; // khach di kem quet ma rieng hoac go so co duoi (1004-2)
 }
 interface Gan {
   hoTen: string;
-  soThuTu: number;
+  soThuTu: number | string;
   gio: string;
   ok: boolean;
   trungLap?: boolean;
@@ -75,7 +75,7 @@ export function CheckinApp({ ten, ca }: { ten: string; ca: string | null }) {
           [
             {
               hoTen: data.nguoiQuet?.ten || data.guest!.hoTen,
-              soThuTu: data.guest!.soThuTu,
+              soThuTu: data.nguoiQuet?.so || data.guest!.soThuTu,
               gio: dinhDangGioNgan(new Date()),
               ok: data.ok,
               trungLap: data.ketQua === "TRUNG_LAP",
@@ -184,16 +184,19 @@ function NhapSo({ onMa }: { onMa: (ma: string) => void }) {
       <input
         className="input text-center font-mono text-lg"
         value={v}
-        inputMode="numeric"
+        inputMode="decimal"
         onChange={(e) => setV(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && gui()}
-        placeholder="1234"
+        placeholder="1234 hoặc 1234-2"
         autoFocus
       />
       <button className="btn-brand mt-3 w-full" disabled={!v.trim()} onClick={gui}>
         Check in
       </button>
       <p className="mt-2 text-center text-xs text-ink-muted">
+        Khách đi kèm có số riêng, ví dụ 1234-2: gõ 1234-2 hoặc 1234.2 để check in đúng người đó. Gõ 1234 là check in cả thiệp.
+      </p>
+      <p className="mt-1 text-center text-xs text-ink-muted">
         Cửa không kẹt: quét QR, nhập số, hoặc tìm tên. Ca khó chuyển sang quầy hỗ trợ.
       </p>
     </div>
@@ -414,7 +417,7 @@ function KetQuaCard({ kq, onDong }: { kq: KetQua; onDong: () => void }) {
               </>
             )}
             <div className="mt-1 text-sm text-ink-muted">
-              <span className="font-mono">{kq.guest.soThuTu}</span> · {kq.guest.venue}
+              <span className="font-mono">{kq.nguoiQuet?.so || kq.guest.soThuTu}</span> · {kq.guest.venue}
             </div>
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
               {kq.guest.isVip && <span className="chip bg-brand/15 text-brand-deep">VIP</span>}

@@ -3,11 +3,11 @@ import { prisma } from "@/lib/db";
 import { docMaTuQR, docNguoiTuQR } from "@/lib/codes";
 import { TRANG_THAI, KET_QUA_CHECKIN, DUOC_CHECKIN } from "@/lib/constants";
 import { yeuCauQuyen } from "@/lib/auth";
-import { khachDiKemThu, moTaDiCung } from "@/lib/khach";
+import { docSoThiep, khachDiKemThu, moTaDiCung, soThiep } from "@/lib/khach";
 
 // Thuc hien check in. Moi ma chi check in mot lan.
-// Ma chung cua ve (khach chinh, thiep giay, go so thu tu): check in ca ve, mac dinh du so nguoi.
-// Ma rieng cua khach di kem (?k=2): ghi nhan dung nguoi do, den truoc hay sau khach chinh deu duoc.
+// Ma chung cua ve (khach chinh, thiep giay, go so thu tu 1004): check in ca ve, mac dinh du so nguoi.
+// Ma rieng cua khach di kem (QR co ?k=2, hoac go so thu tu co duoi 1004-2): ghi nhan dung nguoi do, den truoc hay sau khach chinh deu duoc.
 export async function POST(req: NextRequest) {
   const u = await yeuCauQuyen(DUOC_CHECKIN);
   if (!u) {
@@ -27,9 +27,18 @@ export async function POST(req: NextRequest) {
     guest = await prisma.guest.findUnique({ where: { id: body.id }, include: { venue: true } });
   } else if (body.ma) {
     const raw = String(body.ma).trim();
-    // Le tan go so thu tu tren thiep (1 den 5 chu so), hoac quet / nhap ma QR
-    if (/^\d{1,5}$/.test(raw)) {
-      guest = await prisma.guest.findUnique({ where: { soThuTu: parseInt(raw, 10) }, include: { venue: true } });
+    // Le tan go so thu tu tren thiep (1004, hoac 1004-2 cho khach di kem), hoac quet / nhap ma QR
+    const theoSo = docSoThiep(raw);
+    if (theoSo) {
+      guest = await prisma.guest.findUnique({ where: { soThuTu: theoSo.so }, include: { venue: true } });
+      kQuet = theoSo.nguoi;
+      // Go so co duoi ma thiep khong co nguoi do: bao ro, khong check in nham ca thiep
+      if (guest && kQuet && !khachDiKemThu(guest, kQuet)) {
+        return NextResponse.json(
+          { ok: false, ketQua: KET_QUA_CHECKIN.KHONG_HOP_LE, thongBao: `Thiệp ${guest.soThuTu} không có khách thứ ${kQuet}. Kiểm tra lại số, hoặc nhập ${guest.soThuTu} để check in cả thiệp`, guest: gon(guest) },
+          { status: 404 }
+        );
+      }
     } else {
       const ma = docMaTuQR(raw);
       if (ma) guest = await prisma.guest.findUnique({ where: { maBiMat: ma }, include: { venue: true } });
@@ -48,7 +57,7 @@ export async function POST(req: NextRequest) {
 
   // Nguoi dang quet: khach di kem co ma rieng, hoac khach chinh / ca ve
   const diKem = khachDiKemThu(guest, kQuet);
-  const nguoiQuet = diKem ? { ten: [diKem.danhXung, diKem.hoTen].filter(Boolean).join(" "), chucVu: diKem.chucVu } : null;
+  const nguoiQuet = diKem ? { ten: [diKem.danhXung, diKem.hoTen].filter(Boolean).join(" "), chucVu: diKem.chucVu, so: soThiep(guest.soThuTu, kQuet) } : null;
   const chiSo = diKem ? String(kQuet) : "1";
   const daDen: string[] = (guest.nguoiDaDen || "").split(",").filter(Boolean);
 

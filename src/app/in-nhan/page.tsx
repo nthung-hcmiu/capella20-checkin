@@ -2,7 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { yeuCauTrang } from "@/lib/auth";
 import { TRANG_CHINH, TRANG_THAI } from "@/lib/constants";
-import { docDiCung, tenGoi } from "@/lib/khach";
+import { docDiCung, soThiep, tenGoi } from "@/lib/khach";
 import { canThiepGiay } from "@/lib/congTy";
 import { khoaCty } from "@/lib/lichSu";
 import { InNhan } from "@/components/InNhan";
@@ -65,12 +65,13 @@ export default async function InNhanPage({
   for (const g of canIn) {
     const cty = khoaCty(g.congTy);
     const nhom = cty ? `${g.salesOwner}|${cty}` : `thiep:${g.id}`;
-    const chung = { congTy: g.congTy || "", diaChi: (g.diaChi || "").trim(), sdt: hienSdt(g.sdt), so: g.soThuTu };
+    const chung = { congTy: g.congTy || "", diaChi: (g.diaChi || "").trim(), sdt: hienSdt(g.sdt) };
+    // Khach di kem co so rieng: so cua thiep them duoi thu tu, vi du 1004-2
     const cuaThiep = [
-      { khoa: g.id, ten: tenGoi(g), chucVu: g.chucVu || "" },
+      { khoa: g.id, ten: tenGoi(g), chucVu: g.chucVu || "", so: soThiep(g.soThuTu) },
       ...docDiCung(g.khachDiCung)
         .slice(0, Math.max(0, g.soNguoiMoi - 1))
-        .map((x, i) => ({ khoa: `${g.id}-${i + 2}`, ten: [x.danhXung, x.hoTen].filter(Boolean).join(" ").trim(), chucVu: x.chucVu || "" }))
+        .map((x, i) => ({ khoa: `${g.id}-${i + 2}`, ten: [x.danhXung, x.hoTen].filter(Boolean).join(" ").trim(), chucVu: x.chucVu || "", so: soThiep(g.soThuTu, i + 2) }))
         .filter((x) => x.ten),
     ];
     for (const x of cuaThiep) {

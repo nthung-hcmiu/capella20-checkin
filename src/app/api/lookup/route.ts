@@ -20,10 +20,11 @@ export async function GET(req: NextRequest) {
     if (g) return NextResponse.json({ ket_qua: [guiGon(g)], nguon: "qr" });
   }
 
-  // 2. So thu tu (chi gom chu so)
-  if (/^\d{3,4}$/.test(q)) {
+  // 2. So thu tu: 1004, hoac 1004-2 (so cua khach di kem, tim ra thiep 1004)
+  const theoSo = /^\d{3,4}$/.test(q) ? parseInt(q, 10) : /^\d{3,5}\s*[-.,/]\s*\d{1,2}$/.test(q) ? parseInt(q, 10) : null;
+  if (theoSo) {
     const g = await prisma.guest.findUnique({
-      where: { soThuTu: parseInt(q, 10) },
+      where: { soThuTu: theoSo },
       include: { venue: true },
     });
     if (g) return NextResponse.json({ ket_qua: [guiGon(g)], nguon: "so" });

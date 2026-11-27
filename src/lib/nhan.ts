@@ -48,10 +48,10 @@ export interface Nhan {
   congTy: string;
   diaChi: string; // dia chi gui thiep giay; khach di kem dung dia chi cua khach chinh
   sdt: string; // so dien thoai, da tach nhom cho de doc; khach di kem dung so cua khach chinh
-  so: number; // so thu tu thiep
+  so: string; // so thu tu cua nguoi nay: 1004, khach di kem la 1004-2
   // Gop nhan theo cong ty de tiet kiem nhan: moi cong ty (cua cung mot nguoi phu trach) chi in nhan cua khach dau tien.
   gop: boolean; // true: da co nhan cua khach dau tien cung cong ty, khong can in nhan nay
-  kem: number[]; // tren nhan duoc in: so thu tu cac thiep khac cung cong ty di chung
+  kem: string[]; // tren nhan duoc in: so thu tu cac thiep khac di chung (cung cong ty, khach di kem)
 }
 
 // 0901234567 thanh 0901 234 567

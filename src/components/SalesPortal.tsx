@@ -10,7 +10,7 @@ import { canThiepGiay, moTaChoSales, moTaKhachTrung, moTaTrung, type CongTySales
 import { FormKhach, OThongTin, SoNguoiDiCung, docDiCungForm, docThem } from "./FormKhach";
 import { che4SoCuoi, boDau, dinhDangGio, hienTien } from "@/lib/format";
 import { taoKhach, danhDauDaMoi, datThiepGiay, xacNhanKhach, guiDuyet, xoaNhap } from "@/lib/actions";
-import { DANH_XUNG, LINH_VUC, NHAN_TRUONG, PHAN_LOAI_KHACH, docDiCung, moTaDiCung, tenGoi, thieuThongTinMoi, type ThongTinThem } from "@/lib/khach";
+import { DANH_XUNG, LINH_VUC, NHAN_TRUONG, PHAN_LOAI_KHACH, docDiCung, moTaDiCung, soThiep, tenGoi, thieuThongTinMoi, type ThongTinThem } from "@/lib/khach";
 import { CHUA_PHAT_HANH, DUOC_XAC_NHAN, NHAN_CANH_BAO, TRANG_THAI } from "@/lib/constants";
 
 export interface SalesGuest {
@@ -576,7 +576,9 @@ function HanhDong({ g, venuesSua }: { g: SalesGuest; venuesSua: { id: string; te
       {/* Thiep rieng cua tung khach di kem: ghi dung ten nguoi do, ma QR rieng */}
       {dsDiKem.map((x) => (
         <div key={x.k} className="flex flex-wrap items-center gap-2">
-          <span className="w-24 shrink-0 text-xs text-ink-muted">Khách thứ {x.k}</span>
+          <span className="w-24 shrink-0 text-xs text-ink-muted" title="Số thứ tự của khách đi kèm: số của thiệp thêm đuôi thứ tự">
+            Khách thứ {x.k} <span className="font-mono">{soThiep(g.soThuTu, x.k)}</span>
+          </span>
           <a href={`/api/thiep-anh/${g.maBiMat}?k=${x.k}&tai=1`} download={`thiep-capella20-${g.soThuTu}-khach-${x.k}.jpg`} className="btn-brand btn-sm">
             Tải thiệp {[x.danhXung, x.hoTen].filter(Boolean).join(" ")}
           </a>
