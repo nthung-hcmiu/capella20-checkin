@@ -6,6 +6,11 @@ import { dinhDangGioNgan } from "@/lib/format";
 import { tenGoi } from "@/lib/khach";
 
 interface KhachGon {
+  // Dong tim kiem cua khach di kem: thu tu nguoi tren thiep, ten rieng va so rieng (1004-2)
+  nguoi?: number | null;
+  tenNguoi?: string | null;
+  chucVuNguoi?: string | null;
+  so?: string;
   id: string;
   soThuTu: number;
   hoTen: string;
@@ -144,7 +149,7 @@ export function CheckinApp({ ten, ca }: { ten: string; ca: string | null }) {
 
       {che === "quet" && <QuetQR onMa={(ma) => checkin({ ma, cach: "QR" })} />}
       {che === "so" && <NhapSo onMa={(ma) => checkin({ ma, cach: "THU_CONG" })} />}
-      {che === "ten" && <TimTen onChon={(id) => checkin({ id, cach: "THU_CONG" })} />}
+      {che === "ten" && <TimTen onChon={(g) => checkin(g.nguoi && g.so ? { ma: g.so, cach: "THU_CONG" } : { id: g.id, cach: "THU_CONG" })} />}
 
       {kq && <KetQuaCard kq={kq} onDong={() => setKq(null)} />}
 
@@ -203,7 +208,8 @@ function NhapSo({ onMa }: { onMa: (ma: string) => void }) {
   );
 }
 
-function TimTen({ onChon }: { onChon: (id: string) => void }) {
+// Moi dong la mot nguoi. Bam vao khach di kem thi check in rieng nguoi do (theo so 1004-2), bam khach chinh thi check in ca thiep.
+function TimTen({ onChon }: { onChon: (g: KhachGon) => void }) {
   const [q, setQ] = useState("");
   const [ds, setDs] = useState<KhachGon[]>([]);
   const [dang, setDang] = useState(false);
@@ -233,7 +239,7 @@ function TimTen({ onChon }: { onChon: (id: string) => void }) {
 
   return (
     <div className="card p-5">
-      <label className="label">Tìm tên, công ty hoặc số điện thoại</label>
+      <label className="label">Tìm tên (cả khách đi kèm), công ty hoặc số điện thoại</label>
       <input className="input" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tên khách, tên công ty hoặc SĐT" autoFocus />
       <div className="mt-3 space-y-1.5">
         {dang && <p className="text-xs text-ink-muted">Đang tìm...</p>}
@@ -241,19 +247,31 @@ function TimTen({ onChon }: { onChon: (id: string) => void }) {
         {!dang && !loi && q.trim().length >= 2 && ds.length === 0 && <p className="text-xs text-ink-muted">Không tìm thấy khách.</p>}
         {ds.map((g) => (
           <button
-            key={g.id}
-            onClick={() => onChon(g.id)}
-            className="flex w-full items-center justify-between rounded-lg border border-ivory-deep bg-white px-3 py-2.5 text-left hover:border-brand"
+            key={`${g.id}-${g.nguoi || 1}`}
+            onClick={() => onChon(g)}
+            className="flex w-full items-center justify-between gap-2 rounded-lg border border-ivory-deep bg-white px-3 py-2.5 text-left hover:border-brand"
           >
-            <span>
-              <span className="font-mono text-xs text-ink-muted">{g.soThuTu}</span> <span className="text-sm text-ink">{tenGoi(g)}</span>
-              {g.isVip && <span className="ml-1.5 chip bg-brand/15 text-brand-deep">VIP</span>}
-              {g.congTy && <div className="text-xs text-ink-soft">{g.congTy}</div>}
-              <div className="text-xs text-ink-muted">
-                {g.venue}
-              </div>
-            </span>
-            <span className="text-xs font-medium text-brand">Check in</span>
+            {g.nguoi ? (
+              <span>
+                <span className="font-mono text-xs text-ink-muted">{g.so}</span> <span className="text-sm text-ink">{g.tenNguoi}</span>
+                <span className="ml-1.5 chip bg-ivory-deep text-ink-soft">Khách thứ {g.nguoi}</span>
+                {(g.chucVuNguoi || g.congTy) && <div className="text-xs text-ink-soft">{[g.chucVuNguoi, g.congTy].filter(Boolean).join(" · ")}</div>}
+                <div className="text-xs text-ink-muted">
+                  Cùng thiệp với {tenGoi(g)} · {g.venue}
+                </div>
+              </span>
+            ) : (
+              <span>
+                <span className="font-mono text-xs text-ink-muted">{g.soThuTu}</span> <span className="text-sm text-ink">{tenGoi(g)}</span>
+                {g.isVip && <span className="ml-1.5 chip bg-brand/15 text-brand-deep">VIP</span>}
+                {g.congTy && <div className="text-xs text-ink-soft">{g.congTy}</div>}
+                <div className="text-xs text-ink-muted">
+                  {g.venue}
+                  {g.soNguoiMoi > 1 ? ` · thiệp ${g.soNguoiMoi} người` : ""}
+                </div>
+              </span>
+            )}
+            <span className="shrink-0 text-right text-xs font-medium text-brand">{g.nguoi ? "Check in người này" : g.soNguoiMoi > 1 ? "Check in cả thiệp" : "Check in"}</span>
           </button>
         ))}
       </div>

@@ -67,7 +67,8 @@ export async function POST(req: NextRequest) {
         if (!q) return NextResponse.json({ ok: false, thongBao: "Thieu tu khoa (q)." });
         const ds = await prisma.guest.findMany({
           where: {
-            OR: [{ hoTen: { contains: q } }, { sdt: { contains: q } }, { congTy: { contains: q } }],
+            // khachDiCung: ten khach di kem (khach thu 2) luu trong chuoi JSON cua thiep
+            OR: [{ hoTen: { contains: q } }, { sdt: { contains: q } }, { congTy: { contains: q } }, { khachDiCung: { contains: q } }],
             ...(body.trangThai ? { trangThai: String(body.trangThai) } : {}),
           },
           include: { venue: true },

@@ -97,6 +97,9 @@ export function GuestManager({
       if (s) {
         return (
           boDau(g.hoTen).includes(s) ||
+          // Ten khach di kem nam trong khachDiCung; so cua khach di kem co duoi (1004-2) thi tim theo so cua thiep
+          boDau(moTaDiCung(g.khachDiCung)).includes(s) ||
+          (/^\d{3,5}[-.]\d{1,2}$/.test(q.trim()) && String(g.soThuTu) === q.trim().split(/[-.]/)[0]) ||
           boDau(g.them.congTy || "").includes(s) ||
           boDau(g.them.maCorp || "").includes(s) ||
           (g.sdt || "").includes(q.trim()) ||
