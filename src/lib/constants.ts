@@ -92,7 +92,8 @@ export const TRANG_CHINH: Record<string, string> = {
 };
 
 // ===== Lan check in =====
-export const LAN_CHECKIN = ["Làn 1", "Làn 2", "Làn 3", "Làn 4", "Làn VIP", "Quầy hỗ trợ"];
+// 6 lan check in thuong, cong lan VIP va quay ho tro
+export const LAN_CHECKIN = ["Làn 1", "Làn 2", "Làn 3", "Làn 4", "Làn 5", "Làn 6", "Làn VIP", "Quầy hỗ trợ"];
 
 export const KET_QUA_CHECKIN = {
   THANH_CONG: "THANH_CONG",
@@ -135,7 +136,7 @@ export const CHISO = {
   tongCongTyMucTieu: 400,
   tyLeVang: 0.1,
   nguongXacNhan: 889, // 800 cong vang 10%
-  soLanQuet: 4,
+  soLanQuet: 6,
   soLeTan: 12,
 };
 

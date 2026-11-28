@@ -174,7 +174,7 @@ export default async function GiamSatPage({ searchParams }: { searchParams: { la
               riêng danh sách của làn đó.
             </p>
           </div>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {dsLan.map((l) => {
               const dangChon = lanChon === l.ten;
               const nguoi = [...l.leTan.entries()].sort((a, b) => b[1].getTime() - a[1].getTime()).map(([ten]) => ten);
